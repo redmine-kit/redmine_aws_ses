@@ -10,16 +10,20 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 image=redmine-serverless-ses-test
 # The same tests run against either backend; TEST_AWS_BACKEND names it.
+# SES v2 is not in the LocalStack license that the token gives, so SES stays
+# on moto (the SDK's AWS_ENDPOINT_URL_SESV2 and AWS_ENDPOINT_URL_SES).
 if [[ -n "${LOCALSTACK_AUTH_TOKEN:-}" ]]; then
   backend=localstack endpoint=http://localstack:4566
 else
   backend=moto endpoint=http://moto:5000
 fi
-echo "AWS backend: $backend ($endpoint)"
+ses_backend=moto ses_endpoint=http://moto:5000
+echo "AWS backend: $backend ($endpoint); SES: $ses_backend ($ses_endpoint)"
 bin/services >/dev/null
 docker buildx build --load -q -t "$image" -f test/Dockerfile . >/dev/null
 run() {
   docker run --rm --network redmine-serverless-ses-test_default -e AWS_ENDPOINT_URL="$endpoint" -e TEST_AWS_BACKEND="$backend" \
+    -e AWS_ENDPOINT_URL_SESV2="$ses_endpoint" -e AWS_ENDPOINT_URL_SES="$ses_endpoint" -e TEST_SES_BACKEND="$ses_backend" \
     -e PARALLEL_WORKERS="${PARALLEL_WORKERS:-4}" "$image" \
     sh -c 'bin/rails db:drop db:create db:migrate redmine:plugins:migrate db:schema:dump >/dev/null && "$@"' test "$@"
 }
@@ -27,6 +31,7 @@ run() {
 run_plugin() {
   mkdir -p coverage
   docker run --rm --network redmine-serverless-ses-test_default -e AWS_ENDPOINT_URL="$endpoint" -e TEST_AWS_BACKEND="$backend" \
+    -e AWS_ENDPOINT_URL_SESV2="$ses_endpoint" -e AWS_ENDPOINT_URL_SES="$ses_endpoint" -e TEST_SES_BACKEND="$ses_backend" \
     -e PLUGIN_COVERAGE=1 -e PARALLEL_WORKERS=1 -v "$PWD/coverage:/redmine/plugins/redmine_serverless_ses/coverage" "$image" \
     sh -c 'bin/rails db:drop db:create db:migrate redmine:plugins:migrate db:schema:dump >/dev/null && "$@"' test "$@"
 }

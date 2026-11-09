@@ -4,13 +4,14 @@ require_relative '../test_helper'
 require 'net/http'
 
 module RedmineServerlessSes
-  # Sending through aws-actionmailer-ses (:ses_v2) to moto's SES v2, and the
-  # connection check.
+  # Sending through aws-actionmailer-ses (:ses_v2) to SES v2, and the
+  # connection check. SES runs on moto (TEST_SES_BACKEND): SES v2 is not in the
+  # LocalStack license that the tests use.
   class SendMailTest < ActiveSupport::TestCase
     include RedmineServerlessSes::TestHelper
 
     def setup
-      @endpoint = ENV.fetch('AWS_ENDPOINT_URL')
+      @endpoint = ENV.fetch('AWS_ENDPOINT_URL_SESV2') { ENV.fetch('AWS_ENDPOINT_URL') }
       @ses_v1 = Aws::SES::Client.new(endpoint: @endpoint)
       @ses_v1.verify_domain_identity(domain: DOMAIN)
       @saved = [ActionMailer::Base.delivery_method, ActionMailer::Base.ses_v2_settings,
@@ -25,10 +26,14 @@ module RedmineServerlessSes
         ActionMailer::Base.perform_deliveries = @saved
     end
 
+    def ses_backend
+      ENV.fetch('TEST_SES_BACKEND') { ENV.fetch('TEST_AWS_BACKEND', nil) }
+    end
+
     # Messages the backend accepted: LocalStack lists them at /_aws/ses;
     # moto counts them in the send quota.
     def sent_count
-      if ENV['TEST_AWS_BACKEND'] == 'localstack'
+      if ses_backend == 'localstack'
         JSON.parse(Net::HTTP.get(URI("#{@endpoint}/_aws/ses")))['messages'].size
       else
         @ses_v1.get_send_quota.sent_last_24_hours.to_i
@@ -57,7 +62,7 @@ module RedmineServerlessSes
     # moto has no SES v2 GetAccount (it answers NotFound); the check is also
     # covered by SDK response stubs (ServerlessMailSendingControllerTest).
     def test_the_connection_check
-      skip 'moto has no SES v2 GetAccount' unless ENV['TEST_AWS_BACKEND'] == 'localstack'
+      skip 'moto has no SES v2 GetAccount' unless ses_backend == 'localstack'
 
       RedmineServerlessSes::Clients.ses = Aws::SESV2::Client.new(endpoint: @endpoint)
       result = RedmineServerlessAdmin.run_checks.find { |r| r.name == 'ses' }
