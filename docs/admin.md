@@ -1,6 +1,6 @@
 # Administration pages
 
-This is the design of the administration pages of Redmine Serverless SES. Only Redmine administrators can open them (`require_admin`), except the project email settings, which people with the project permission that the plugin adds can also open (below). When [Redmine Serverless](https://redmine-kit.github.io/redmine_serverless/admin.html) is installed, the pages are tabs of its "Serverless" administration page. Without it, they are an item of their own in Redmine's administration menu.
+This is the design of the administration pages of Redmine Serverless SES. Only Redmine administrators can open them (`require_admin`), except the project email settings, which people with the project permission that the plugin adds can also open (below). The pages are the "Sending email" and "Receiving email" tabs under the "Serverless" item of Redmine's administration menu, which all the Redmine Serverless plugins share, whether or not [Redmine Serverless](https://redmine-kit.github.io/redmine_serverless/admin.html#the-serverless-menu) is installed. The project email settings are a tab in project settings instead.
 
 The specifications in this page were checked against official information and the Redmine 7.0.3 source as of 2026-11-08. Sources are in [sources.md](https://redmine-kit.github.io/serverless/sources.html).
 

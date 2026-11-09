@@ -15,7 +15,7 @@ Redmine Serverless SES(`redmine_serverless_ses`)は、Redmine のメールを Am
 | メールの送信のやり直し | ジョブを動かすプロセスでの `raise_delivery_errors`、SES のエラーの種類ごとのやり直し(一時的なエラーはやり直し、アカウントの問題は送り直しのために残し、メッセージの問題は捨てる) | Lambda では `REDMINE_ROLE=worker`。Lambda 以外のときは、ジョブを動かすプロセス | [mail.md](https://redmine-kit.github.io/serverless/ja/mail.html#when-sending-fails) |
 | メールの受信 | SES が S3 に置いたメールの取り込み(rake のタスク `redmine_serverless_ses:receive_mail`。中では Redmine の標準の `MailHandler` を使う)、なりすましと迷惑メールの確認、取り込みの記録 | 受信の設定がある | [mail.md](https://redmine-kit.github.io/serverless/ja/mail.html#importing) |
 | プロジェクトごとのアドレス | プロジェクトごとの受信のアドレスと送信元、全体用のアドレス、プロジェクトの設定の「メール」のタブ | プラグインの設定で有効にする。無効なら Redmine の標準と同じ(送信元は 1 つで、プロジェクトはサブアドレス `redmine+識別子@…` で選ぶ) | [mail.md](https://redmine-kit.github.io/serverless/ja/mail.html#addresses-per-project) |
-| 管理画面 | メールの送信(SES の状態)、メールの受信、プロジェクトのメールの設定 | 管理者。使っていない機能の画面は出さない | [admin.md](admin.md) |
+| 管理画面 | 共有の「Serverless」のメニューの「メールの送信」(SES の状態)と「メールの受信」のタブ、プロジェクトの設定の中のプロジェクトのメールの設定 | 管理者。使っていない機能の画面は出さない | [admin.md](admin.md) |
 
 - **Lambda でも、Lambda 以外でも:** SES での送信(`aws-actionmailer-ses`)と受信は、SES と S3 に届く Redmine なら動きます。受信のタスクは、受けたメールのメッセージの ID を渡して動かします。AWS Lambda では、[Serverless](https://redmine-kit.github.io/serverless/ja/) が [Redmine Serverless SQS](https://redmine-kit.github.io/redmine_serverless_sqs/ja/) といっしょに入れます。メールを送るジョブを動かし、最後に失敗したものを記録して送り直せるようにするのは、Redmine Serverless SQS です。
 - **gem:** プラグインが使う gem は、プラグインの `Gemfile` に書きます。Redmine の `Gemfile` は、`plugins/*/Gemfile` も読み込みます。

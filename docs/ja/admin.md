@@ -1,6 +1,6 @@
 # 管理画面
 
-Redmine Serverless SES の管理画面の設計です。Redmine の管理者だけが開けます(`require_admin`)。プロジェクトのメールの設定だけは、プラグインが足すプロジェクトの権限を持つ人も開けます(下記)。[Redmine Serverless](https://redmine-kit.github.io/redmine_serverless/ja/admin.html) を入れているときは、その「サーバーレス」の管理画面のタブになります。入れていないときは、Redmine の管理のメニューの 1 つの項目になります。
+Redmine Serverless SES の管理画面の設計です。Redmine の管理者だけが開けます(`require_admin`)。プロジェクトのメールの設定だけは、プラグインが足すプロジェクトの権限を持つ人も開けます(下記)。画面は、[Redmine Serverless](https://redmine-kit.github.io/redmine_serverless/ja/admin.html#the-serverless-menu) をインストールしているかどうかにかかわらず、すべての Redmine Serverless のプラグインが共有する Redmine の管理のメニューの「Serverless」の下の、「メールの送信」と「メールの受信」のタブになります。プロジェクトのメールの設定は、代わりにプロジェクトの設定のタブになります。
 
 この資料の仕様は、2026-11-08 時点の公式の情報と、Redmine 7.0.3 のソースで確認したものです。出典は [sources.md](https://redmine-kit.github.io/serverless/ja/sources.html) にあります。
 
