@@ -34,4 +34,4 @@ Redmine Serverless SES(`redmine_serverless_ses`)は、Redmine のメールを Am
 
 ## ライセンス
 
-Redmine Serverless SES は、GNU General Public License バージョン 2 またはそれ以降のバージョンで公開しています。[LICENSE](../../LICENSE) を参照してください。Redmine projectとは関係ありません。
+Redmine Serverless SES は、GNU General Public License バージョン 2 またはそれ以降のバージョンで公開しています。[LICENSE](../../LICENSE) を参照してください。Redmine の非公式のプラグインです。

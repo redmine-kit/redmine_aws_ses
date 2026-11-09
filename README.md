@@ -27,4 +27,4 @@ A Redmine plugin for sending and receiving Redmine's email with Amazon SES: retr
 
 ## License
 
-Redmine Serverless SES is released under the GNU General Public License, version 2 or (at your option) any later version. See [LICENSE](LICENSE). Not affiliated with the Redmine project.
+Redmine Serverless SES is released under the GNU General Public License, version 2 or (at your option) any later version. See [LICENSE](LICENSE). An unofficial Redmine plugin.

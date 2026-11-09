@@ -28,4 +28,4 @@ Redmine Serverless SES (`redmine_serverless_ses`) is a Redmine plugin for sendin
 
 ## License
 
-Redmine Serverless SES is released under the GNU General Public License, version 2 or (at your option) any later version. See [LICENSE](../LICENSE). Not affiliated with the Redmine project.
+Redmine Serverless SES is released under the GNU General Public License, version 2 or (at your option) any later version. See [LICENSE](../LICENSE). An unofficial Redmine plugin.
