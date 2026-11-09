@@ -18,7 +18,7 @@ Redmine のメールを Amazon SES で送受信するための Redmine のプラ
 - Web サイト: https://redmine-kit.github.io/redmine_serverless_ses/ja/ (English: https://redmine-kit.github.io/redmine_serverless_ses/)
 - Markdown: [docs/ja/README.md](docs/ja/README.md) (English: [docs/README.md](docs/README.md))。[準備](docs/ja/setup.md)、[IAM の権限](docs/ja/iam.md)と[管理画面](docs/ja/admin.md)があります。
 
-<a id="license"></a>
+<a id="sponsors"></a>
 
 ## スポンサー
 
@@ -28,6 +28,8 @@ Redmine のメールを Amazon SES で送受信するための Redmine のプラ
     <img alt="LocalStack" src=".github/assets/localstack-logo.svg" width="120" height="28">
   </picture>
 </a>
+
+<a id="license"></a>
 
 ## ライセンス
 

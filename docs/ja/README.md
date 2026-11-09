@@ -24,6 +24,14 @@ Redmine Serverless SES(`redmine_serverless_ses`)は、Redmine のメールを Am
 - **テスト:** Redmine の標準の仕組みでテストを書き、Docker の中で moto といっしょに動かします([setup.md](setup.md#tests))。メールの取り込みのテストには、SES が足すヘッダーを付けたメールを使います([testing.md](https://redmine-kit.github.io/serverless/ja/testing.html#email-redmine_serverless_ses))。
 - **migration:** 受け取ったメールの記録(`serverless_received_mails`)と、プロジェクトのメールの設定(`serverless_project_mail_settings`)のテーブルを足します([admin.md](admin.md))。
 
+<a id="sponsors"></a>
+
 ## スポンサー
 
 <Sponsors><a href="https://localstack.cloud">LocalStack</a></Sponsors>
+
+<a id="license"></a>
+
+## ライセンス
+
+Redmine Serverless SES は、GNU General Public License バージョン 2 またはそれ以降のバージョンで公開しています。[LICENSE](../../LICENSE) を参照してください。Redmine projectとは関係ありません。
