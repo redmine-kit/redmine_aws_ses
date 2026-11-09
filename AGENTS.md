@@ -4,14 +4,16 @@ Guidelines for people and coding agents working in this repository. See [README.
 
 ## What this project does
 
-Redmine Serverless SES (`redmine_serverless_ses`) is a Redmine plugin for sending and receiving Redmine's email with Amazon SES. It works with or without AWS Lambda. [Serverless](https://github.com/redmine-kit/serverless) installs it together with [Redmine Serverless](https://github.com/redmine-kit/redmine_serverless). It is in the design stage: the repository holds the design documents.
+Redmine Serverless SES (`redmine_serverless_ses`) is a Redmine plugin for sending and receiving Redmine's email with Amazon SES. It works with or without AWS Lambda. [Serverless](https://github.com/redmine-kit/serverless) installs it together with [Redmine Serverless](https://github.com/redmine-kit/redmine_serverless). It is in early development.
 
 ## Rules
 
 - **Redmine's extension points only:** do not edit Redmine's own files. Keep Redmine's standard behaviour wherever possible.
 - **Off without its settings:** each feature has the condition that turns it on; without it, Redmine behaves as standard.
-- **Received email is untrusted:** import only email that passes DMARC and SES's spam and virus verdicts, and never trust `X-SES-*` headers added by the sender.
-- **Tests:** replaced and added code has tests, run with Redmine's own mechanism (`rake redmine:plugins:test`). The test plan is in Serverless ([testing.md](https://github.com/redmine-kit/serverless/blob/main/docs/testing.md#running-on-lambda-and-email)).
+- **Received email is untrusted:** import only email whose DMARC, spam and virus verdicts in the SES event are `PASS`; take the verdicts and recipients from the event, never from the message's headers.
+- **Tests:** replaced and added code has tests, run with Redmine's own mechanism (`bin/test` runs them in Docker with PostgreSQL and moto; [setup.md](docs/setup.md#tests)). What each test checks is in [sending.md](docs/sending.md#tests) and [receiving.md](docs/receiving.md#tests); the order of the tests across the repositories is in Serverless ([testing.md](https://github.com/redmine-kit/serverless/blob/main/docs/testing.md#plugin-tests)).
+- **Code layout:** `boot/` holds what must be in place before Rails initializes (Bundler loads it; module `RedmineServerlessSesBoot`), `lib/`, `app/` and `db/` the rest (Redmine loads them; `init.rb` calls `RedmineServerlessSes.setup`).
+- **Shared files:** `lib/redmine_serverless_admin.rb`, `app/controllers/serverless_admin_controller.rb` and `app/views/serverless_admin/_tabs.html.erb` are the same in every Redmine Serverless plugin. Change them in all plugins together and raise `SHARED_VERSION`.
 - **No secrets in the repository.**
 
 ## Documentation

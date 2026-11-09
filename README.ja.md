@@ -1,10 +1,14 @@
 # Redmine Serverless SES
 
+[![CI](https://img.shields.io/github/actions/workflow/status/redmine-kit/redmine_serverless_ses/ci.yml?branch=main&label=CI)](https://github.com/redmine-kit/redmine_serverless_ses/actions/workflows/ci.yml)
+[![Coverage](https://img.shields.io/codecov/c/github/redmine-kit/redmine_serverless_ses)](https://codecov.io/gh/redmine-kit/redmine_serverless_ses)
+[![License](https://img.shields.io/github/license/redmine-kit/redmine_serverless_ses)](LICENSE)
+
 Redmine のメールを Amazon SES で送受信するための Redmine のプラグインです。エラーの種類ごとの送信のやり直し、なりすましと迷惑メールの確認を付けた受信の取り込み、プロジェクトごとのメールアドレス、SES の管理画面を持ちます。AWS Lambda でも、Lambda 以外でも動きます。[Serverless](https://github.com/redmine-kit/serverless) は、[Redmine Serverless](https://github.com/redmine-kit/redmine_serverless) といっしょに使います。
 
 [English](README.md)
 
-> **状態:** 設計段階です。リポジトリには設計の資料だけがあり、まだ何も実装していません。
+> **状態:** 開発の初期です。エラーの種類ごとにやり直す送信、SES の確認の結果を使う取り込み、プロジェクトごとのアドレス、管理画面を実装し、Redmine 7.0.3 と moto でテストしています。
 
 <a id="documentation"></a>
 
