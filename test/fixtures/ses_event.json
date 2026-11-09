@@ -1,0 +1,29 @@
+{
+  "Records": [
+    {
+      "eventSource": "aws:ses",
+      "eventVersion": "1.0",
+      "ses": {
+        "mail": {
+          "timestamp": "2026-11-09T00:00:00.000Z",
+          "source": "jsmith@somenet.foo",
+          "messageId": "MESSAGE_ID",
+          "destination": ["ecookbook@redmine.example.com"],
+          "headersTruncated": false
+        },
+        "receipt": {
+          "timestamp": "2026-11-09T00:00:00.000Z",
+          "processingTimeMillis": 400,
+          "recipients": ["ecookbook@redmine.example.com"],
+          "spamVerdict": { "status": "PASS" },
+          "virusVerdict": { "status": "PASS" },
+          "spfVerdict": { "status": "PASS" },
+          "dkimVerdict": { "status": "PASS" },
+          "dmarcVerdict": { "status": "PASS" },
+          "dmarcPolicy": "none",
+          "action": { "type": "Lambda", "functionArn": "arn:aws:lambda:us-east-1:123456789012:function:redmine-task", "invocationType": "Event" }
+        }
+      }
+    }
+  ]
+}

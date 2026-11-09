@@ -1,0 +1,52 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          persist-credentials: false
+      - run: bin/lint
+
+  test:
+    needs: lint
+    runs-on: ubuntu-24.04-arm
+    # id-token: Codecov's upload with OIDC, without a token secret.
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          persist-credentials: false
+      # The plugin's tests, then every Redmine test with the plugin installed.
+      # LocalStack when the organization's secret is available (not on pull
+      # requests from forks); moto otherwise. The log names the backend.
+      - run: bin/test --redmine
+        env:
+          LOCALSTACK_AUTH_TOKEN: ${{ secrets.LOCALSTACK_AUTH_TOKEN }}
+      # The plugin's coverage (coverage/coverage.xml, written by bin/test).
+      # Not failing the run while the Codecov app is not installed.
+      - uses: codecov/codecov-action@v7.1.1
+        with:
+          use_oidc: true
+          files: coverage/coverage.xml
+          fail_ci_if_error: false
+      - if: always()
+        run: bin/services --down
+        env:
+          LOCALSTACK_AUTH_TOKEN: ${{ secrets.LOCALSTACK_AUTH_TOKEN }}

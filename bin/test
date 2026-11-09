@@ -1,0 +1,45 @@
+#!/usr/bin/env bash
+# The plugin's tests in Redmine 7.0.3 on PostgreSQL 16, with AWS on LocalStack
+# (when LOCALSTACK_AUTH_TOKEN is set) or moto, in Docker.
+#   bin/test                 # the plugin's tests, then the Redmine tests around email
+#   bin/test --redmine       # also every Redmine test, with the plugin installed
+#   bin/test <files>         # some files of the plugin's tests
+# Commands that run inside the container are in single quotes on purpose.
+# shellcheck disable=SC2016
+set -euo pipefail
+cd "$(dirname "$0")/.."
+image=redmine-serverless-ses-test
+# The same tests run against either backend; TEST_AWS_BACKEND names it.
+if [[ -n "${LOCALSTACK_AUTH_TOKEN:-}" ]]; then
+  backend=localstack endpoint=http://localstack:4566
+else
+  backend=moto endpoint=http://moto:5000
+fi
+echo "AWS backend: $backend ($endpoint)"
+bin/services >/dev/null
+docker buildx build --load -q -t "$image" -f test/Dockerfile . >/dev/null
+run() {
+  docker run --rm --network redmine-serverless-ses-test_default -e AWS_ENDPOINT_URL="$endpoint" -e TEST_AWS_BACKEND="$backend" \
+    -e PARALLEL_WORKERS="${PARALLEL_WORKERS:-4}" "$image" \
+    sh -c 'bin/rails db:drop db:create db:migrate redmine:plugins:migrate db:schema:dump >/dev/null && "$@"' test "$@"
+}
+# The plugin's tests, with coverage written to coverage/coverage.xml.
+run_plugin() {
+  mkdir -p coverage
+  docker run --rm --network redmine-serverless-ses-test_default -e AWS_ENDPOINT_URL="$endpoint" -e TEST_AWS_BACKEND="$backend" \
+    -e PLUGIN_COVERAGE=1 -e PARALLEL_WORKERS=1 -v "$PWD/coverage:/redmine/plugins/redmine_serverless_ses/coverage" "$image" \
+    sh -c 'bin/rails db:drop db:create db:migrate redmine:plugins:migrate db:schema:dump >/dev/null && "$@"' test "$@"
+}
+redmine_tests=(test/unit/mail_handler_test.rb test/unit/mailer_test.rb test/functional/projects_controller_test.rb
+  test/functional/settings_controller_test.rb test/functional/admin_controller_test.rb)
+# Redmine's tests that fail with the current gems for known reasons.
+known=$(grep -v -e '^#' -e '^$' test/redmine_known_failures.txt | sed 's/[.]/\\./g' | paste -sd '|' -)
+if [[ "${1:-}" == "--redmine" ]]; then
+  run_plugin bin/rails test plugins/redmine_serverless_ses/test
+  run bin/rails test --exclude "/^($known)\$/"
+elif (($#)); then
+  run_plugin bin/rails test "${@/#/plugins/redmine_serverless_ses/}"
+else
+  run_plugin bin/rails test plugins/redmine_serverless_ses/test
+  run bin/rails test "${redmine_tests[@]}"
+fi
