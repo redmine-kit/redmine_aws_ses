@@ -1,10 +1,10 @@
-# 準備
+# 導入
 
 Redmine Serverless SES を使う Redmine に要るもの(インストール、設定、SES と S3 のリソース、IAM の権限、ネットワーク)です。AWS Lambda でも、ふつうのサーバーでも同じです。[Serverless](https://redmine-kit.github.io/serverless/ja/) は、これを CloudFormation でまとめて作ります。このページは、手で用意するときや、Serverless が作るものを確認するときのためのものです。
 
 <a id="requirements"></a>
 
-## 前提
+## 動作環境
 
 - Redmine 7.0 以降。
 - AWS の認証情報で SES と S3 に届くプロセス(Lambda では実行ロール、ほかではインスタンスプロファイルやタスクのロール)。Redmine にアクセスキーや SMTP のパスワードは置きません。
@@ -147,7 +147,7 @@ bin/services --down # PostgreSQL、moto、LocalStack を止める
 
 <a id="to-verify"></a>
 
-## 確認すること
+## 未確認の事項
 
 - メッセージ全体を渡す SES v2 の `SendEmail` に、`ses:SendRawEmail` が要るか
 - SES の API のインターフェースのエンドポイントのサービスの名前
