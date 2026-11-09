@@ -21,11 +21,15 @@ module RedmineServerlessSes
       with_ses_settings { get :index }
 
       assert_response :success
-      assert_select 'table.serverless-mail-addresses td', text: "redmine@#{DOMAIN}"
+      assert_select 'div.box.tabular p', text: /redmine@#{Regexp.escape(DOMAIN)}/
       assert_select '#serverless-received-mails tbody tr', 2
       assert_select '#serverless-received-mails tr.dropped', text: /DMARC/
-      assert_select 'input[type=checkbox][name=?]', 'settings[import_without_dmarc_pass]'
-      assert_select 'input[type=checkbox][name=?]', 'settings[import_spam]'
+      assert_select '#serverless-mail-settings .box.tabular.settings label.block', text: /Also fetch email that fails DMARC/ do
+        assert_select 'input[type=checkbox][name=?]', 'settings[import_without_dmarc_pass]'
+      end
+      assert_select '#serverless-mail-settings label.block', text: /Also fetch email marked as spam/ do
+        assert_select 'input[type=checkbox][name=?]', 'settings[import_spam]'
+      end
       with_ses_settings { get :index, params: { dropped: '1' } }
 
       assert_select '#serverless-received-mails tbody tr', 1

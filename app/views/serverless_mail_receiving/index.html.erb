@@ -1,86 +1,94 @@
 <%= render partial: 'serverless_admin/tabs', locals: { selected: 'mail_receiving' } %>
 
 <h3><%= l(:label_serverless_mail_addresses) %></h3>
+
 <% if @domain.nil? %>
-  <p class="warning"><%= l(:text_serverless_mail_no_domain) %></p>
+<p class="warning"><%= l(:text_serverless_mail_no_domain) %></p>
 <% else %>
-<table class="list serverless-mail-addresses">
-  <tbody>
-    <tr><th><%= l(:label_serverless_mail_domain) %></th><td><%= @domain %></td></tr>
-    <tr><th><%= l(:label_serverless_mail_global_address) %></th><td><%= RedmineServerlessSes.global_address %></td></tr>
-    <tr>
-      <th>MX</th>
-      <td>
-        <% if @mx.nil? %><%= l(:text_serverless_mail_mx_unknown) %>
-        <% elsif @mx.empty? %><%= l(:text_serverless_mail_mx_none) %>
-        <% else %><%= @mx.join(', ') %><% end %>
-      </td>
-    </tr>
-  </tbody>
-</table>
+<div class="box tabular settings">
+  <p><label><%= l(:label_serverless_mail_domain) %></label><%= @domain %></p>
+  <p><label><%= l(:label_serverless_mail_global_address) %></label><%= RedmineServerlessSes.global_address %></p>
+  <p><label>MX</label><%= @mx.nil? ? l(:text_serverless_mail_mx_unknown) : (@mx.empty? ? l(:text_serverless_mail_mx_none) : @mx.join(', ')) %></p>
+</div>
+
 <% if RedmineServerlessSes.per_project_addresses? && @project_settings.any? %>
-<table class="list serverless-mail-projects">
-  <thead><tr><th><%= l(:label_project) %></th><th><%= l(:field_mail) %></th><th><%= l(:label_serverless_mail_receive) %></th></tr></thead>
-  <tbody>
-  <% @project_settings.each do |setting| %>
-    <tr>
-      <td><%= link_to_project setting.project %></td>
-      <td><%= setting.address %></td>
-      <td><%= format_object(setting.receive?) %></td>
-    </tr>
-  <% end %>
-  </tbody>
+<div class="autoscroll">
+<table class="list addresses"><thead>
+<tr>
+    <th><%= l(:label_project) %></th>
+    <th><%= l(:field_mail) %></th>
+    <th><%= l(:label_serverless_mail_receive) %></th>
+</tr></thead>
+<tbody>
+<% @project_settings.each do |setting| %>
+<tr>
+    <td class="name"><%= link_to_project setting.project %></td>
+    <td class="name"><%= setting.address %></td>
+    <td class="tick"><%= checked_image setting.receive? %></td>
+</tr>
+<% end %>
+</tbody>
 </table>
+</div>
 <% end %>
 <% end %>
+
 <% unless RedmineServerlessSes.mail_bucket %>
-  <p class="warning"><%= l(:text_serverless_mail_no_bucket) %></p>
+<p class="warning"><%= l(:text_serverless_mail_no_bucket) %></p>
 <% end %>
 
 <h3><%= l(:label_serverless_mail_received) %></h3>
+
 <p>
   <%= link_to_unless params[:dropped] != '1', l(:label_all), action: 'index' %> |
   <%= link_to_unless params[:dropped] == '1', l(:label_serverless_mail_dropped_only), action: 'index', dropped: '1' %>
 </p>
-<% if @received.empty? %>
-  <p class="nodata"><%= l(:label_no_data) %></p>
-<% else %>
+
+<% if @received.any? %>
 <%= form_tag(serverless_mail_reimport_path, id: 'serverless-received-mails') do %>
-<table class="list">
-  <thead>
-    <tr>
-      <th></th><th><%= l(:label_serverless_mail_received_at) %></th><th><%= l(:field_mail) %></th>
-      <th><%= l(:field_subject) %></th><th><%= l(:label_project) %></th><th><%= l(:label_serverless_mail_verdicts) %></th>
-      <th><%= l(:label_serverless_mail_result) %></th>
-    </tr>
-  </thead>
-  <tbody>
-  <% @received.each do |mail| %>
-    <tr id="received-mail-<%= mail.id %>" class="<%= mail.status %>">
-      <td><%= check_box_tag 'ids[]', mail.id, false, id: nil %></td>
-      <td><%= format_time(mail.received_at || mail.created_at) %></td>
-      <td><%= mail.mail_from %></td>
-      <td><%= mail.subject %></td>
-      <td><%= mail.project ? link_to_project(mail.project) : '' %></td>
-      <td class="verdicts"><%= mail.verdicts.to_h.slice(:virus, :spam, :dmarc).map { |k, v| "#{k.to_s.upcase} #{v}" }.join(', ') %></td>
-      <td>
-        <% if mail.status == 'imported' %>
-          <%= mail.issue_id ? link_to("##{mail.issue_id}", issue_path(mail.issue_id)) : l(:label_serverless_mail_imported) %>
-        <% else %>
-          <%= l(:"label_serverless_mail_reason_#{mail.reason}") %>
-        <% end %>
-      </td>
-    </tr>
-  <% end %>
-  </tbody>
+<div class="autoscroll">
+<table class="list mails"><thead>
+<tr>
+    <th class="checkbox hide-when-print"></th>
+    <th><%= l(:label_serverless_mail_received_at) %></th>
+    <th><%= l(:label_serverless_mail_from) %></th>
+    <th><%= l(:field_subject) %></th>
+    <th><%= l(:label_project) %></th>
+    <th><%= l(:label_serverless_mail_verdicts) %></th>
+    <th><%= l(:label_serverless_mail_result) %></th>
+</tr></thead>
+<tbody>
+<% @received.each do |mail| %>
+<tr id="received-mail-<%= mail.id %>" class="<%= mail.status %>">
+    <td class="checkbox hide-when-print"><%= check_box_tag 'ids[]', mail.id, false, id: nil %></td>
+    <td><%= format_time(mail.received_at || mail.created_at) %></td>
+    <td class="name"><%= mail.mail_from %></td>
+    <td class="subject"><%= mail.subject %></td>
+    <td class="name"><%= mail.project ? link_to_project(mail.project) : '' %></td>
+    <td><%= mail.verdicts.to_h.slice(:virus, :spam, :dmarc).map { |k, v| "#{k.to_s.upcase} #{v}" }.join(', ') %></td>
+    <td>
+      <% if mail.status == 'imported' %>
+      <%= mail.issue_id ? link_to("##{mail.issue_id}", issue_path(mail.issue_id)) : l(:label_serverless_mail_imported) %>
+      <% else %>
+      <%= l(:"label_serverless_mail_reason_#{mail.reason}") %>
+      <% end %>
+    </td>
+</tr>
+<% end %>
+</tbody>
 </table>
+</div>
+<p><%= check_all_links 'serverless-received-mails' %></p>
 <p><%= submit_tag l(:button_serverless_mail_reimport), data: { confirm: l(:text_are_you_sure) } %></p>
 <% end %>
+<% else %>
+<p class="nodata"><%= l(:label_no_data) %></p>
 <% end %>
 
 <h3><%= l(:label_serverless_mail_settings) %></h3>
+
 <%= form_tag({ action: 'update' }, id: 'serverless-mail-settings') do %>
-<div class="box tabular">
+<div class="box tabular settings">
   <p>
     <%= label_tag 'settings_global_local_part', l(:label_serverless_mail_global_local_part) %>
     <%= text_field_tag 'settings[global_local_part]', @settings['global_local_part'], size: 20 %>@<%= @domain %>
@@ -99,28 +107,29 @@
                                       @settings['default_project']) %>
   </p>
   <p>
-    <%= label_tag 'settings_import_without_dmarc_pass', l(:label_serverless_mail_import_without_dmarc_pass) %>
-    <%= hidden_field_tag 'settings[import_without_dmarc_pass]', '0', id: nil %>
-    <%= check_box_tag 'settings[import_without_dmarc_pass]', '1', @settings['import_without_dmarc_pass'] == '1' %>
-    <em class="info"><%= l(:text_serverless_mail_import_without_dmarc_pass) %></em>
+    <label><%= l(:label_serverless_mail_import) %></label>
+    <% %w[import_without_dmarc_pass import_spam].each do |name| %>
+    <label class="block">
+      <%= hidden_field_tag "settings[#{name}]", '0', id: nil %>
+      <%= check_box_tag "settings[#{name}]", '1', @settings[name] == '1' %>
+      <%= l(:"label_serverless_mail_#{name}") %>
+    </label>
+    <em class="info"><%= l(:"text_serverless_mail_#{name}") %></em>
+    <% end %>
+    <em class="info"><%= l(:text_serverless_mail_virus) %></em>
   </p>
   <p>
-    <%= label_tag 'settings_import_spam', l(:label_serverless_mail_import_spam) %>
-    <%= hidden_field_tag 'settings[import_spam]', '0', id: nil %>
-    <%= check_box_tag 'settings[import_spam]', '1', @settings['import_spam'] == '1' %>
-    <em class="info"><%= l(:text_serverless_mail_import_spam) %></em>
-  </p>
-  <p><em class="info"><%= l(:text_serverless_mail_virus) %></em></p>
-  <p>
-    <%= label_tag 'settings_per_project_addresses', l(:label_serverless_mail_per_project) %>
-    <%= hidden_field_tag 'settings[per_project_addresses]', '0', id: nil %>
-    <%= check_box_tag 'settings[per_project_addresses]', '1', @settings['per_project_addresses'] == '1' %>
-  </p>
-  <p>
-    <%= label_tag 'settings_project_senders', l(:label_serverless_mail_project_senders) %>
-    <%= hidden_field_tag 'settings[project_senders]', '0', id: nil %>
-    <%= check_box_tag 'settings[project_senders]', '1', @settings['project_senders'] == '1' %>
+    <label><%= l(:label_project_plural) %></label>
+    <% { 'per_project_addresses' => :label_serverless_mail_per_project,
+         'project_senders' => :label_serverless_mail_project_senders }.each do |name, label| %>
+    <label class="block">
+      <%= hidden_field_tag "settings[#{name}]", '0', id: nil %>
+      <%= check_box_tag "settings[#{name}]", '1', @settings[name] == '1' %>
+      <%= l(label) %>
+    </label>
+    <% end %>
   </p>
 </div>
+
 <%= submit_tag l(:button_save) %>
 <% end %>

@@ -28,10 +28,11 @@ module RedmineServerlessSes
       with_ses_settings { get :index }
 
       assert_response :success
-      assert_select 'p.flash.error', 0, response.body[%r{<p class="flash error">.*?</p>}m]
-      assert_select 'table.serverless-mail-account td', text: '12 / 50000'
-      assert_select 'table.serverless-mail-identity td', text: 'SUCCESS'
-      assert_select 'table.serverless-mail-suppressed tr', text: /jsmith@somenet\.foo\s*John Smith\s*BOUNCE/
+      assert_select 'div.flash.error', 0, response.body[%r{<div class="flash error">.*?</div>}m]
+      assert_select 'div.box.tabular p', text: %r{12 / 50000}
+      assert_select 'div.box.tabular p', text: /DKIM\s*SUCCESS/
+      assert_select 'table.list.suppressed tr', text: /jsmith@somenet\.foo\s*John Smith\s*BOUNCE/
+      assert_select 'p a.icon.icon-email[data-method=post][href=?]', '/admin/test_email'
     end
 
     def test_index_opens_when_ses_fails
@@ -40,7 +41,10 @@ module RedmineServerlessSes
       with_ses_settings { get :index }
 
       assert_response :success
-      assert_select 'p.flash.error', 3
+      assert_select 'div.flash.error', 3
+      assert_select 'div.flash.error', text: 'Could not call the SES API (AccessDeniedException). See the log for details.'
+      assert_select 'div.flash.error', text: /NotFoundException/
+      assert_not_includes response.body, 'stubbed response error', 'the raw exception message stays in the log'
     end
 
     def test_unsuppress
