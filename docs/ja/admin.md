@@ -63,7 +63,7 @@ Redmine Serverless SES の管理画面の設計です。Redmine の管理者だ�
 
 ## 権限
 
-画面のために、Redmine の Web の要求を動かすロールに、SES の状態を読む権限と、サプレッションリストからアドレスを外す権限を足します。詳しくは [iam.md](https://redmine-kit.github.io/serverless/ja/iam.html) にあります。
+画面のために、Redmine の Web の要求を動かすロールに、SES の状態を読む権限と、サプレッションリストからアドレスを外す権限を足します。一覧とポリシーの例は [setup.md](setup.md#iam-permissions) にあります。
 
 <a id="tests"></a>
 
