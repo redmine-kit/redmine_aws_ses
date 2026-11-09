@@ -46,7 +46,8 @@ Redmine sends every notification from the emission address (`Setting.mail_from`)
 
 | Target | What is checked |
 | --- | --- |
-| Sending through SES | A notification is sent through `aws-actionmailer-ses` to SES v2 (LocalStack or moto) |
+| Sending through SES | A notification is sent through `aws-actionmailer-ses` to SES v2 (LocalStack, or moto without its token). A sender that is not a verified identity raises `MessageRejected` in the worker (a mocked answer, below) |
+| Connection check | SES v2 `GetAccount` (a mocked answer, below) |
 | Errors by kind | Each `SendEmail` error raised one by one with SDK response stubs: temporary errors are retried in the job and raised after the last run, message errors are dropped, account errors are raised for the queue |
 | Only in the worker | `raise_delivery_errors` is set only with `REDMINE_ROLE=worker` |
 | Senders per project | The interceptor changes the sender and `Reply-To` only when the settings are on |

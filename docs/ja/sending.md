@@ -56,7 +56,8 @@ Redmine は、すべての通知を送信元のアドレス(`Setting.mail_from`)
 
 | 対象 | 確認すること |
 | --- | --- |
-| SES での送信 | 通知が `aws-actionmailer-ses` を通って SES v2(LocalStack か moto)に送られる |
+| SES での送信 | 通知が `aws-actionmailer-ses` を通って SES v2(LocalStack。トークンがなければ moto)に送られる。確認済みの ID でない送信元は、worker で `MessageRejected` の例外を発生させる(モックした応答。下記) |
+| 接続の確認 | SES v2 の `GetAccount`(モックした応答。下記) |
 | エラーの種類ごと | SDK の応答のスタブで `SendEmail` のエラーを 1 つずつ起こす。一時的なエラーはジョブの中でやり直し、最後の実行のあとは例外を発生させる。メッセージのエラーは捨てる。アカウントのエラーはキューのために例外を発生させる |
 | worker だけ | `raise_delivery_errors` は `REDMINE_ROLE=worker` のときだけ設定する |
 | プロジェクトごとの送信元 | インターセプターは、設定が有効なときだけ、送信元と `Reply-To` を替える |

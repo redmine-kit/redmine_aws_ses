@@ -106,7 +106,15 @@ ln -s "$(bundle info --path redmine_serverless_ses)" plugins/redmine_serverless_
 
 ## テスト
 
-テストは `test/` にあり、Redmine の標準のしくみで、Docker の中の Redmine 7.0.3 と PostgreSQL 16 で動かします。AWS は、`LOCALSTACK_AUTH_TOKEN` があれば LocalStack(CI は組織のシークレットを使う)、なければ moto(フォークからのプルリクエスト、手元での実行)です。どちらでも同じテストを動かし、ログに使ったほうを出します。LocalStack を使うときは、SES v2 も S3 も LocalStack で動かします。それぞれのテストで確認することは、[sending.md](sending.md#tests) と [receiving.md](receiving.md#tests) にあります。SES のエラーは、SDK の応答のスタブで、配送の方法を通して 1 つずつ起こします。画面もスタブを使います。取り込みのテストは、メールを moto の S3 に置き、イベントの判定と宛先といっしょに取り込みます。宛先のプロジェクト、Bcc、プロジェクトを変えられない `Project:` のキーワード、取り込まないそれぞれの理由、何も変えない偽の SES のヘッダー、記録からの取り込み直しを確認します。`bin/test` は、プラグインのテストのあと、メールのまわりの Redmine 本体のテスト(`MailHandler`、`Mailer`、プロジェクト、設定、管理)を動かします。`bin/test --redmine` は、プラグインを入れた状態で Redmine 本体のすべてのテストを動かします。CI はこちらです。
+テストは `test/` にあり、Redmine の標準のしくみで、Docker の中の Redmine 7.0.3 と PostgreSQL 16 で動かします。AWS は、`LOCALSTACK_AUTH_TOKEN` があれば LocalStack です(CI は組織のシークレットを使う)。SES v2 も S3 も LocalStack で動かし、LocalStack が起動しなければ失敗にします。トークンがなければ(フォークからのプルリクエスト、手元での実行)、同じテストを moto で動かします。ログに使ったほうを出します。
+
+LocalStack が実際の AWS のとおりに再現しない呼び出しは、その呼び出しだけを SDK の応答のスタブ(`stub_responses`)でモックします。
+
+| 呼び出し | モックする理由 | モックした応答 |
+| --- | --- | --- |
+| SES v2 の `GetAccount`(接続の確認、「メールの送信」の画面) | LocalStack は対応していないと答え、moto にもない(2026-11-09 に確認) | API リファレンスの項目(`ProductionAccessEnabled`、`SendingEnabled`、`SendQuota` など)と、そのエラー |
+| 確認済みの ID でない送信元からの SES v2 の `SendEmail` | 実際の SES は `MessageRejected` で拒むが、LocalStack は送ってしまう | SES のメッセージ(「Email address is not verified. ...」)を持つ `MessageRejected` |
+| `SendEmail` の種類ごとのエラー([sending.md](sending.md#handling-by-kind-of-error)) | エミュレーターに、スロットリングやアカウントのエラーを返させられない | API リファレンスのそれぞれのエラーコード |それぞれのテストで確認することは、[sending.md](sending.md#tests) と [receiving.md](receiving.md#tests) にあります。SES のエラーは、SDK の応答のスタブで、配送の方法を通して 1 つずつ起こします。画面もスタブを使います。取り込みのテストは、メールを moto の S3 に置き、イベントの判定と宛先といっしょに取り込みます。宛先のプロジェクト、Bcc、プロジェクトを変えられない `Project:` のキーワード、取り込まないそれぞれの理由、何も変えない偽の SES のヘッダー、記録からの取り込み直しを確認します。`bin/test` は、プラグインのテストのあと、メールのまわりの Redmine 本体のテスト(`MailHandler`、`Mailer`、プロジェクト、設定、管理)を動かします。`bin/test --redmine` は、プラグインを入れた状態で Redmine 本体のすべてのテストを動かします。CI はこちらです。
 
 プラグインのテストは、プラグイン自身のファイルのカバレッジ(SimpleCov。Cobertura の XML の `coverage/coverage.xml`)も書きます。CI は、それを [Codecov](https://codecov.io/gh/redmine-kit/redmine_serverless_ses) に送ります。
 

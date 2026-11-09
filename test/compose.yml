@@ -31,3 +31,14 @@ services:
       LOCALSTACK_HOST: localstack:4566
       SQS_ENDPOINT_STRATEGY: path
     # The image has its own health check.
+
+  # Headless Chromium for the screenshots of the docs (bin/screenshots), only
+  # with the "screenshots" profile. Multi-architecture, so it runs on arm64 too.
+  chrome:
+    image: selenium/standalone-chromium:155.0-chromedriver-155.0-grid-4.51.0-20261010@sha256:c7c17cd79c62819a8329df00e610dbc4073c279da034a6f37135d454eb0d8870
+    profiles: ["screenshots"]
+    shm_size: 2gb
+    healthcheck:
+      test: ["CMD", "/opt/bin/check-grid.sh", "--host", "0.0.0.0", "--port", "4444"]
+      interval: 2s
+      retries: 60
