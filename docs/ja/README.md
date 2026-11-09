@@ -12,7 +12,7 @@ Redmine Serverless SES(`redmine_serverless_ses`)は、Redmine のメールを Am
 
 ## 機能
 
-| 機能 | 中身 | 有効にする条件 | 資料 |
+| 機能 | 内容 | 有効にする条件 | 資料 |
 | --- | --- | --- | --- |
 | メールの送信のやり直し | ジョブを動かすプロセスでの `raise_delivery_errors`、SES のエラーの種類ごとのやり直し(一時的なエラーはやり直し、アカウントの問題は送り直しのために残し、メッセージの問題は捨てる) | Lambda では `REDMINE_ROLE=worker`。Lambda 以外のときは、ジョブを動かすプロセス | [sending.md](sending.md) |
 | メールの受信 | SES が S3 に置いたメールの取り込み(rake のタスク `redmine_serverless_ses:receive_mail`。中では Redmine の標準の `MailHandler` を使う)、SES のイベントの判定の確認(迷惑メールと DMARC は設定で選べ、ウイルスはいつも捨てる)、取り込みの記録 | 受信の設定がある | [receiving.md](receiving.md#importing) |

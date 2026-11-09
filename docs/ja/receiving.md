@@ -102,8 +102,8 @@ Redmine は、メールの差出人(`From`)のアドレスで、どのユーザ�
 | イベントの判定(`receipt`) | `PASS` でないとき | 設定 |
 | --- | --- | --- |
 | `virusVerdict.status` | いつも取り込まない。添付ファイルが全員に配られるため | — |
-| `spamVerdict.status` | 取り込まない | 「SES が迷惑メールと判定したメールも取り込む」(`import_spam`。既定はオフ) |
-| `dmarcVerdict.status` | 取り込まない | 「DMARC が通らないメールも取り込む」(`import_without_dmarc_pass`。既定はオフ) |
+| `spamVerdict.status` | 取得しない | 「迷惑メールと判定されたメールも取得する」(`import_spam`。既定はオフ) |
+| `dmarcVerdict.status` | 取得しない | 「DMARC が通らないメールも取得する」(`import_without_dmarc_pass`。既定はオフ) |
 
 値は `PASS`、`FAIL`、`GRAY`、`PROCESSING_FAILED` のどれかです。判定がないときは、`PASS` でないものとして扱います。`spfVerdict`、`dkimVerdict`、`dmarcPolicy` も記録しますが、これだけでは決めません。判定は、取り込んだかどうかにかかわらず記録します。
 
