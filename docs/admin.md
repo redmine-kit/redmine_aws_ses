@@ -28,19 +28,19 @@ The specifications in this page were checked against official information and th
 
 ## Receiving email
 
-![The Receiving email tab: the addresses and the MX record, received email with one imported and two dropped, and the receiving settings](./images/mail-receiving.png)
+![The Receiving email tab: the addresses and the MX record, received email with one fetched and two dropped, and the receiving settings](./images/mail-receiving.png)
 
 | Item | Contents | Source |
 | --- | --- | --- |
 | Addresses | Redmine's domain (the domain of the emission address), the address for the whole Redmine, and the projects' addresses (whether they receive) | Plugin settings and project email settings |
 | MX record | The MX hosts of Redmine's domain, to check that they are the SES receiving endpoint | DNS lookup, with a 2-second timeout |
 | Received email | Time received, sender, subject, project, SES's verdicts (virus, spam, DMARC), result (the issue, or the reason it was dropped). The newest 100; dropped email can be listed on its own | The plugin's table (below) |
-| Re-import | Imports the selected messages again | A job for each message (`ServerlessReimportMailJob`; SQS in Serverless, where `redmine-worker` imports it) |
-| Receiving settings | The address for the whole Redmine (the part before `@`), email sent to it (drop, or put in the default project), the default project, importing email that fails DMARC, importing spam (both off by default, with an explanation on the page; viruses are always dropped), addresses per project, per-project senders | Plugin settings (changed on the page). Email that fails DMARC is dropped regardless of settings ([receiving.md](receiving.md#spoofing-and-spam)) |
+| Fetch again | Fetches the selected messages again | A job for each message (`ServerlessReimportMailJob`; SQS in Serverless, where `redmine-worker` imports it) |
+| Receiving settings | The address for the whole Redmine (the part before `@`), email sent to it (do not fetch, or put in the default project), the default project, "Email to fetch" (also fetching email that fails DMARC, or marked as spam; both off by default, with an explanation on the page; viruses are always dropped), and "Projects" (using an address per project, sending project notifications from the project's address) | Plugin settings (changed on the page). Email that fails DMARC is dropped regardless of settings ([receiving.md](receiving.md#spoofing-and-spam)) |
 
 - **Import records:** `redmine_serverless_ses:receive_mail` stores the result for each message in the plugin's table (`serverless_received_mails`): the sender, the subject, the envelope recipients and the verdicts from the SES event, the project, and the issue created or the note added. The body is not stored; its key in the mail bucket (`inbound/` or `processed/`) is. A re-import updates the same record. Records older than 90 days are deleted by `rake redmine_serverless_ses:prune_records`, which Serverless runs daily ([security.md](https://redmine-kit.github.io/serverless/security.html#retention-periods)).
-- **Reasons for dropping:** no verdicts from SES (a message that was never received through the event), virus, spam, DMARC failure, auto-reply, no project receives it, or not imported by Redmine (for example, a sender that is not registered, or without permission; Redmine's log has the reason). Dropped email stays in `inbound/` and can be re-imported after the cause is fixed.
-- **Re-import:** The page does not call `redmine-task` directly; it puts a job on the queue. This way `redmine-web` needs no permission to read the mail bucket or to invoke Lambda. With Redmine Serverless SQS, the job class is added to the allowed job classes.
+- **Reasons for dropping:** no verdicts from SES (a message that was never received through the event), virus, spam, DMARC failure, auto-reply, no project receives it, or not fetched by Redmine (for example, a sender that is not registered, or without permission; Redmine's log has the reason). Dropped email stays in `inbound/` and can be re-imported after the cause is fixed.
+- **Fetch again:** The page does not call `redmine-task` directly; it puts a job on the queue. This way `redmine-web` needs no permission to read the mail bucket or to invoke Lambda. With Redmine Serverless SQS, the job class is added to the allowed job classes.
 - **Why receiving settings are on the page:** You do not have to deploy each time you change the default project. `redmine_serverless_ses:receive_mail` reads the settings from the database on every run.
 
 ## Project email settings
@@ -55,7 +55,7 @@ An "Email" tab is added to project settings when addresses per project are on. I
 | Whether to receive email | Do not receive (default) or receive |
 | Alias | An address other than the identifier (the part before `@`: lowercase letters, digits, `.`, `_` and `-`). It cannot be saved if it matches another project's identifier or alias, the address for the whole Redmine, or a reserved name (`postmaster`, `abuse`, `hostmaster`, `webmaster`, `mailer-daemon`, `root`, `admin`, `administrator`, `noreply`, `no-reply`, `security`) |
 | Default values | Tracker, category, priority, assignee of created issues, and whether they are private |
-| Handling unregistered addresses | Do not import (default), accept as the anonymous user, or create an account (Redmine's `unknown_user` values `ignore`, `accept`, `create`) |
+| Handling unregistered addresses | Do not fetch (default), accept as the anonymous user, or create an account (Redmine's `unknown_user` values `ignore`, `accept`, `create`) |
 
 - **Who can change it:** Redmine administrators and members with the project permission "Manage email settings" that the plugin adds.
 - **When accepting unregistered addresses:** Use this to receive email from outside people, such as for a contact desk. Spam increases, so keep the DMARC check ([receiving.md](receiving.md#spoofing-and-spam)).

@@ -15,7 +15,6 @@ en:
   label_serverless_mail_verified: Verified for sending
   label_serverless_mail_suppressed: Suppression list
   label_serverless_mail_reason: Reason
-  label_serverless_mail_more: More
   label_serverless_mail_failed: Failed email
   label_serverless_mail_addresses: Addresses
   label_serverless_mail_global_address: Address for the whole Redmine
@@ -23,42 +22,44 @@ en:
   label_serverless_mail_dropped_only: Dropped only
   label_serverless_mail_received_at: Received
   label_serverless_mail_result: Result
-  label_serverless_mail_imported: Imported
+  label_serverless_mail_imported: Fetched
   label_serverless_mail_reason_no_verdict: "Dropped: no verdicts from SES"
   label_serverless_mail_reason_virus: "Dropped: virus"
   label_serverless_mail_reason_spam: "Dropped: spam"
   label_serverless_mail_reason_dmarc: "Dropped: DMARC failed"
   label_serverless_mail_reason_auto_reply: "Dropped: auto-reply"
   label_serverless_mail_reason_no_project: "Dropped: no project receives it"
-  label_serverless_mail_reason_import_error: "Not imported by Redmine (see the log)"
+  label_serverless_mail_reason_import_error: "Not fetched by Redmine (see the log)"
   label_serverless_mail_settings: Receiving settings
   label_serverless_mail_global_local_part: Address for the whole Redmine
   label_serverless_mail_global_mail: Email to that address
   label_serverless_mail_global_drop: Drop
   label_serverless_mail_global_default_project: Put in the default project
   label_serverless_mail_default_project: Default project
-  label_serverless_mail_per_project: Addresses per project
+  label_serverless_mail_per_project: Use an address per project
   label_serverless_mail_project_senders: Send project notifications from the project's address
   label_serverless_mail_receive: Receive email
   label_serverless_mail_alias: Alias
   label_serverless_mail_unknown_user: Senders not registered in Redmine
-  label_serverless_mail_unknown_user_ignore: Do not import
+  label_serverless_mail_unknown_user_ignore: Do not fetch
   label_serverless_mail_unknown_user_accept: Accept as the anonymous user
   label_serverless_mail_unknown_user_create: Create an account
   button_serverless_mail_unsuppress: Remove from the list
-  button_serverless_mail_reimport: Import again
+  button_serverless_mail_reimport: Fetch again
   notice_serverless_mail_unsuppressed: "%{address} was removed from the suppression list."
-  notice_serverless_mail_reimport: "%{count} message(s) will be imported again."
+  notice_serverless_mail_reimport: "%{count} message(s) will be fetched again."
   error_serverless_mail_local_part: The address may contain only lowercase letters, digits, ".", "_" and "-".
   text_serverless_mail_no_domain: Set the emission email address (Administration › Settings › Email notifications) to an address on Redmine's domain.
-  text_serverless_mail_no_bucket: REDMINE_MAIL_BUCKET is not set, so received email cannot be imported.
+  text_serverless_mail_no_bucket: REDMINE_MAIL_BUCKET is not set, so received email cannot be fetched.
   text_serverless_mail_suppressed: SES does not send to these addresses. Remove an address once its mailbox works again.
   text_serverless_mail_mx_unknown: Could not be read
   text_serverless_mail_mx_none: None
-  label_serverless_mail_import_without_dmarc_pass: Import email that fails DMARC
+  label_serverless_mail_import_without_dmarc_pass: Also fetch email that fails DMARC
   text_serverless_mail_import_without_dmarc_pass: "Off (recommended): email whose sender domain SES could not verify is dropped. Redmine takes the user from the sender's address, so such email could create issues as someone else."
-  label_serverless_mail_import_spam: Import email that SES marks as spam
+  label_serverless_mail_import_spam: Also fetch email marked as spam
   text_serverless_mail_import_spam: Off (recommended) drops it. Turn on only if SES drops email you need.
   text_serverless_mail_virus: Email in which SES finds a virus is always dropped, because its attachments would be served to everyone.
   label_serverless_mail_verdicts: SES verdicts
+  label_serverless_mail_import: Email to fetch
+  label_serverless_mail_from: From
   text_serverless_mail_api_error: "Could not call the SES API (%{error}). See the log for details."

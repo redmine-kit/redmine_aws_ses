@@ -92,8 +92,8 @@ Redmine decides which user an email comes from by the sender (`From`) address. I
 | Verdict in the event (`receipt`) | Not `PASS` | Setting |
 | --- | --- | --- |
 | `virusVerdict.status` | Always dropped: the attachments would be served to everyone | — |
-| `spamVerdict.status` | Dropped | "Import email that SES marks as spam" (`import_spam`, default off) |
-| `dmarcVerdict.status` | Dropped | "Import email that fails DMARC" (`import_without_dmarc_pass`, default off) |
+| `spamVerdict.status` | Dropped | "Also fetch email marked as spam" (`import_spam`, default off) |
+| `dmarcVerdict.status` | Dropped | "Also fetch email that fails DMARC" (`import_without_dmarc_pass`, default off) |
 
 The values are `PASS`, `FAIL`, `GRAY` or `PROCESSING_FAILED`; a verdict that is missing counts as not `PASS`. `spfVerdict`, `dkimVerdict` and `dmarcPolicy` are recorded but do not decide. The verdicts are recorded whether or not the message is imported.
 
