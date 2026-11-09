@@ -19,10 +19,33 @@ Redmine Serverless SES(`redmine_serverless_ses`)は、Redmine のメールを Am
 | プロジェクトごとのアドレス | プロジェクトごとの受信のアドレスと送信元、全体用のアドレス、プロジェクトの設定の「メール」のタブ | プラグインの設定で有効にする。無効なら Redmine の標準と同じ(送信元は 1 つで、プロジェクトはサブアドレス `redmine+識別子@…` で選ぶ) | [receiving.md](receiving.md#addresses-per-project) |
 | 管理画面 | 共有の「Serverless」のメニューの「メールの送信」(SES の状態)と「メールの受信」のタブ、プロジェクトの設定の中のプロジェクトのメールの設定 | 管理者。使っていない機能の画面は出さない | [admin.md](admin.md) |
 
-- **Lambda でも、Lambda 以外でも:** SES での送信(`aws-actionmailer-ses`)と受信は、SES と S3 に届く Redmine なら動きます。受信のタスクは、受けたメールのメッセージの ID を渡して動かします。AWS Lambda では、[Serverless](https://redmine-kit.github.io/serverless/ja/) が [Redmine Serverless SQS](https://redmine-kit.github.io/redmine_serverless_sqs/ja/) といっしょに入れます。メールを送るジョブを動かし、最後に失敗したものを記録して送り直せるようにするのは、Redmine Serverless SQS です。
-- **gem とコードの分け方:** gem は `aws-actionmailer-ses`、`aws-sdk-sesv2`、`aws-sdk-s3` に依存します(チェックアウトでは、プラグインの `Gemfile` が足します)。`boot/redmine_serverless_ses.rb` は、`aws-actionmailer-ses`(配送の方法 `:ses_v2`)を読み込み、プロジェクトごとの送信元のためのインターセプターを登録します。プラグインは gem でもあるので、Bundler が Rails の初期化より前に読み込みます([setup.md](setup.md#installation))。ほかは Redmine が読み込む `lib/redmine_serverless_ses/`、`app/`、`db/` にあり、`init.rb` が有効にします。
-- **テスト:** Redmine の標準の仕組みでテストを書き、Docker の中で moto といっしょに動かします([setup.md](setup.md#tests))。メールの取り込みのテストには、SES が足すヘッダーを付けたメールを使います([testing.md](https://redmine-kit.github.io/serverless/ja/testing.html#email-redmine_serverless_ses))。
-- **migration:** 受け取ったメールの記録(`serverless_received_mails`)と、プロジェクトのメールの設定(`serverless_project_mail_settings`)のテーブルを足します([admin.md](admin.md))。
+<a id="outside-lambda"></a>
+
+## Lambda 以外での利用
+
+SES での送信(`aws-actionmailer-ses`)と受信は、SES と S3 に届く Redmine なら動きます。受信のタスクは、受信したメールのメッセージ ID を渡して動かします。
+
+AWS Lambda では、[Serverless](https://redmine-kit.github.io/serverless/ja/) が [Redmine Serverless SQS](https://redmine-kit.github.io/redmine_serverless_sqs/ja/) といっしょにインストールします。メールを送るジョブを動かし、最後に失敗したものを記録して送り直せるようにするのは、Redmine Serverless SQS です。
+
+<a id="gems-and-code-layout"></a>
+
+## gem とコードの構成
+
+gem は `aws-actionmailer-ses`、`aws-sdk-sesv2`、`aws-sdk-s3` に依存します。チェックアウトで使うときは、プラグインの `Gemfile` がこれらを足します。
+
+`boot/redmine_serverless_ses.rb` は、`aws-actionmailer-ses`(配送の方法 `:ses_v2`)を読み込み、プロジェクトごとの送信元のためのインターセプターを登録します。プラグインは gem でもあるので、Bundler がこのファイルを Rails の初期化より前に読み込みます([setup.md](setup.md#installation))。ほかは Redmine が読み込む `lib/redmine_serverless_ses/`、`app/`、`db/` にあり、`init.rb` が有効にします。
+
+<a id="tests"></a>
+
+## テスト
+
+Redmine の標準の仕組みでテストを書き、Docker の中で動かします([setup.md](setup.md#tests))。メールの取得のテストには、SES が足すヘッダーを付けたメールを使います([testing.md](https://redmine-kit.github.io/serverless/ja/testing.html#email-redmine_serverless_ses))。
+
+<a id="database-tables"></a>
+
+## データベースのテーブル
+
+受信したメールの記録(`serverless_received_mails`)と、プロジェクトのメールの設定(`serverless_project_mail_settings`)の 2 つのテーブルを足します([admin.md](admin.md))。
 
 <a id="sponsors"></a>
 
