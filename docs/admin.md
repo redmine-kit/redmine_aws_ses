@@ -57,9 +57,8 @@ An "Email" tab is added to project settings when addresses per project are on. I
 
 | Item | Contents |
 | --- | --- |
-| Address | `<identifier or alias>@<Redmine's domain>`. Display only. A project whose identifier is longer than 64 characters needs an alias |
+| Address | `<identifier>@<Redmine's domain>`. Display only. A project whose identifier cannot be an address shows `-` and cannot receive email ([receiving.md](receiving.md#addresses-per-project)) |
 | Whether to receive email | Do not receive (default) or receive |
-| Alias | An address other than the identifier (the part before `@`: lowercase letters, digits, `.`, `_` and `-`). It cannot be saved if it matches another project's identifier or alias, the address for the whole Redmine, or a reserved name (`postmaster`, `abuse`, `hostmaster`, `webmaster`, `mailer-daemon`, `root`, `admin`, `administrator`, `noreply`, `no-reply`, `security`) |
 | Default values | Tracker, category, priority, assignee of created issues, and whether they are private |
 | Handling unregistered addresses | Do not fetch (default), accept as the anonymous user, or create an account (Redmine's `unknown_user` values `ignore`, `accept`, `create`) |
 

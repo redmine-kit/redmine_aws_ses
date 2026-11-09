@@ -23,7 +23,7 @@
 <% @project_settings.each do |setting| %>
 <tr>
     <td class="name"><%= link_to_project setting.project %></td>
-    <td class="name"><%= setting.address %></td>
+    <td class="name"><%= setting.address || '-' %></td>
     <td class="tick"><%= checked_image setting.receive? %></td>
 </tr>
 <% end %>

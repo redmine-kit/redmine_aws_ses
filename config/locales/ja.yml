@@ -36,10 +36,9 @@ ja:
   label_serverless_mail_global_drop: 取得しない
   label_serverless_mail_global_default_project: 既定のプロジェクトに入れる
   label_serverless_mail_default_project: 既定のプロジェクト
-  label_serverless_mail_per_project: プロジェクトごとのアドレスを使う
+  label_serverless_mail_per_project: プロジェクト別のアドレスを使う
   label_serverless_mail_project_senders: プロジェクトの通知を、プロジェクトのアドレスから送る
   label_serverless_mail_receive: メールを受け取る
-  label_serverless_mail_alias: 別名
   label_serverless_mail_unknown_user: Redmine に登録していない送信者
   label_serverless_mail_unknown_user_ignore: 取得しない
   label_serverless_mail_unknown_user_accept: 匿名ユーザーとして受け付ける

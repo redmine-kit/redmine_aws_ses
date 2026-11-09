@@ -1,11 +1,14 @@
 # frozen_string_literal: true
 
 # A project's email settings (docs/admin.md#project-email-settings): whether
-# it receives email, its alias, and the values of the issues it creates.
+# it receives email and the values of the issues it creates. The project's
+# address is its identifier before @.
 class ServerlessProjectMailSetting < ApplicationRecord
   include Redmine::SafeAttributes
 
   UNKNOWN_USER = %w[ignore accept create].freeze
+  # Role addresses (RFC 2142 and common ones) that never go to a project, even
+  # when a project has such an identifier.
   RESERVED = %w[postmaster abuse hostmaster webmaster mailer-daemon root admin administrator noreply no-reply
                 security].freeze
   LOCAL_PART = /\A[a-z0-9](?:[a-z0-9._-]{0,62}[a-z0-9])?\z/
@@ -16,34 +19,34 @@ class ServerlessProjectMailSetting < ApplicationRecord
   belongs_to :priority, class_name: 'IssuePriority', optional: true
   belongs_to :assigned_to, class_name: 'Principal', optional: true
 
-  safe_attributes 'receive', 'alias_name', 'tracker_id', 'category_id', 'priority_id', 'assigned_to_id',
-                  'is_private', 'unknown_user'
-
-  normalizes :alias_name, with: ->(value) { value.to_s.strip.downcase.presence }
+  safe_attributes 'receive', 'tracker_id', 'category_id', 'priority_id', 'assigned_to_id', 'is_private',
+                  'unknown_user'
 
   validates :unknown_user, inclusion: { in: UNKNOWN_USER }
-  validates :alias_name, format: { with: LOCAL_PART }, allow_nil: true
-  validate :alias_is_free
 
-  # The setting of the project that receives email at this part before @
-  # (its identifier or its alias).
+  # The setting of the project that receives email at this part before @.
   def self.receiving_for(local)
-    by_alias = where(receive: true).find_by(alias_name: local)
-    return by_alias if by_alias
+    return unless addressable?(local)
 
     project = Project.active.find_by(identifier: local)
     project && where(receive: true).find_by(project: project)
   end
 
-  # The project's address: the alias, or the identifier when it fits before @.
-  def self.address_for(project, setting = find_by(project: project))
+  # The project's address, or nil when its identifier cannot be one.
+  def self.address_for(project)
     domain = RedmineServerlessSes.domain
-    local = setting&.alias_name.presence || project.identifier
-    domain && local.length <= 64 ? "#{local}@#{domain}" : nil
+    domain && addressable?(project.identifier) ? "#{project.identifier}@#{domain}" : nil
+  end
+
+  # An identifier can be an address when it fits before @ (64 characters),
+  # is not a role address and is not the default address.
+  def self.addressable?(identifier)
+    identifier.to_s.length.between?(1, 64) && RESERVED.exclude?(identifier) &&
+      identifier != RedmineServerlessSes.global_local_part
   end
 
   def address
-    self.class.address_for(project, self)
+    self.class.address_for(project)
   end
 
   # Default values of the issues the project creates from email, as
@@ -52,16 +55,5 @@ class ServerlessProjectMailSetting < ApplicationRecord
     { tracker: tracker&.name, category: category&.name, priority: priority&.name,
       assigned_to: assigned_to.is_a?(User) ? assigned_to.login : assigned_to&.name,
       is_private: is_private? ? '1' : nil }.compact
-  end
-
-  private
-
-  def alias_is_free
-    return if alias_name.blank?
-
-    taken = RESERVED.include?(alias_name) || alias_name == RedmineServerlessSes.global_local_part ||
-            Project.where.not(id: project_id).exists?(identifier: alias_name) ||
-            self.class.where.not(project_id: project_id).exists?(alias_name: alias_name)
-    errors.add(:alias_name, :taken) if taken
   end
 end

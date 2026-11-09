@@ -2,9 +2,9 @@
 <%= labelled_form_for setting, url: serverless_project_mail_setting_path(@project), method: :patch,
                                html: { id: 'serverless-project-mail-setting' } do |f| %>
 <div class="box tabular">
-  <p><label><%= l(:field_mail) %></label><%= setting.address || '-' %></p>
-  <p><%= f.check_box :receive, label: :label_serverless_mail_receive %></p>
-  <p><%= f.text_field :alias_name, label: :label_serverless_mail_alias, size: 30 %>@<%= RedmineServerlessSes.domain %></p>
+  <% address = setting.address %>
+  <p><label><%= l(:field_mail) %></label><%= address || '-' %></p>
+  <p><%= f.check_box :receive, label: :label_serverless_mail_receive, disabled: address.nil? %></p>
   <p><%= f.select :tracker_id, @project.trackers.map { |t| [t.name, t.id] }, { include_blank: true, label: :field_tracker } %></p>
   <p><%= f.select :category_id, @project.issue_categories.map { |c| [c.name, c.id] }, { include_blank: true, label: :field_category } %></p>
   <p><%= f.select :priority_id, IssuePriority.active.map { |p| [p.name, p.id] }, { include_blank: true, label: :field_priority } %></p>

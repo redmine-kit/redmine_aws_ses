@@ -39,7 +39,6 @@ en:
   label_serverless_mail_per_project: Use an address per project
   label_serverless_mail_project_senders: Send project notifications from the project's address
   label_serverless_mail_receive: Receive email
-  label_serverless_mail_alias: Alias
   label_serverless_mail_unknown_user: Senders not registered in Redmine
   label_serverless_mail_unknown_user_ignore: Do not fetch
   label_serverless_mail_unknown_user_accept: Accept as the anonymous user

@@ -28,7 +28,7 @@ class RedmineServerlessSesScreens < ScreenshotCase
     @saved_ses = RedmineServerlessSes::Clients.instance_variable_get(:@ses)
     RedmineServerlessSes::Clients.ses = ses_client
     Rails.cache.clear
-    ServerlessProjectMailSetting.create!(project: Project.find(1), receive: true, alias_name: 'cookbook',
+    ServerlessProjectMailSetting.create!(project: Project.find(1), receive: true,
                                          tracker_id: 1, priority_id: 5, unknown_user: 'accept')
     ServerlessProjectMailSetting.create!(project: Project.find(2), receive: true)
     record_received_mail

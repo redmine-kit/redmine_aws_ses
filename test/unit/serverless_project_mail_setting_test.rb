@@ -6,28 +6,25 @@ module RedmineServerlessSes
   class ServerlessProjectMailSettingTest < ActiveSupport::TestCase
     include RedmineServerlessSes::TestHelper
 
-    def setting(project_id, alias_name)
-      ServerlessProjectMailSetting.new(project: Project.find(project_id), alias_name: alias_name)
-    end
-
-    def test_alias_rules
-      with_ses_settings do
-        assert_predicate setting(1, 'support'), :valid?
-        assert_not setting(1, 'onlinestore').valid?, 'another project identifier'
-        assert_not setting(1, 'postmaster').valid?, 'reserved'
-        assert_not setting(1, 'redmine').valid?, 'the address for the whole Redmine'
-        assert_not setting(1, 'with space').valid?, 'format'
-        setting(2, 'help').save!
-
-        assert_not setting(1, 'help').valid?, 'another alias'
-        assert_equal 'support', setting(1, ' Support ').tap(&:valid?).alias_name
-      end
-    end
-
     def test_address
       with_ses_settings do
         assert_equal "ecookbook@#{DOMAIN}", ServerlessProjectMailSetting.address_for(Project.find(1))
-        assert_equal "help@#{DOMAIN}", setting(1, 'help').address
+        assert_equal "ecookbook@#{DOMAIN}", ServerlessProjectMailSetting.new(project: Project.find(1)).address
+      end
+    end
+
+    # An identifier that does not fit before @, a role address or the default
+    # address is no project's address.
+    def test_identifiers_that_cannot_be_an_address
+      with_ses_settings do
+        assert_nil ServerlessProjectMailSetting.address_for(Project.generate!(identifier: 'a' * 65))
+        assert_equal "#{'a' * 64}@#{DOMAIN}",
+                     ServerlessProjectMailSetting.address_for(Project.generate!(identifier: 'a' * 64))
+        assert_nil ServerlessProjectMailSetting.address_for(Project.generate!(identifier: 'postmaster'))
+        assert_nil ServerlessProjectMailSetting.address_for(Project.generate!(identifier: 'noreply'))
+      end
+      with_ses_settings('global_local_part' => 'helpdesk') do
+        assert_nil ServerlessProjectMailSetting.address_for(Project.generate!(identifier: 'helpdesk'))
       end
     end
 
@@ -39,15 +36,12 @@ module RedmineServerlessSes
                    s.issue_defaults)
     end
 
-    def test_deleting_the_project_deletes_its_settings_and_frees_the_alias
-      with_ses_settings do
-        project = Project.generate!
-        ServerlessProjectMailSetting.create!(project: project, receive: true, alias_name: 'helpdesk')
-        project.reload.destroy
+    def test_deleting_the_project_deletes_its_settings
+      project = Project.generate!
+      ServerlessProjectMailSetting.create!(project: project, receive: true)
+      project.reload.destroy
 
-        assert_not ServerlessProjectMailSetting.exists?(project_id: project.id)
-        assert_predicate setting(1, 'helpdesk'), :valid?
-      end
+      assert_not ServerlessProjectMailSetting.exists?(project_id: project.id)
     end
   end
 end

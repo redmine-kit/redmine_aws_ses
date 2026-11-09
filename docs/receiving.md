@@ -9,15 +9,16 @@ Checked against the Redmine 7.0.3 source on 2026-11-09.
 | Address | Use |
 | --- | --- |
 | `<project identifier>@<domain>` | The project's address. Email sent to it becomes an issue in that project, and the project's notifications can be sent from it ([sending.md](sending.md#senders-per-project)) |
-| Project alias (for example, `support@<domain>`) | An easy-to-remember address separate from the identifier. Set in the project settings |
 | `redmine@<domain>` (the address for the whole Redmine) | Sender of email that does not belong to a project ("Address for the whole Redmine" below) |
 
 `<domain>` is Redmine's domain: the domain of the emission address (`Setting.mail_from`).
 
-- **Identifiers and addresses:** Redmine project identifiers consist of lowercase letters, digits, `-` and `_`, so they can be used as they are before the `@`. The part before `@` is limited to 64 characters, so projects with longer identifiers need an alias.
+- **Identifiers and addresses:** A project's address is its identifier before the `@`; there are no other addresses per project. Redmine project identifiers consist of lowercase letters, digits, `-` and `_`, so they can be used as they are. A project cannot receive email, and its notifications keep the emission address, when its identifier:
+  - is longer than 64 characters (the limit of the part before `@`),
+  - is a role address that never goes to a project (`postmaster`, `abuse`, `hostmaster`, `webmaster`, `mailer-daemon`, `root`, `admin`, `administrator`, `noreply`, `no-reply`, `security`; RFC 2142 and common ones), or
+  - is the part before `@` of the address for the whole Redmine, which that address takes.
 - **Whether to receive:** Each project chooses whether to receive email (default: no). Email to a project that does not receive is dropped and recorded.
-- **Aliases:** An alias must not collide with other projects' identifiers or aliases, the address for the whole Redmine, or reserved names ([admin.md](admin.md#project-email-settings)).
-- **Project settings:** The "Email" tab of project settings sets whether to receive, the alias and the defaults ([admin.md](admin.md#project-email-settings)). The settings are in the plugin's table (`serverless_project_mail_settings`).
+- **Project settings:** The "Email" tab of project settings sets whether to receive and the defaults ([admin.md](admin.md#project-email-settings)). The settings are in the plugin's table (`serverless_project_mail_settings`).
 
 ## Without addresses per project
 
@@ -42,7 +43,7 @@ Email that does not belong to a project is sent from the emission address (`Sett
 
 The methods above are the Redmine 7.0.3 mailer methods that do not add the project header (`X-Redmine-Project`) (`app/models/mailer.rb`).
 
-- **The part before `@`:** Set on the "Receiving email" tab (default `redmine`; `noreply` is also possible). It cannot be a project alias.
+- **The part before `@`:** Set on the "Receiving email" tab (default `redmine`; `noreply` is also possible). A project with the same identifier cannot receive email at it.
 - **Email sent to it:** Put in the default project, or dropped (default). Replies to password resets and similar usually need not be imported.
 
 ## Importing
@@ -69,7 +70,7 @@ On Lambda, the SES receipt rule invokes the task function, whose handler sets th
 **Choosing the project:**
 
 - **Recipients come from the SES event:** The envelope recipients (SMTP `RCPT TO`), not the `To` and `Cc` headers, so email received as Bcc is matched too. They are kept in the import record for re-imports.
-- **Matching:** The recipient addresses on Redmine's domain are tried in order; the first that names a project that receives email (identifier or alias) wins. If none does, the message is dropped and recorded.
+- **Matching:** The recipient addresses on Redmine's domain are tried in order; the first that names a project that receives email (by its identifier) wins. If none does, the message is dropped and recorded.
 - **Passing to Redmine:** The project's identifier and its defaults go in `MailHandler`'s options (`issue[:project]` and others). In Redmine's rules, a `Project:` keyword in the body would win, so `allow_override` is empty, and the keyword cannot change the project.
 - **Replies:** Redmine adds replies to notification email to the original issue as notes, from the `In-Reply-To` and `References` headers (`MailHandler#dispatch`), whichever address the reply is sent to.
 
@@ -115,5 +116,5 @@ The values are `PASS`, `FAIL`, `GRAY` or `PROCESSING_FAILED`; a verdict that is 
 | --- | --- |
 | The verdicts | Each combination of the settings; a virus is never imported; missing verdicts |
 | Importing | On the mail bucket in S3 (LocalStack or moto), with the values of an SES event (`test/fixtures/ses_event.json`): the project of the recipient, Bcc, a `Project:` keyword that cannot change the project, each reason for dropping, forged SES headers that change nothing, the move to `processed/`, re-imports from the record, the rake task |
-| Choosing the project | Addresses per project and aliases, projects that do not receive, the address for the whole Redmine, subaddresses |
-| Project settings | Aliases in use and reserved names are refused; only people with the permission can change them |
+| Choosing the project | Addresses per project, identifiers that cannot be an address (longer than 64 characters, role addresses), projects that do not receive, the address for the whole Redmine, subaddresses |
+| Project settings | A project whose identifier cannot be an address shows no address and cannot turn receiving on; only people with the permission can change the settings |

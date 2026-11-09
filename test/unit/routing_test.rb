@@ -14,12 +14,25 @@ module RedmineServerlessSes
       ServerlessProjectMailSetting.create!(project: Project.find(project), receive: true, **attributes)
     end
 
-    def test_per_project_address_and_alias
+    def test_per_project_address
       with_ses_settings('per_project_addresses' => '1') do
-        receive(1, alias_name: 'support')
+        receive(1)
 
         assert_equal 'ecookbook', target("ecookbook@#{DOMAIN}")
-        assert_equal 'ecookbook', target("Support@#{DOMAIN.upcase}")
+        assert_equal 'ecookbook', target("EcookBook@#{DOMAIN.upcase}")
+        assert_nil target("support@#{DOMAIN}")
+      end
+    end
+
+    def test_identifiers_that_cannot_be_an_address_are_not_routed
+      with_ses_settings('per_project_addresses' => '1') do
+        long = Project.generate!(identifier: 'a' * 65)
+        ServerlessProjectMailSetting.create!(project: long, receive: true)
+        role = Project.generate!(identifier: 'postmaster')
+        ServerlessProjectMailSetting.create!(project: role, receive: true)
+
+        assert_nil target("#{'a' * 65}@#{DOMAIN}")
+        assert_nil target("postmaster@#{DOMAIN}")
       end
     end
 

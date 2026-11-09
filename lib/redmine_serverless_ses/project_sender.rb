@@ -15,7 +15,7 @@ module RedmineServerlessSes
       return unless project
 
       setting = ServerlessProjectMailSetting.find_by(project_id: project.id)
-      address = ServerlessProjectMailSetting.address_for(project, setting)
+      address = ServerlessProjectMailSetting.address_for(project)
       return unless address
 
       message.from = with_display_name(message, address)

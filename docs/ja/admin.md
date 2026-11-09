@@ -63,9 +63,8 @@ Redmine Serverless SES の管理画面です。Redmine の管理者だけが開�
 
 | 項目 | 中身 |
 | --- | --- |
-| アドレス | `<識別子か別名>@<Redmine のドメイン>`。表示だけ。識別子が 64 文字より長いプロジェクトには、別名が要る |
+| アドレス | `<識別子>@<Redmine のドメイン>`。表示だけ。識別子をアドレスにできないプロジェクトは `-` になり、メールを受け取れない([receiving.md](receiving.md#addresses-per-project)) |
 | メールを受け取るか | 受け取らない(既定)か、受け取る |
-| 別名 | 識別子とは別のアドレス(`@` の前。英小文字、数字、`.`、`_`、`-`)。ほかのプロジェクトの識別子や別名、Redmine 全体のアドレス、予約した名前(`postmaster`、`abuse`、`hostmaster`、`webmaster`、`mailer-daemon`、`root`、`admin`、`administrator`、`noreply`、`no-reply`、`security`)と同じなら、保存できない |
 | 既定の値 | 作るチケットのトラッカー、カテゴリー、優先度、担当者、プライベートにするか |
 | 登録していないアドレスの扱い | 取得しない(既定)、匿名ユーザーとして受け付ける、アカウントを作る(Redmine の `unknown_user` の `ignore`、`accept`、`create`) |
 
