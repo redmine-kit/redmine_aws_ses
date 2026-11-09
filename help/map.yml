@@ -1,0 +1,5 @@
+# This plugin's screens -> help topics, read by redmine_help (docs/mapping.md).
+serverless_mail_sending: serverless-ses/sending
+serverless_mail_receiving: serverless-ses/receiving
+projects#settings?tab=serverless_mail: serverless-ses/project-mail
+serverless_project_mail_settings: serverless-ses/project-mail

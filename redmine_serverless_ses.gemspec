@@ -12,7 +12,7 @@ Gem::Specification.new do |spec|
   spec.license = 'GPL-2.0-or-later'
   spec.homepage = 'https://github.com/redmine-kit/redmine_serverless_ses'
   spec.required_ruby_version = '>= 4.0'
-  spec.files = Dir['{init.rb,LICENSE}', '{app,boot,config,db,lib}/**/*']
+  spec.files = Dir['{init.rb,LICENSE}', '{app,boot,config,db,lib,help}/**/*']
   # boot/ holds what Bundler loads before Rails initializes; lib/ is Redmine's
   # (autoloaded) and must not be required by Bundler.
   spec.require_paths = ['boot']
