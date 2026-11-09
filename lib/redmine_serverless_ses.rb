@@ -3,7 +3,7 @@
 # Redmine's email through Amazon SES (docs/README.md): retries of sending by
 # error type, importing email that SES received, and addresses per project.
 module RedmineServerlessSes
-  VERSION = '0.1.0'
+  VERSION = '0.1.1'
 
   DEFAULTS = {
     'global_local_part' => 'redmine',
@@ -58,6 +58,7 @@ module RedmineServerlessSes
     def setup
       apply_worker_settings
       DeliveryJobPatch.install
+      ProjectPatch.install
       ProjectSettingsTab.install
       register_admin
       RedmineServerlessSqsBoot.allow_job('ServerlessReimportMailJob') if defined?(RedmineServerlessSqsBoot)

@@ -38,5 +38,16 @@ module RedmineServerlessSes
       assert_equal({ tracker: 'Feature request', priority: 'High', assigned_to: 'jsmith', is_private: '1' },
                    s.issue_defaults)
     end
+
+    def test_deleting_the_project_deletes_its_settings_and_frees_the_alias
+      with_ses_settings do
+        project = Project.generate!
+        ServerlessProjectMailSetting.create!(project: project, receive: true, alias_name: 'helpdesk')
+        project.reload.destroy
+
+        assert_not ServerlessProjectMailSetting.exists?(project_id: project.id)
+        assert_predicate setting(1, 'helpdesk'), :valid?
+      end
+    end
   end
 end
