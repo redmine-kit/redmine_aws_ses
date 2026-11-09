@@ -61,8 +61,8 @@ class RedmineServerlessSesScreens < ScreenshotCase
     client = Aws::SESV2::Client.new(stub_responses: true, region: 'ap-northeast-1')
     client.stub_responses(:get_account, production_access_enabled: true, sending_enabled: true,
                                         enforcement_status: 'HEALTHY',
-                                        send_quota: { max_24_hour_send: 50_000, max_send_rate: 14,
-                                                      sent_last_24_hours: 312 })
+                                        send_quota: { max_24_hour_send: 50_000.0, max_send_rate: 14.0,
+                                                      sent_last_24_hours: 312.0 })
     client.stub_responses(:get_email_identity, verified_for_sending_status: true,
                                                dkim_attributes: { status: 'SUCCESS' })
     client.stub_responses(:list_suppressed_destinations, suppressed_destination_summaries: [

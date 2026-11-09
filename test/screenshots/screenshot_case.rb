@@ -45,8 +45,11 @@ class ScreenshotCase < ApplicationSystemTestCase
   # captures what is in the window; the focused field loses its caret.
   def shoot(name, language, selector: '#content')
     element = page.find(selector)
-    bottom = page.evaluate_script("document.querySelector(#{selector.to_json}).getBoundingClientRect().bottom")
-    page.driver.browser.manage.window.resize_to(1280, [bottom.ceil + 200, 900].max)
+    # Twice: the page can lay out taller once the window has grown.
+    2.times do
+      bottom = page.evaluate_script("document.querySelector(#{selector.to_json}).getBoundingClientRect().bottom")
+      page.driver.browser.manage.window.resize_to(1280, [bottom.ceil + 200, 900].max)
+    end
     page.execute_script('window.scrollTo(0, 0); document.activeElement?.blur()')
     path = File.join(DOCS, LANGUAGES.fetch(language), "#{name}.png")
     element.native.save_screenshot(path)
