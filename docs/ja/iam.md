@@ -68,7 +68,7 @@ SES が受け取ったメールを置けるようにする、バケットポリ�
 }
 ```
 
-- **Lambda:** 受信のルールが Lambda の関数を呼ぶときは、関数のリソースベースのポリシーで、`ses.amazonaws.com` に `lambda:InvokeFunction` を、同じ `aws:SourceAccount` と `aws:SourceArn` の条件で許します。関数は SES と同じリージョンに置きます([Serverless の iam.md](https://redmine-kit.github.io/serverless/ja/iam.html#resource-based-policies))。
+受信のルールが Lambda の関数を呼ぶときは、関数のリソースベースのポリシーで、`ses.amazonaws.com` に `lambda:InvokeFunction` を、同じ `aws:SourceAccount` と `aws:SourceArn` の条件で許します。関数は SES と同じリージョンに置きます([Serverless の iam.md](https://redmine-kit.github.io/serverless/ja/iam.html#resource-based-policies))。
 
 <a id="not-checked-yet"></a>
 

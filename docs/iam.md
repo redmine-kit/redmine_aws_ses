@@ -62,7 +62,7 @@ Bucket policy statement that lets SES store received email (with the TLS-only de
 }
 ```
 
-- **Lambda:** When the receipt rule invokes a Lambda function, the function's resource-based policy allows `lambda:InvokeFunction` by `ses.amazonaws.com` with the same `aws:SourceAccount` and `aws:SourceArn` conditions. The function must be in the same Region as SES ([Serverless iam.md](https://redmine-kit.github.io/serverless/iam.html#resource-based-policies)).
+When the receipt rule invokes a Lambda function, the function's resource-based policy allows `lambda:InvokeFunction` by `ses.amazonaws.com` with the same `aws:SourceAccount` and `aws:SourceArn` conditions. The function must be in the same Region as SES ([Serverless iam.md](https://redmine-kit.github.io/serverless/iam.html#resource-based-policies)).
 
 ## Not checked yet
 
