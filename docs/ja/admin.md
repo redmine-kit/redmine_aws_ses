@@ -36,7 +36,7 @@ Redmine Serverless SES の管理画面です。Redmine の管理者だけが開�
 | MX のレコード | Redmine のドメインの MX のホスト。SES の受信のエンドポイントになっているかを確認する | DNS の問い合わせ。タイムアウトは 2 秒 |
 | 受け取ったメール | 受信の日時、送信者、件名、プロジェクト、SES の判定(ウイルス、迷惑メール、DMARC)、結果(チケット、または取り込まなかった理由)。新しい 100 件。取り込まなかったものだけを並べることもできる | プラグインの表(下記) |
 | 取り込み直し | 選んだメールをもう一度取り込む | メールごとのジョブ(`ServerlessReimportMailJob`。Serverless では SQS に入り、`redmine-worker` が取り込む) |
-| 受信の設定 | Redmine 全体のアドレス(`@` の前)、そこに届いたメール(取り込まない、または既定のプロジェクトに入れる)、既定のプロジェクト、DMARC が通らないメールを取り込むか、迷惑メールを取り込むか(どちらも既定はオフで、画面に説明を出す。ウイルスはいつも捨てる)、プロジェクトごとのアドレス、プロジェクトごとの送信元 | プラグインの設定(画面で変える)。DMARC に失敗したメールは、設定にかかわらず取り込まない([mail.md](receiving.md#spoofing-and-spam)) |
+| 受信の設定 | Redmine 全体のアドレス(`@` の前)、そこに届いたメール(取り込まない、または既定のプロジェクトに入れる)、既定のプロジェクト、DMARC が通らないメールを取り込むか、迷惑メールを取り込むか(どちらも既定はオフで、画面に説明を出す。ウイルスはいつも捨てる)、プロジェクトごとのアドレス、プロジェクトごとの送信元 | プラグインの設定(画面で変える)。DMARC に失敗したメールは、設定にかかわらず取り込まない([receiving.md](receiving.md#spoofing-and-spam)) |
 
 - **取り込みの記録:** `redmine_serverless_ses:receive_mail` は、メールごとの結果を、プラグインの表(`serverless_received_mails`)に入れます。送信者、件名、SES のイベントのエンベロープの宛先と判定、プロジェクト、作ったチケットや足した注記です。本文は入れず、メールのバケットのキー(`inbound/` か `processed/`)を入れます。取り込み直しは、同じ記録を書き換えます。90 日より古い記録は、`rake redmine_serverless_ses:prune_records` が消します。Serverless は毎日動かします([security.md](https://redmine-kit.github.io/serverless/ja/security.html#retention-periods))。
 - **取り込まない理由:** SES の判定がない(イベントを通して受け取っていないメール)、ウイルス、スパム、DMARC の失敗、自動の返信、受け取るプロジェクトがない、Redmine が取り込まなかった(たとえば、登録していない送信者や、権限のない送信者。理由は Redmine のログにある)のどれかです。取り込まなかったメールは `inbound/` に残り、原因を直してから取り込み直せます。
@@ -47,7 +47,7 @@ Redmine Serverless SES の管理画面です。Redmine の管理者だけが開�
 
 ## プロジェクトのメールの設定
 
-プロジェクトごとのアドレスを使うとき、プロジェクトの設定に「メール」のタブを足します。プロジェクトごとのアドレスを設定します([mail.md](receiving.md#addresses-per-project))。設定は、プラグインの表(`serverless_project_mail_settings`)に入ります。
+プロジェクトごとのアドレスを使うとき、プロジェクトの設定に「メール」のタブを足します。プロジェクトごとのアドレスを設定します([receiving.md](receiving.md#addresses-per-project))。設定は、プラグインの表(`serverless_project_mail_settings`)に入ります。Redmine の設定(`Setting`。名前と値)は Redmine 全体のものだけで、プロジェクトごとの設定の表がないためです。プロジェクトを削除すると、その行も消えます。
 
 | 項目 | 中身 |
 | --- | --- |
@@ -58,7 +58,7 @@ Redmine Serverless SES の管理画面です。Redmine の管理者だけが開�
 | 登録していないアドレスの扱い | 取り込まない(既定)、匿名ユーザーとして受け付ける、アカウントを作る(Redmine の `unknown_user` の `ignore`、`accept`、`create`) |
 
 - **変えられる人:** Redmine の管理者と、プラグインが足すプロジェクトの権限「メールの設定の管理」を持つメンバーです。
-- **登録していないアドレスを受け付けるとき:** 問い合わせの窓口のように、外の人からのメールを受けるときに使います。迷惑メールが増えるので、DMARC の確認は外しません([mail.md](receiving.md#spoofing-and-spam))。
+- **登録していないアドレスを受け付けるとき:** 問い合わせの窓口のように、外の人からのメールを受けるときに使います。迷惑メールが増えるので、DMARC の確認は外しません([receiving.md](receiving.md#spoofing-and-spam))。
 
 <a id="permissions"></a>
 

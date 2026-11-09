@@ -20,9 +20,9 @@ SES v2 の `SendEmail` のエラー(API リファレンスの一覧)を、3 つ�
 
 | エラー | 意味 | 扱い |
 | --- | --- | --- |
-| `TooManyRequestsException`、`InternalFailure`、`ServiceUnavailable`、そのほかの 5xx、ネットワークのエラー | 一時的 | ジョブの中でやり直す。3、18、83、258 秒のあとに、5 回まで動かす |
-| `MessageRejected`、`BadRequestException` | そのメッセージの中身や宛先の問題 | ジョブを捨てる。[Redmine Serverless SQS](https://redmine-kit.github.io/redmine_serverless_sqs/ja/) があれば、失敗の記録を残す |
-| そのほか。`SendingPausedException`、`AccountSuspendedException`、`MailFromDomainNotVerifiedException`、`NotFoundException`、`LimitExceededException`、`AccessDeniedException` など | アカウントか設定の問題。直すまで、何度でも失敗する | ジョブの中ではやり直さずに例外を発生させる。キューがメッセージを受け取り直し、最後の受け取りのあとにデッドレターキューへ移し、そこで Redmine Serverless SQS が記録する |
+| `TooManyRequestsException`<br>`InternalFailure`<br>`ServiceUnavailable`<br>そのほかの 5xx<br>ネットワークのエラー | 一時的 | ジョブの中でやり直す。3、18、83、258 秒のあとに、5 回まで動かす |
+| `MessageRejected`<br>`BadRequestException` | そのメッセージの中身や宛先の問題 | ジョブを捨てる。[Redmine Serverless SQS](https://redmine-kit.github.io/redmine_serverless_sqs/ja/) があれば、失敗の記録を残す |
+| そのほか。たとえば<br>`SendingPausedException`<br>`AccountSuspendedException`<br>`MailFromDomainNotVerifiedException`<br>`NotFoundException`<br>`LimitExceededException`<br>`AccessDeniedException` | アカウントか設定の問題。直すまで、何度でも失敗する | ジョブの中ではやり直さずに例外を発生させる。キューがメッセージを受け取り直し、最後の受け取りのあとにデッドレターキューへ移し、そこで Redmine Serverless SQS が記録する |
 
 - **待ち時間:** ActiveJob の `:polynomially_longer` から揺らぎを除いたものです(`実行回数⁴ + 2` 秒)。SQS で遅らせられる最長(15 分)に収まります。5 回目のあとは例外を発生させ、アカウントのエラーと同じく、キューのやり直しとデッドレターキューになります。
 - **SDK のやり直し:** AWS の SDK も、ジョブより前に、429 と 5xx を自分でやり直します(既定のやり直しの設定)。

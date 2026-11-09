@@ -32,7 +32,7 @@ The specifications in this page were checked against official information and th
 | MX record | The MX hosts of Redmine's domain, to check that they are the SES receiving endpoint | DNS lookup, with a 2-second timeout |
 | Received email | Time received, sender, subject, project, SES's verdicts (virus, spam, DMARC), result (the issue, or the reason it was dropped). The newest 100; dropped email can be listed on its own | The plugin's table (below) |
 | Re-import | Imports the selected messages again | A job for each message (`ServerlessReimportMailJob`; SQS in Serverless, where `redmine-worker` imports it) |
-| Receiving settings | The address for the whole Redmine (the part before `@`), email sent to it (drop, or put in the default project), the default project, importing email that fails DMARC, importing spam (both off by default, with an explanation on the page; viruses are always dropped), addresses per project, per-project senders | Plugin settings (changed on the page). Email that fails DMARC is dropped regardless of settings ([mail.md](receiving.md#spoofing-and-spam)) |
+| Receiving settings | The address for the whole Redmine (the part before `@`), email sent to it (drop, or put in the default project), the default project, importing email that fails DMARC, importing spam (both off by default, with an explanation on the page; viruses are always dropped), addresses per project, per-project senders | Plugin settings (changed on the page). Email that fails DMARC is dropped regardless of settings ([receiving.md](receiving.md#spoofing-and-spam)) |
 
 - **Import records:** `redmine_serverless_ses:receive_mail` stores the result for each message in the plugin's table (`serverless_received_mails`): the sender, the subject, the envelope recipients and the verdicts from the SES event, the project, and the issue created or the note added. The body is not stored; its key in the mail bucket (`inbound/` or `processed/`) is. A re-import updates the same record. Records older than 90 days are deleted by `rake redmine_serverless_ses:prune_records`, which Serverless runs daily ([security.md](https://redmine-kit.github.io/serverless/security.html#retention-periods)).
 - **Reasons for dropping:** no verdicts from SES (a message that was never received through the event), virus, spam, DMARC failure, auto-reply, no project receives it, or not imported by Redmine (for example, a sender that is not registered, or without permission; Redmine's log has the reason). Dropped email stays in `inbound/` and can be re-imported after the cause is fixed.
@@ -41,7 +41,7 @@ The specifications in this page were checked against official information and th
 
 ## Project email settings
 
-An "Email" tab is added to project settings when addresses per project are on. It configures the address per project ([mail.md](receiving.md#addresses-per-project)). The settings are in the plugin's table (`serverless_project_mail_settings`).
+An "Email" tab is added to project settings when addresses per project are on. It configures the address per project ([receiving.md](receiving.md#addresses-per-project)). The settings are in the plugin's table (`serverless_project_mail_settings`), because Redmine's settings are for the whole Redmine only (`Setting`, a name and a value) and Redmine has no table for per-project settings. Deleting a project deletes its row.
 
 | Item | Contents |
 | --- | --- |
@@ -52,7 +52,7 @@ An "Email" tab is added to project settings when addresses per project are on. I
 | Handling unregistered addresses | Do not import (default), accept as the anonymous user, or create an account (Redmine's `unknown_user` values `ignore`, `accept`, `create`) |
 
 - **Who can change it:** Redmine administrators and members with the project permission "Manage email settings" that the plugin adds.
-- **When accepting unregistered addresses:** Use this to receive email from outside people, such as for a contact desk. Spam increases, so keep the DMARC check ([mail.md](receiving.md#spoofing-and-spam)).
+- **When accepting unregistered addresses:** Use this to receive email from outside people, such as for a contact desk. Spam increases, so keep the DMARC check ([receiving.md](receiving.md#spoofing-and-spam)).
 
 ## Permissions
 

@@ -40,10 +40,10 @@ Redmine Serverless SES が、SES の受け取ったメールを取り込むし�
 | Redmine 全体のアドレスから送るメール | Redmine のメーラーのメソッド |
 | --- | --- |
 | パスワードの再設定 | `lost_password` |
-| アカウントの登録の確認、有効化の依頼、有効化の通知 | `register`、`account_activation_request`、`account_activated` |
+| アカウントの登録の確認、有効化の依頼、有効化の通知 | `register`<br>`account_activation_request`<br>`account_activated` |
 | アカウントの情報(管理者が作ったアカウント) | `account_information` |
 | 期日のリマインダー(複数のプロジェクトのチケットをまとめる) | `reminder` |
-| セキュリティの通知、設定の変更の通知 | `security_notification`、`settings_updated` |
+| セキュリティの通知、設定の変更の通知 | `security_notification`<br>`settings_updated` |
 | テストのメール | `test_email` |
 
 上のメソッドは、Redmine 7.0.3 のメーラーのうち、プロジェクトのヘッダー(`X-Redmine-Project`)を付けないものです(`app/models/mailer.rb`)。
@@ -69,7 +69,7 @@ rake のタスク `redmine_serverless_ses:receive_mail` が、メッセージを
 | --- | --- |
 | `MESSAGE_ID` | `mail.messageId`(メールのバケットのキー) |
 | `SES_RECIPIENTS` | `receipt.recipients`(エンベロープの宛先。カンマ区切り) |
-| `SES_SPAM_VERDICT`、`SES_VIRUS_VERDICT`、`SES_DMARC_VERDICT`、`SES_SPF_VERDICT`、`SES_DKIM_VERDICT` | `receipt.spamVerdict.status` など |
+| `SES_SPAM_VERDICT`<br>`SES_VIRUS_VERDICT`<br>`SES_DMARC_VERDICT`<br>`SES_SPF_VERDICT`<br>`SES_DKIM_VERDICT` | `receipt.spamVerdict.status` など |
 | `SES_DMARC_POLICY` | `receipt.dmarcPolicy` |
 
 Lambda では、SES の受信のルールがタスクの関数を呼び、そのハンドラーがこれらを設定します([Serverless の tasks.md](https://redmine-kit.github.io/serverless/ja/tasks.html#kinds-of-events))。取り込み直しは `MESSAGE_ID` だけを渡し、最初の実行で記録したものを使います。

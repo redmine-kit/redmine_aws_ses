@@ -34,10 +34,10 @@ Email that does not belong to a project is sent from the emission address (`Sett
 | Email sent from the address for the whole Redmine | Redmine mailer method |
 | --- | --- |
 | Password reset (lost password) | `lost_password` |
-| Account registration confirmation, activation request, activation notice | `register`, `account_activation_request`, `account_activated` |
+| Account registration confirmation, activation request, activation notice | `register`<br>`account_activation_request`<br>`account_activated` |
 | Account information (accounts created by an administrator) | `account_information` |
 | Due date reminders (combining issues from several projects) | `reminder` |
-| Security notifications, settings change notifications | `security_notification`, `settings_updated` |
+| Security notifications, settings change notifications | `security_notification`<br>`settings_updated` |
 | Test email | `test_email` |
 
 The methods above are the Redmine 7.0.3 mailer methods that do not add the project header (`X-Redmine-Project`) (`app/models/mailer.rb`).
@@ -61,7 +61,7 @@ The task takes the values of the SES event as variables:
 | --- | --- |
 | `MESSAGE_ID` | `mail.messageId` (the key in the mail bucket) |
 | `SES_RECIPIENTS` | `receipt.recipients` (the envelope recipients, comma-separated) |
-| `SES_SPAM_VERDICT`, `SES_VIRUS_VERDICT`, `SES_DMARC_VERDICT`, `SES_SPF_VERDICT`, `SES_DKIM_VERDICT` | `receipt.spamVerdict.status` and the others |
+| `SES_SPAM_VERDICT`<br>`SES_VIRUS_VERDICT`<br>`SES_DMARC_VERDICT`<br>`SES_SPF_VERDICT`<br>`SES_DKIM_VERDICT` | `receipt.spamVerdict.status` and the others |
 | `SES_DMARC_POLICY` | `receipt.dmarcPolicy` |
 
 On Lambda, the SES receipt rule invokes the task function, whose handler sets these ([Serverless tasks.md](https://redmine-kit.github.io/serverless/tasks.html#kinds-of-events)). A re-import gives `MESSAGE_ID` only and uses what the first run recorded.

@@ -16,9 +16,9 @@ Errors from SES v2 `SendEmail` (the list in the API reference) are split into th
 
 | Error | Meaning | Handling |
 | --- | --- | --- |
-| `TooManyRequestsException`, `InternalFailure`, `ServiceUnavailable`, other 5xx, network errors | Temporary | Retried inside the job: up to 5 runs, after 3, 18, 83 and 258 seconds |
-| `MessageRejected`, `BadRequestException` | A problem with the content or recipients of that message | The job is dropped. With [Redmine Serverless SQS](https://redmine-kit.github.io/redmine_serverless_sqs/), a failure record is kept |
-| Anything else, such as `SendingPausedException`, `AccountSuspendedException`, `MailFromDomainNotVerifiedException`, `NotFoundException`, `LimitExceededException`, `AccessDeniedException` | A problem with the account or the settings. Every attempt fails until it is fixed | Raised without retries inside the job. The queue receives the message again and, after the last receive, moves it to the dead-letter queue, where Redmine Serverless SQS records it |
+| `TooManyRequestsException`<br>`InternalFailure`<br>`ServiceUnavailable`<br>Other 5xx<br>Network errors | Temporary | Retried inside the job: up to 5 runs, after 3, 18, 83 and 258 seconds |
+| `MessageRejected`<br>`BadRequestException` | A problem with the content or recipients of that message | The job is dropped. With [Redmine Serverless SQS](https://redmine-kit.github.io/redmine_serverless_sqs/), a failure record is kept |
+| Anything else, such as:<br>`SendingPausedException`<br>`AccountSuspendedException`<br>`MailFromDomainNotVerifiedException`<br>`NotFoundException`<br>`LimitExceededException`<br>`AccessDeniedException` | A problem with the account or the settings. Every attempt fails until it is fixed | Raised without retries inside the job. The queue receives the message again and, after the last receive, moves it to the dead-letter queue, where Redmine Serverless SQS records it |
 
 - **Waits:** The waits are those of ActiveJob's `:polynomially_longer` without jitter (`executions⁴ + 2` seconds). They fit within the longest delay SQS allows (15 minutes). After the 5th run the error is raised, and the queue's retries and dead-letter queue apply as for account errors.
 - **SDK retries:** The AWS SDK also retries 429 and 5xx by itself, before the job does (the default retry settings).
