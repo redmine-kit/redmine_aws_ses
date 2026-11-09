@@ -18,7 +18,7 @@ The specifications in this page were checked against official information and th
 | Suppression list | List of addresses SES has stopped sending to (added because of bounces and complaints), matched against Redmine users' addresses | SES v2 `ListSuppressedDestinations` |
 | Removing from the suppression list | A button removes an address from the list | SES v2 `DeleteSuppressedDestination` |
 | Test email | A link to Redmine's standard "Send a test email" (in "Email notifications" under Administration › Settings). The same feature is not added | — |
-| Failed email | When Redmine Serverless is installed, a link to the list of failed email only on its "Jobs" page | — |
+| Failed email | When Redmine Serverless SQS is installed, a link to the list of failed email only on its "Jobs" page | — |
 
 - **Why show the suppression list:** Once an address bounces, SES stops sending to it. From Redmine it looks as if the email was sent, so when someone says "notifications do not arrive", this page lets you check.
 - **Test email:** Redmine's standard test email is sent within the page request (`deliver_now`), so `redmine-web` is also given permission to send through SES ([mail.md](https://redmine-kit.github.io/serverless/mail.html#ses)).

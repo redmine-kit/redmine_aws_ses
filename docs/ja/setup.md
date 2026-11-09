@@ -9,7 +9,7 @@ Redmine Serverless SES を使う Redmine に要るもの(インストール、�
 - Redmine 7.0 以降。
 - AWS の認証情報で SES と S3 に届くプロセス(Lambda では実行ロール、ほかではインスタンスプロファイルやタスクのロール)。Redmine にアクセスキーや SMTP のパスワードは置きません。
 - 送信には、AWS の公式の gem `aws-actionmailer-ses`(配送の方法は `:ses_v2`)([Serverless の mail.md](https://redmine-kit.github.io/serverless/ja/mail.html#gems))。
-- 送信のやり直しには、別のプロセスで動くジョブ(Lambda では `REDMINE_ROLE=worker`。最後まで失敗したジョブは [Redmine Serverless](https://redmine-kit.github.io/redmine_serverless/ja/) が記録します)。
+- 送信のやり直しには、別のプロセスで動くジョブ(Lambda では `REDMINE_ROLE=worker`。最後まで失敗したジョブは [Redmine Serverless SQS](https://redmine-kit.github.io/redmine_serverless_sqs/ja/) が記録します)。
 
 <a id="installation"></a>
 

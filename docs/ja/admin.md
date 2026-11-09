@@ -20,7 +20,7 @@ Redmine Serverless SES の管理画面の設計です。Redmine の管理者だ�
 | サプレッションリスト | SES が送信を止めているアドレス(バウンスと苦情で登録されたもの)の一覧。Redmine のユーザーのアドレスと突き合わせて表示する | SES v2 の `ListSuppressedDestinations` |
 | サプレッションリストからの削除 | ボタンで、アドレスを一覧から外す | SES v2 の `DeleteSuppressedDestination` |
 | テストのメール | Redmine の標準の「テストメールを送信」(管理の「設定」の「メール通知」)へのリンク。同じ機能は足さない | — |
-| 失敗したメール | Redmine Serverless を入れているときは、その「ジョブ」の画面の、失敗したメールだけの一覧へのリンク | — |
+| 失敗したメール | Redmine Serverless SQS を入れているときは、その「ジョブ」の画面の、失敗したメールだけの一覧へのリンク | — |
 
 - **サプレッションリストを出す理由:** あるアドレスが一度バウンスすると、SES はそのアドレスへの送信を止めます。Redmine からは送れたように見えるので、「通知が届かない」と言われたときに、ここで確認できるようにします。
 - **テストのメール:** Redmine の標準のテストのメールは、画面の要求の中で送る(`deliver_now`)ので、`redmine-web` にも SES の送信の権限を付けます([mail.md](https://redmine-kit.github.io/serverless/ja/mail.html#ses))。

@@ -7,7 +7,7 @@ What a Redmine needs to use Redmine Serverless SES: installation, configuration,
 - Redmine 7.0 or later.
 - A process that can reach SES and S3 with AWS credentials (an execution role on Lambda, an instance profile or a task role elsewhere). No access keys or SMTP passwords are stored in Redmine.
 - For sending: the official AWS gem `aws-actionmailer-ses` (delivery method `:ses_v2`) ([Serverless mail.md](https://redmine-kit.github.io/serverless/mail.html#gems)).
-- For retries of sending: jobs that run in a process of their own (on Lambda, `REDMINE_ROLE=worker`; [Redmine Serverless](https://redmine-kit.github.io/redmine_serverless/) records the jobs that fail for the last time).
+- For retries of sending: jobs that run in a process of their own (on Lambda, `REDMINE_ROLE=worker`; [Redmine Serverless SQS](https://redmine-kit.github.io/redmine_serverless_sqs/) records the jobs that fail for the last time).
 
 ## Installation
 
