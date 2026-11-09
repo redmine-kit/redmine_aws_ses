@@ -1,0 +1,63 @@
+ja:
+  label_serverless_admin: Serverless
+  label_serverless_mail_sending: メールの送信
+  label_serverless_mail_receiving: メールの受信
+  label_serverless_check_ses: SES
+  label_serverless_project_mail: メール
+  permission_manage_serverless_mail_settings: メールの設定の管理
+  label_serverless_mail_account: SES のアカウント
+  label_serverless_mail_production_access: 本番のアクセス
+  label_serverless_mail_sending_enabled: 送信が有効
+  label_serverless_mail_enforcement_status: 適用の状態
+  label_serverless_mail_quota: 24 時間の送信数 / 上限
+  label_serverless_mail_rate: 1 秒あたりの通数
+  label_serverless_mail_domain: ドメイン
+  label_serverless_mail_verified: 送信の検証
+  label_serverless_mail_suppressed: サプレッションリスト
+  label_serverless_mail_reason: 理由
+  label_serverless_mail_more: 関連
+  label_serverless_mail_failed: 失敗したメール
+  label_serverless_mail_addresses: アドレス
+  label_serverless_mail_global_address: Redmine 全体のアドレス
+  label_serverless_mail_received: 受信したメール
+  label_serverless_mail_dropped_only: 取り込まなかったものだけ
+  label_serverless_mail_received_at: 受信日時
+  label_serverless_mail_result: 結果
+  label_serverless_mail_imported: 取り込み済み
+  label_serverless_mail_reason_no_verdict: 取り込まない(SES の判定がない)
+  label_serverless_mail_reason_virus: 取り込まない(ウイルス)
+  label_serverless_mail_reason_spam: 取り込まない(スパム)
+  label_serverless_mail_reason_dmarc: 取り込まない(DMARC の失敗)
+  label_serverless_mail_reason_auto_reply: 取り込まない(自動の返信)
+  label_serverless_mail_reason_no_project: 取り込まない(受け取るプロジェクトがない)
+  label_serverless_mail_reason_import_error: Redmine が取り込まなかった(ログを参照)
+  label_serverless_mail_settings: 受信の設定
+  label_serverless_mail_global_local_part: Redmine 全体のアドレス
+  label_serverless_mail_global_mail: そのアドレスへのメール
+  label_serverless_mail_global_drop: 取り込まない
+  label_serverless_mail_global_default_project: 既定のプロジェクトに入れる
+  label_serverless_mail_default_project: 既定のプロジェクト
+  label_serverless_mail_per_project: プロジェクトごとのアドレス
+  label_serverless_mail_project_senders: プロジェクトの通知を、プロジェクトのアドレスから送る
+  label_serverless_mail_receive: メールを受け取る
+  label_serverless_mail_alias: 別名
+  label_serverless_mail_unknown_user: Redmine に登録していない送信者
+  label_serverless_mail_unknown_user_ignore: 取り込まない
+  label_serverless_mail_unknown_user_accept: 匿名ユーザーとして受け付ける
+  label_serverless_mail_unknown_user_create: アカウントを作る
+  button_serverless_mail_unsuppress: リストから外す
+  button_serverless_mail_reimport: もう一度取り込む
+  notice_serverless_mail_unsuppressed: "%{address} をサプレッションリストから外しました。"
+  notice_serverless_mail_reimport: "%{count} 通をもう一度取り込みます。"
+  error_serverless_mail_local_part: アドレスには、英小文字、数字、「.」「_」「-」だけを使えます。
+  text_serverless_mail_no_domain: 送信元のメールアドレス(管理 › 設定 › メール通知)を、Redmine のドメインのアドレスにしてください。
+  text_serverless_mail_no_bucket: REDMINE_MAIL_BUCKET がないので、受信したメールを取り込めません。
+  text_serverless_mail_suppressed: SES は、これらのアドレスに送りません。メールボックスが直ったら、リストから外します。
+  text_serverless_mail_mx_unknown: 読めませんでした
+  text_serverless_mail_mx_none: なし
+  label_serverless_mail_import_without_dmarc_pass: DMARC が通らないメールも取り込む
+  text_serverless_mail_import_without_dmarc_pass: オフ(推奨)では、SES が差出人のドメインを確認できなかったメールを取り込みません。Redmine は差出人のアドレスで利用者を決めるので、ほかの人になりすましてチケットを作れてしまうためです。
+  label_serverless_mail_import_spam: SES が迷惑メールと判定したメールも取り込む
+  text_serverless_mail_import_spam: オフ(推奨)では取り込みません。必要なメールを SES が落とすときだけオンにします。
+  text_serverless_mail_virus: SES がウイルスを見つけたメールは、いつも取り込みません。添付ファイルが全員に配られるためです。
+  label_serverless_mail_verdicts: SES の判定

@@ -1,6 +1,7 @@
 # Publishes the plugin as a gem to GitHub Packages
 # (https://rubygems.pkg.github.com/redmine-kit) when a version tag v* is
-# pushed. The tag must equal the version in the gemspec and init.rb.
+# pushed. The tag must equal the version in the gemspec, which reads it from
+# lib/redmine_serverless_ses.rb.
 # Installing from GitHub Packages needs a token with read:packages, even for
 # a public package (docs/setup.md#installation).
 name: Gem
@@ -30,7 +31,6 @@ jobs:
         run: |
           version=$(ruby -e 'print Gem::Specification.load("redmine_serverless_ses.gemspec").version')
           test "$GITHUB_REF_NAME" = "v$version" || { echo "the tag $GITHUB_REF_NAME is not v$version" >&2; exit 1; }
-          if [ -f init.rb ]; then grep -q "version '$version'" init.rb || { echo "init.rb is not $version" >&2; exit 1; }; fi
           echo "version=$version" >> "$GITHUB_ENV"
       - run: gem build redmine_serverless_ses.gemspec
       - name: Push to GitHub Packages

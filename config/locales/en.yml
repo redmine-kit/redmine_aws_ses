@@ -1,0 +1,63 @@
+en:
+  label_serverless_admin: Serverless
+  label_serverless_mail_sending: Sending email
+  label_serverless_mail_receiving: Receiving email
+  label_serverless_check_ses: SES
+  label_serverless_project_mail: Email
+  permission_manage_serverless_mail_settings: Manage email settings
+  label_serverless_mail_account: SES account
+  label_serverless_mail_production_access: Production access
+  label_serverless_mail_sending_enabled: Sending enabled
+  label_serverless_mail_enforcement_status: Enforcement status
+  label_serverless_mail_quota: Sent in the last 24 hours / limit
+  label_serverless_mail_rate: Messages per second
+  label_serverless_mail_domain: Domain
+  label_serverless_mail_verified: Verified for sending
+  label_serverless_mail_suppressed: Suppression list
+  label_serverless_mail_reason: Reason
+  label_serverless_mail_more: More
+  label_serverless_mail_failed: Failed email
+  label_serverless_mail_addresses: Addresses
+  label_serverless_mail_global_address: Address for the whole Redmine
+  label_serverless_mail_received: Received email
+  label_serverless_mail_dropped_only: Dropped only
+  label_serverless_mail_received_at: Received
+  label_serverless_mail_result: Result
+  label_serverless_mail_imported: Imported
+  label_serverless_mail_reason_no_verdict: "Dropped: no verdicts from SES"
+  label_serverless_mail_reason_virus: "Dropped: virus"
+  label_serverless_mail_reason_spam: "Dropped: spam"
+  label_serverless_mail_reason_dmarc: "Dropped: DMARC failed"
+  label_serverless_mail_reason_auto_reply: "Dropped: auto-reply"
+  label_serverless_mail_reason_no_project: "Dropped: no project receives it"
+  label_serverless_mail_reason_import_error: "Not imported by Redmine (see the log)"
+  label_serverless_mail_settings: Receiving settings
+  label_serverless_mail_global_local_part: Address for the whole Redmine
+  label_serverless_mail_global_mail: Email to that address
+  label_serverless_mail_global_drop: Drop
+  label_serverless_mail_global_default_project: Put in the default project
+  label_serverless_mail_default_project: Default project
+  label_serverless_mail_per_project: Addresses per project
+  label_serverless_mail_project_senders: Send project notifications from the project's address
+  label_serverless_mail_receive: Receive email
+  label_serverless_mail_alias: Alias
+  label_serverless_mail_unknown_user: Senders not registered in Redmine
+  label_serverless_mail_unknown_user_ignore: Do not import
+  label_serverless_mail_unknown_user_accept: Accept as the anonymous user
+  label_serverless_mail_unknown_user_create: Create an account
+  button_serverless_mail_unsuppress: Remove from the list
+  button_serverless_mail_reimport: Import again
+  notice_serverless_mail_unsuppressed: "%{address} was removed from the suppression list."
+  notice_serverless_mail_reimport: "%{count} message(s) will be imported again."
+  error_serverless_mail_local_part: The address may contain only lowercase letters, digits, ".", "_" and "-".
+  text_serverless_mail_no_domain: Set the emission email address (Administration › Settings › Email notifications) to an address on Redmine's domain.
+  text_serverless_mail_no_bucket: REDMINE_MAIL_BUCKET is not set, so received email cannot be imported.
+  text_serverless_mail_suppressed: SES does not send to these addresses. Remove an address once its mailbox works again.
+  text_serverless_mail_mx_unknown: Could not be read
+  text_serverless_mail_mx_none: None
+  label_serverless_mail_import_without_dmarc_pass: Import email that fails DMARC
+  text_serverless_mail_import_without_dmarc_pass: "Off (recommended): email whose sender domain SES could not verify is dropped. Redmine takes the user from the sender's address, so such email could create issues as someone else."
+  label_serverless_mail_import_spam: Import email that SES marks as spam
+  text_serverless_mail_import_spam: Off (recommended) drops it. Turn on only if SES drops email you need.
+  text_serverless_mail_virus: Email in which SES finds a virus is always dropped, because its attachments would be served to everyone.
+  label_serverless_mail_verdicts: SES verdicts

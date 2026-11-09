@@ -1,0 +1,70 @@
+<%= render partial: 'serverless_admin/tabs', locals: { selected: 'mail_sending' } %>
+
+<h3><%= l(:label_serverless_mail_account) %></h3>
+<% if @account_error %>
+  <p class="flash error"><%= @account_error %></p>
+<% else %>
+<table class="list serverless-mail-account">
+  <tbody>
+    <tr><th><%= l(:label_serverless_mail_production_access) %></th><td><%= format_object(@account[:production_access]) %></td></tr>
+    <tr><th><%= l(:label_serverless_mail_sending_enabled) %></th><td><%= format_object(@account[:sending_enabled]) %></td></tr>
+    <tr><th><%= l(:label_serverless_mail_enforcement_status) %></th><td><%= @account[:enforcement_status] %></td></tr>
+    <tr><th><%= l(:label_serverless_mail_quota) %></th><td><%= @account[:sent_last_24_hours].to_i %> / <%= @account[:max_24_hour_send].to_i %></td></tr>
+    <tr><th><%= l(:label_serverless_mail_rate) %></th><td><%= @account[:max_send_rate] %></td></tr>
+  </tbody>
+</table>
+<% end %>
+
+<h3><%= l(:label_serverless_mail_domain) %></h3>
+<% if @domain.nil? %>
+  <p class="warning"><%= l(:text_serverless_mail_no_domain) %></p>
+<% elsif @identity_error %>
+  <p class="flash error"><%= @identity_error %></p>
+<% else %>
+<table class="list serverless-mail-identity">
+  <tbody>
+    <tr><th><%= l(:label_serverless_mail_domain) %></th><td><%= @domain %></td></tr>
+    <tr><th><%= l(:label_serverless_mail_verified) %></th><td><%= format_object(@identity[:verified]) %></td></tr>
+    <tr><th>DKIM</th><td><%= @identity[:dkim_status] %></td></tr>
+  </tbody>
+</table>
+<% end %>
+
+<h3><%= l(:label_serverless_mail_suppressed) %></h3>
+<p><%= l(:text_serverless_mail_suppressed) %></p>
+<% if @suppressed_error %>
+  <p class="flash error"><%= @suppressed_error %></p>
+<% elsif @suppressed.empty? %>
+  <p class="nodata"><%= l(:label_no_data) %></p>
+<% else %>
+<table class="list serverless-mail-suppressed">
+  <thead>
+    <tr>
+      <th><%= l(:field_mail) %></th><th><%= l(:label_user) %></th><th><%= l(:label_serverless_mail_reason) %></th>
+      <th><%= l(:field_updated_on) %></th><th></th>
+    </tr>
+  </thead>
+  <tbody>
+  <% @suppressed.each do |destination| %>
+    <tr>
+      <td><%= destination[:address] %></td>
+      <td><%= destination[:user] %></td>
+      <td><%= destination[:reason] %></td>
+      <td><%= destination[:last_update] ? format_time(destination[:last_update]) : '' %></td>
+      <td class="buttons">
+        <%= button_to l(:button_serverless_mail_unsuppress), serverless_mail_unsuppress_path(address: destination[:address]),
+                      data: { confirm: l(:text_are_you_sure) } %>
+      </td>
+    </tr>
+  <% end %>
+  </tbody>
+</table>
+<% end %>
+
+<h3><%= l(:label_serverless_mail_more) %></h3>
+<ul>
+  <li><%= link_to l(:label_send_test_email), settings_path(tab: 'notifications') %></li>
+  <% if respond_to?(:serverless_jobs_path) %>
+    <li><%= link_to l(:label_serverless_mail_failed), serverless_jobs_path(mail: '1') %></li>
+  <% end %>
+</ul>
