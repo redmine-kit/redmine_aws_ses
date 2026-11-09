@@ -12,14 +12,26 @@ What a Redmine needs to use Redmine Serverless SES: installation, configuration,
 ## Installation
 
 1. Get the plugin into `plugins/redmine_serverless_ses` of Redmine 7.0: the gem below, or a checkout of this repository.
-2. Add the plugin to `Gemfile.local` as a gem, and run `bundle install`. Bundler then loads `boot/redmine_serverless_ses.rb` before Rails initializes: it loads `aws-actionmailer-ses`, which registers the delivery method `:ses_v2`, and the interceptor for per-project senders. With a checkout, add it by path:
+2. Add the plugin to `Gemfile.local` as a gem, and install it:
+
+   ```sh
+   bundle install
+   ```
+
+   Bundler then loads `boot/redmine_serverless_ses.rb` before Rails initializes: it loads `aws-actionmailer-ses`, which registers the delivery method `:ses_v2`, and the interceptor for per-project senders. With a checkout, add it by path:
 
    ```ruby
    # Redmine's Gemfile.local
    gem 'redmine_serverless_ses', path: 'plugins/redmine_serverless_ses'
    ```
 
-3. Run `bin/rake redmine:plugins:migrate`. It creates the tables of received mail records (`serverless_received_mails`) and project mail settings (`serverless_project_mail_settings`).
+3. Run the plugin's migrations:
+
+   ```sh
+   bin/rake redmine:plugins:migrate
+   ```
+
+   They create the tables of received mail records (`serverless_received_mails`) and project mail settings (`serverless_project_mail_settings`).
 4. Set sending in `config/configuration.yml`:
 
    ```yaml
@@ -64,7 +76,11 @@ ln -s "$(bundle info --path redmine_serverless_ses)" plugins/redmine_serverless_
 - **Errors by kind:** Temporary errors are retried inside the job, message errors drop the job, and account errors go to the queue's retries and dead-letter queue ([sending.md](sending.md#handling-by-kind-of-error)).
 - **Importing:** The rake task `redmine_serverless_ses:receive_mail` imports one received message. Something must start it for each message: on Lambda, the SES receipt rule invokes the task function asynchronously, and its handler passes the values of the SES event as variables: `MESSAGE_ID` (`mail.messageId`), `SES_RECIPIENTS` (`receipt.recipients`, comma-separated), and the verdicts `SES_SPAM_VERDICT`, `SES_VIRUS_VERDICT`, `SES_DMARC_VERDICT`, `SES_SPF_VERDICT`, `SES_DKIM_VERDICT` and `SES_DMARC_POLICY` ([Serverless tasks.md](https://redmine-kit.github.io/serverless/tasks.html#kinds-of-events)).
 - **The checks of SES:** A message is imported only if the event's virus verdict is `PASS`, and its spam and DMARC verdicts are `PASS` unless the receiving settings import them. The verdicts and recipients come from the event, never from headers ([receiving.md](receiving.md#spoofing-and-spam)).
-- **Keeping records:** `rake redmine_serverless_ses:prune_records[<days>]` deletes the import records older than the given days (default 90). Serverless runs it daily ([Serverless security.md](https://redmine-kit.github.io/serverless/security.html#retention-periods)).
+- **Keeping records:** This task deletes the import records older than the given days (default 90). Serverless runs it daily ([Serverless security.md](https://redmine-kit.github.io/serverless/security.html#retention-periods)).
+
+  ```sh
+  bin/rake redmine_serverless_ses:prune_records[<days>]
+  ```
 
 ## AWS resources
 

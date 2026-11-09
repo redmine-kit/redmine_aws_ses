@@ -16,14 +16,26 @@ Redmine Serverless SES を使う Redmine に要るもの(インストール、�
 ## インストール
 
 1. プラグインを、Redmine 7.0 の `plugins/redmine_serverless_ses` に置きます。下の gem か、このリポジトリのチェックアウトです。
-2. プラグインを gem として `Gemfile.local` に足し、`bundle install` を実行します。こうすると、Bundler が、Rails の初期化より前に `boot/redmine_serverless_ses.rb` を読み込みます。配送の方法 `:ses_v2` を登録する `aws-actionmailer-ses` と、プロジェクトごとの送信元のためのインターセプターを読み込みます。チェックアウトなら、パスで足します。
+2. プラグインを gem として `Gemfile.local` に足し、インストールします。
+
+   ```sh
+   bundle install
+   ```
+
+   こうすると、Bundler が、Rails の初期化より前に `boot/redmine_serverless_ses.rb` を読み込みます。配送の方法 `:ses_v2` を登録する `aws-actionmailer-ses` と、プロジェクトごとの送信元のためのインターセプターを読み込みます。チェックアウトなら、パスで足します。
 
    ```ruby
    # Redmine の Gemfile.local
    gem 'redmine_serverless_ses', path: 'plugins/redmine_serverless_ses'
    ```
 
-3. `bin/rake redmine:plugins:migrate` を実行します。受け取ったメールの記録(`serverless_received_mails`)と、プロジェクトのメールの設定(`serverless_project_mail_settings`)の表ができます。
+3. プラグインの migration を実行します。
+
+   ```sh
+   bin/rake redmine:plugins:migrate
+   ```
+
+   受け取ったメールの記録(`serverless_received_mails`)と、プロジェクトのメールの設定(`serverless_project_mail_settings`)の表ができます。
 4. `config/configuration.yml` に送信を設定します。
 
    ```yaml
@@ -72,7 +84,11 @@ ln -s "$(bundle info --path redmine_serverless_ses)" plugins/redmine_serverless_
 - **エラーの種類ごとに:** 一時的なエラーはジョブの中でやり直し、メッセージのエラーはジョブを捨て、アカウントのエラーはキューのやり直しとデッドレターキューに任せます([sending.md](sending.md#handling-by-kind-of-error))。
 - **取り込み:** rake のタスク `redmine_serverless_ses:receive_mail` が、受け取ったメールを 1 通取り込みます。メールごとに、何かがこれを起動する必要があります。Lambda では、SES の受信のルールがタスクの関数を非同期で呼び、そのハンドラーが SES のイベントの値を変数で渡します。`MESSAGE_ID`(`mail.messageId`)、`SES_RECIPIENTS`(`receipt.recipients`。カンマ区切り)と、判定の `SES_SPAM_VERDICT`、`SES_VIRUS_VERDICT`、`SES_DMARC_VERDICT`、`SES_SPF_VERDICT`、`SES_DKIM_VERDICT`、`SES_DMARC_POLICY` です([Serverless の tasks.md](https://redmine-kit.github.io/serverless/ja/tasks.html#kinds-of-events))。
 - **SES の確認の結果:** イベントのウイルスの判定が `PASS` で、迷惑メールと DMARC の判定が `PASS` のメールだけを取り込みます(受信の設定で、迷惑メールと DMARC は取り込むようにもできます)。判定と宛先はイベントから取り、ヘッダーからは取りません([receiving.md](receiving.md#spoofing-and-spam))。
-- **記録の保持:** `rake redmine_serverless_ses:prune_records[<日数>]` が、指定した日数より古い取り込みの記録を消します(既定は 90 日)。Serverless は毎日動かします([Serverless の security.md](https://redmine-kit.github.io/serverless/ja/security.html#retention-periods))。
+- **記録の保持:** 次のタスクが、指定した日数より古い取り込みの記録を消します(既定は 90 日)。Serverless は毎日動かします([Serverless の security.md](https://redmine-kit.github.io/serverless/ja/security.html#retention-periods))。
+
+  ```sh
+  bin/rake redmine_serverless_ses:prune_records[<日数>]
+  ```
 
 <a id="aws-resources"></a>
 
