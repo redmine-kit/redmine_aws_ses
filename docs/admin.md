@@ -11,6 +11,8 @@ The specifications in this page were checked against official information and th
 
 ## Sending email
 
+![The Sending email tab: the SES account, the sender domain and the suppression list](./images/mail-sending.png)
+
 | Item | Contents | Source |
 | --- | --- | --- |
 | Account status | Production access (out of the sandbox), whether sending is enabled, enforcement status | SES v2 `GetAccount` |
@@ -25,6 +27,8 @@ The specifications in this page were checked against official information and th
 - **Test email:** Redmine's standard test email is sent within the page request (`deliver_now`), so `redmine-web` is also given permission to send through SES ([mail.md](https://redmine-kit.github.io/serverless/mail.html#ses)).
 
 ## Receiving email
+
+![The Receiving email tab: the addresses and the MX record, received email with one imported and two dropped, and the receiving settings](./images/mail-receiving.png)
 
 | Item | Contents | Source |
 | --- | --- | --- |
@@ -42,6 +46,8 @@ The specifications in this page were checked against official information and th
 ## Project email settings
 
 An "Email" tab is added to project settings when addresses per project are on. It configures the address per project ([receiving.md](receiving.md#addresses-per-project)). The settings are in the plugin's table (`serverless_project_mail_settings`), because Redmine's settings are for the whole Redmine only (`Setting`, a name and a value) and Redmine has no table for per-project settings. Deleting a project deletes its row.
+
+![The Email tab of a project's settings](./images/project-mail.png)
 
 | Item | Contents |
 | --- | --- |
@@ -61,3 +67,5 @@ For these pages, the role that runs Redmine's web requests gets permission to re
 ## Tests
 
 Each page has Redmine functional tests, with SDK response stubs for SES ([testing.md](https://redmine-kit.github.io/serverless/testing.html#administration-pages)).
+
+The screenshots on this page are taken with `bin/screenshots` (headless Chromium in Docker, with Redmine's test data and example SES answers and received email). Run it after changing a page.

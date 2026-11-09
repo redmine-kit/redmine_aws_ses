@@ -42,12 +42,12 @@ class ScreenshotCase < ApplicationSystemTestCase
   # Saves the element (by default Redmine's content area) as
   # docs/<images>/<name>.png.
   # The window grows to the element's height first, since Chrome only
-  # captures what is in the window.
+  # captures what is in the window; the focused field loses its caret.
   def shoot(name, language, selector: '#content')
     element = page.find(selector)
     bottom = page.evaluate_script("document.querySelector(#{selector.to_json}).getBoundingClientRect().bottom")
     page.driver.browser.manage.window.resize_to(1280, [bottom.ceil + 200, 900].max)
-    page.execute_script('window.scrollTo(0, 0)')
+    page.execute_script('window.scrollTo(0, 0); document.activeElement?.blur()')
     path = File.join(DOCS, LANGUAGES.fetch(language), "#{name}.png")
     element.native.save_screenshot(path)
     assert File.size?(path), "no screenshot at #{path}"

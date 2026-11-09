@@ -13,6 +13,8 @@ Redmine Serverless SES の管理画面です。Redmine の管理者だけが開�
 
 ## メールの送信
 
+![「メールの送信」のタブ。SES のアカウント、送信元のドメイン、サプレッションリスト](./images/mail-sending.png)
+
 | 項目 | 中身 | 取得元 |
 | --- | --- | --- |
 | アカウントの状態 | 本番での利用(サンドボックスの解除)、送信が有効か、制限の状態 | SES v2 の `GetAccount` |
@@ -29,6 +31,8 @@ Redmine Serverless SES の管理画面です。Redmine の管理者だけが開�
 <a id="receiving-email"></a>
 
 ## メールの受信
+
+![「メールの受信」のタブ。アドレスと MX レコード、取り込んだ 1 通と捨てた 2 通の受信の記録、受信の設定](./images/mail-receiving.png)
 
 | 項目 | 中身 | 取得元 |
 | --- | --- | --- |
@@ -48,6 +52,8 @@ Redmine Serverless SES の管理画面です。Redmine の管理者だけが開�
 ## プロジェクトのメールの設定
 
 プロジェクトごとのアドレスを使うとき、プロジェクトの設定に「メール」のタブを足します。プロジェクトごとのアドレスを設定します([receiving.md](receiving.md#addresses-per-project))。設定は、プラグインの表(`serverless_project_mail_settings`)に入ります。Redmine の設定(`Setting`。名前と値)は Redmine 全体のものだけで、プロジェクトごとの設定の表がないためです。プロジェクトを削除すると、その行も消えます。
+
+![プロジェクトの設定の「メール」のタブ](./images/project-mail.png)
 
 | 項目 | 中身 |
 | --- | --- |
@@ -71,3 +77,5 @@ Redmine Serverless SES の管理画面です。Redmine の管理者だけが開�
 ## テスト
 
 画面ごとに、Redmine の機能のテストがあります。SES には SDK の応答のスタブを使います([testing.md](https://redmine-kit.github.io/serverless/ja/testing.html#administration-pages))。
+
+このページの画面のスクリーンショットは、`bin/screenshots` で撮ります(Docker の中のヘッドレスの Chromium と、Redmine のテストのデータと、例の SES の応答と受信したメール)。画面を変えたら実行します。

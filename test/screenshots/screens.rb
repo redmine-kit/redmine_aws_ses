@@ -4,7 +4,8 @@ require_relative 'screenshot_case'
 
 # The screens of docs/admin.md: the Sending email and Receiving email tabs and
 # a project's Mail tab, for the domain redmine.example.com. SES answers with
-# SDK response stubs; the account, the addresses and the mail are examples.
+# SDK response stubs; the account, the addresses, the bucket and the mail are
+# examples.
 class RedmineServerlessSesScreens < ScreenshotCase
   DOMAIN = 'redmine.example.com'
 
@@ -18,6 +19,8 @@ class RedmineServerlessSesScreens < ScreenshotCase
 
   def setup
     super
+    @saved_bucket = ENV.fetch('REDMINE_MAIL_BUCKET', nil)
+    ENV['REDMINE_MAIL_BUCKET'] = 'redmine-mail-111122223333'
     Setting.mail_from = "redmine@#{DOMAIN}"
     Setting.plugin_redmine_serverless_ses = RedmineServerlessSes::DEFAULTS.merge(
       'per_project_addresses' => '1', 'project_senders' => '1', 'default_project' => 'ecookbook'
@@ -33,6 +36,7 @@ class RedmineServerlessSesScreens < ScreenshotCase
 
   def teardown
     RedmineServerlessSes::Clients.ses = @saved_ses
+    @saved_bucket ? ENV['REDMINE_MAIL_BUCKET'] = @saved_bucket : ENV.delete('REDMINE_MAIL_BUCKET')
   end
 
   def test_screens
