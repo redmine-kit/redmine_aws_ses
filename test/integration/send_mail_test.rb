@@ -4,9 +4,8 @@ require_relative '../test_helper'
 require 'net/http'
 
 module RedmineServerlessSes
-  # Sending through aws-actionmailer-ses (:ses_v2) to SES v2, and the
-  # connection check. SES runs on moto (TEST_SES_BACKEND): SES v2 is not in the
-  # LocalStack license that the tests use.
+  # Sending through aws-actionmailer-ses (:ses_v2) to SES v2 (LocalStack or
+  # moto, TEST_SES_BACKEND), and the connection check.
   class SendMailTest < ActiveSupport::TestCase
     include RedmineServerlessSes::TestHelper
 

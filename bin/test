@@ -10,14 +10,14 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 image=redmine-serverless-ses-test
 # The same tests run against either backend; TEST_AWS_BACKEND names it.
-# SES v2 is not in the LocalStack license that the token gives, so SES stays
-# on moto (the SDK's AWS_ENDPOINT_URL_SESV2 and AWS_ENDPOINT_URL_SES).
 if [[ -n "${LOCALSTACK_AUTH_TOKEN:-}" ]]; then
   backend=localstack endpoint=http://localstack:4566
 else
   backend=moto endpoint=http://moto:5000
 fi
-ses_backend=moto ses_endpoint=http://moto:5000
+# SES has its own variables (the SDK's AWS_ENDPOINT_URL_SESV2 and
+# AWS_ENDPOINT_URL_SES), so that it can be pointed elsewhere; now the same.
+ses_backend=$backend ses_endpoint=$endpoint
 echo "AWS backend: $backend ($endpoint); SES: $ses_backend ($ses_endpoint)"
 bin/services >/dev/null
 docker buildx build --load -q -t "$image" -f test/Dockerfile . >/dev/null
