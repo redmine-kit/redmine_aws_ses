@@ -1,8 +1,8 @@
 # Redmine Serverless SES
 
 [![CI](https://img.shields.io/github/actions/workflow/status/redmine-kit/redmine_serverless_ses/ci.yml?branch=main&label=CI)](https://github.com/redmine-kit/redmine_serverless_ses/actions/workflows/ci.yml)
-[![Coverage](https://img.shields.io/codecov/c/github/redmine-kit/redmine_serverless_ses)](https://codecov.io/gh/redmine-kit/redmine_serverless_ses)
-[![License](https://img.shields.io/github/license/redmine-kit/redmine_serverless_ses)](LICENSE)
+[![Coverage](https://img.shields.io/codecov/c/github/redmine-kit/redmine_serverless_ses?label=Coverage)](https://codecov.io/gh/redmine-kit/redmine_serverless_ses)
+[![License](https://img.shields.io/github/license/redmine-kit/redmine_serverless_ses?label=License)](LICENSE)
 
 A Redmine plugin for sending and receiving Redmine's email with Amazon SES: retries of sending by error type, importing received email with checks against spoofing and spam, email addresses per project, and administration pages for SES. It works with or without AWS Lambda; [Serverless](https://github.com/redmine-kit/serverless) uses it together with [Redmine Serverless](https://github.com/redmine-kit/redmine_serverless).
 
