@@ -21,3 +21,7 @@ Redmine Serverless SES (`redmine_serverless_ses`) is a Redmine plugin for sendin
 - **Gems and code structure:** The gem depends on `aws-actionmailer-ses`, `aws-sdk-sesv2` and `aws-sdk-s3` (with a checkout, the plugin's `Gemfile` adds them). `boot/redmine_serverless_ses.rb` loads `aws-actionmailer-ses` (the delivery method `:ses_v2`) and registers the interceptor for per-project senders; Bundler loads it before Rails initializes, because the plugin is also a gem ([setup.md](setup.md#installation)). The rest is in `lib/redmine_serverless_ses/`, `app/` and `db/`, which Redmine loads, and `init.rb` turns it on.
 - **Tests:** Tests are written with Redmine's standard mechanism and run in Docker with moto ([setup.md](setup.md#tests)). Mail import tests use messages with the headers SES adds ([testing.md](https://redmine-kit.github.io/serverless/testing.html#email-redmine_serverless_ses)).
 - **Migrations:** Add tables for received mail records (`serverless_received_mails`) and project mail settings (`serverless_project_mail_settings`) ([admin.md](admin.md)).
+
+## Sponsors
+
+<Sponsors><a href="https://localstack.cloud">LocalStack</a></Sponsors>
