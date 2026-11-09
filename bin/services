@@ -12,7 +12,7 @@ if [[ "${1:-}" == "--down" ]]; then
   exit 0
 fi
 if ! "${compose[@]}" up -d --wait; then
-  "${compose[@]}" ps -a
-  "${compose[@]}" logs --tail 80
+  "${compose[@]}" ps -a >&2
+  "${compose[@]}" logs --tail 80 >&2
   exit 1
 fi
