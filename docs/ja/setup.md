@@ -1,6 +1,6 @@
 # 準備
 
-Redmine Serverless SES を使う Redmine に要るもの(入れ方、設定、SES と S3 のリソース、IAM の権限、ネットワーク)です。AWS Lambda でも、ふつうのサーバーでも同じです。[Serverless](https://redmine-kit.github.io/serverless/ja/) は、これを CloudFormation でまとめて作ります。このページは、手で用意するときや、Serverless が作るものを確認するときのためのものです。プラグインは設計段階なので、下の内容は設計で、コードを書くときに確認します。
+Redmine Serverless SES を使う Redmine に要るもの(インストール、設定、SES と S3 のリソース、IAM の権限、ネットワーク)です。AWS Lambda でも、ふつうのサーバーでも同じです。[Serverless](https://redmine-kit.github.io/serverless/ja/) は、これを CloudFormation でまとめて作ります。このページは、手で用意するときや、Serverless が作るものを確認するときのためのものです。プラグインは設計段階なので、下の内容は設計で、コードを書くときに確認します。
 
 <a id="requirements"></a>
 
@@ -13,7 +13,7 @@ Redmine Serverless SES を使う Redmine に要るもの(入れ方、設定、SE
 
 <a id="installation"></a>
 
-## 入れ方
+## インストール
 
 1. プラグインを `plugins/redmine_serverless_ses` に置き、`bundle install` を実行します(プラグインの `Gemfile` は Redmine の `Gemfile` が読み込みます)。
 2. `bin/rake redmine:plugins:migrate` を実行します。受け取ったメールの記録(`serverless_received_mails`)と、プロジェクトのメールの設定(`serverless_project_mail_settings`)の表ができます。
