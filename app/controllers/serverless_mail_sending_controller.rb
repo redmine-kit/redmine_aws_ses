@@ -23,7 +23,7 @@ class ServerlessMailSendingController < ApplicationController
     logger&.info "[redmine_serverless_ses] #{User.current.login} removed #{address} from the suppression list"
     flash[:notice] = l(:notice_serverless_mail_unsuppressed, address: address)
   rescue StandardError => e
-    flash[:error] = "#{e.class}: #{e.message}"
+    flash[:error] = api_error(e)
   ensure
     redirect_to action: 'index'
   end
@@ -33,6 +33,13 @@ class ServerlessMailSendingController < ApplicationController
   def fetch
     [yield, nil]
   rescue StandardError => e
-    [nil, "#{e.class}: #{e.message}"]
+    [nil, api_error(e)]
+  end
+
+  # A short message for the page (the AWS error code, or the class), with the
+  # details in the log.
+  def api_error(error)
+    logger&.error "[redmine_serverless_ses] #{error.class}: #{error.message}"
+    l(:text_serverless_mail_api_error, error: error.respond_to?(:code) && error.code.present? ? error.code : error.class.name)
   end
 end

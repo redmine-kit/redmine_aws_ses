@@ -61,3 +61,4 @@ ja:
   text_serverless_mail_import_spam: オフ(推奨)では取り込みません。必要なメールを SES が落とすときだけオンにします。
   text_serverless_mail_virus: SES がウイルスを見つけたメールは、いつも取り込みません。添付ファイルが全員に配られるためです。
   label_serverless_mail_verdicts: SES の判定
+  text_serverless_mail_api_error: "SES の API を呼べませんでした(%{error})。詳しくはログを参照してください。"

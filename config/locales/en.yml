@@ -61,3 +61,4 @@ en:
   text_serverless_mail_import_spam: Off (recommended) drops it. Turn on only if SES drops email you need.
   text_serverless_mail_virus: Email in which SES finds a virus is always dropped, because its attachments would be served to everyone.
   label_serverless_mail_verdicts: SES verdicts
+  text_serverless_mail_api_error: "Could not call the SES API (%{error}). See the log for details."
