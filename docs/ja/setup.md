@@ -71,16 +71,20 @@ ln -s "$(bundle info --path redmine_serverless_ses)" plugins/redmine_serverless_
 
 ## 設定
 
-| 設定 | 置き場所 | 中身 |
+| キー | 説明 | パラメーター |
 | --- | --- | --- |
-| 送信元メールアドレス(`Setting.mail_from`) | Redmine の管理画面の設定 | Redmine 全体のアドレス。確認済みのドメインのもの(例: `redmine@redmine.example.com`)([Serverless の mail.md](receiving.md#address-for-the-whole-redmine)) |
-| 受信の設定 | プラグインの設定 | Redmine 全体のアドレスの `@` の前(既定は `redmine`)、そこに届いたメールの扱い、既定のプロジェクト、迷惑メール(`import_spam`)と DMARC が通らないメール(`import_without_dmarc_pass`)を取り込むか(どちらも既定はオフ)([admin.md](admin.md#receiving-email))。Serverless では、`redmine.json` の `pluginSettings` で設定する |
-| プロジェクトごとのアドレス | プラグインの設定 | 使うか使わないか(既定は使わない。Redmine の標準と同じ)。プロジェクトごとの設定は、各プロジェクトの「メール」のタブ([admin.md](admin.md#project-email-settings)) |
-| `REDMINE_MAIL_BUCKET` | 取り込むプロセス(タスクと、取り込み直しのための worker)の環境変数 | SES が受け取ったメールを置くバケット(`inbound/<メッセージ ID>`。取り込んだメールは `processed/` に移す) |
-| `REDMINE_ROLE` | 環境変数 | ジョブを動かすプロセスでは `worker`(下記) |
-| 「この行以降を切り捨てる」 | Redmine の管理画面の設定 | 引用の前の行。返信の引用が注記に入らないようにする |
+| `REDMINE_MAIL_BUCKET` | SES が受け取ったメールを置くバケット(`inbound/<メッセージ ID>`。取り込んだメールは `processed/` に移す) | 受信するなら必須。取り込むプロセス(タスクと、取り込み直しのための worker)に設定する |
+| `REDMINE_ROLE` | 送信のやり直しを、ジョブを動かすプロセスでだけ有効にする(下記) | ジョブを動かすプロセスでは `worker` |
 
-- **やり直しは worker だけ:** プラグインは、ジョブを動かすプロセス(`REDMINE_ROLE=worker`。Lambda 以外では、取り出し役のプロセスに設定する)でだけ `raise_delivery_errors` を `true` にします。SES のエラーが Redmine のメールのジョブ(`Mailer::DeliveryJob`)に届くようにするためです。ほかのプロセスは Redmine の `false` のままにし、1 通の失敗で rake のタスクが止まらないようにします([Serverless の mail.md](sending.md))。
+| 項目 | 説明 | 変える場所 |
+| --- | --- | --- |
+| 送信元メールアドレス(`Setting.mail_from`) | Redmine 全体のアドレス。確認済みのドメインのもの(例: `redmine@redmine.example.com`)([receiving.md](receiving.md#address-for-the-whole-redmine)) | Redmine の管理画面の設定 |
+| 受信の設定 | Redmine 全体のアドレスの `@` の前、そこに届いたメールの扱い、既定のプロジェクト、迷惑メールと DMARC が通らないメールを取り込むか([admin.md](admin.md#receiving-email)) | プラグインの設定。Serverless では `redmine.json` の `pluginSettings` |
+| プロジェクトごとのアドレス | 使うか使わないか。既定は使わない(Redmine の標準と同じ)。プロジェクトごとの設定は、各プロジェクトの「メール」のタブ([admin.md](admin.md#project-email-settings)) | プラグインの設定 |
+| 「この行以降を切り捨てる」 | 引用の前の行。返信の引用が注記に入らないようにする | Redmine の管理画面の設定 |
+
+- **受信の設定の既定:** `@` の前は `redmine` です。迷惑メール(`import_spam`)と DMARC が通らないメール(`import_without_dmarc_pass`)の取り込みは、どちらも既定はオフです。
+- **やり直しは worker だけ:** プラグインは、ジョブを動かすプロセス(`REDMINE_ROLE=worker`。Lambda 以外では、取り出し役のプロセスに設定する)でだけ `raise_delivery_errors` を `true` にします。SES のエラーが Redmine のメールのジョブ(`Mailer::DeliveryJob`)に届くようにするためです。ほかのプロセスは Redmine の `false` のままにし、1 通の失敗で rake のタスクが止まらないようにします([sending.md](sending.md))。
 - **エラーの種類ごとに:** 一時的なエラーはジョブの中でやり直し、メッセージのエラーはジョブを捨て、アカウントのエラーはキューのやり直しとデッドレターキューに任せます([sending.md](sending.md#handling-by-kind-of-error))。
 - **取り込み:** rake のタスク `redmine_serverless_ses:receive_mail` が、受け取ったメールを 1 通取り込みます。メールごとに、何かがこれを起動する必要があります。Lambda では、SES の受信のルールがタスクの関数を非同期で呼び、そのハンドラーが SES のイベントの値を変数で渡します。`MESSAGE_ID`(`mail.messageId`)、`SES_RECIPIENTS`(`receipt.recipients`。カンマ区切り)と、判定の `SES_SPAM_VERDICT`、`SES_VIRUS_VERDICT`、`SES_DMARC_VERDICT`、`SES_SPF_VERDICT`、`SES_DKIM_VERDICT`、`SES_DMARC_POLICY` です([Serverless の tasks.md](https://redmine-kit.github.io/serverless/ja/tasks.html#kinds-of-events))。
 - **SES の確認の結果:** イベントのウイルスの判定が `PASS` で、迷惑メールと DMARC の判定が `PASS` のメールだけを取り込みます(受信の設定で、迷惑メールと DMARC は取り込むようにもできます)。判定と宛先はイベントから取り、ヘッダーからは取りません([receiving.md](receiving.md#spoofing-and-spam))。
