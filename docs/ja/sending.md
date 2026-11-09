@@ -14,7 +14,7 @@ Redmine の本番の設定(`production.rb`)は `raise_delivery_errors = false` �
 
 <a id="handling-by-kind-of-error"></a>
 
-## エラーの種類ごとの扱い
+## エラーの種類別の扱い
 
 SES v2 の `SendEmail` のエラー(API リファレンスの一覧)を、3 つの種類に分けます。プラグインは、`Mailer::DeliveryJob` に SES のエラーのハンドラーを足します(`rescue_from`。ActionMailer のものより後に宣言するので、先に試されます)。
 
@@ -40,7 +40,7 @@ SES v2 の `SendEmail` のエラー(API リファレンスの一覧)を、3 つ�
 
 <a id="senders-per-project"></a>
 
-## プロジェクトごとの送信元
+## プロジェクト別の送信元
 
 Redmine は、すべての通知を送信元のアドレス(`Setting.mail_from`)から送ります。プロジェクトごとのアドレスと、プロジェクトごとの送信元を有効にすると([receiving.md](receiving.md#addresses-per-project))、プラグインは、プロジェクトの通知を、そのプロジェクトのアドレスから送ります。
 
@@ -58,6 +58,6 @@ Redmine は、すべての通知を送信元のアドレス(`Setting.mail_from`)
 | --- | --- |
 | SES での送信 | 通知が `aws-actionmailer-ses` を通って SES v2(LocalStack。トークンがなければ moto)に送られる。確認済みの ID でない送信元は、worker で `MessageRejected` の例外を発生させる(モックした応答。下記) |
 | 接続の確認 | SES v2 の `GetAccount`(モックした応答。下記) |
-| エラーの種類ごと | SDK の応答のスタブで `SendEmail` のエラーを 1 つずつ起こす。一時的なエラーはジョブの中でやり直し、最後の実行のあとは例外を発生させる。メッセージのエラーは捨てる。アカウントのエラーはキューのために例外を発生させる |
+| エラーの種類別 | SDK の応答のスタブで `SendEmail` のエラーを 1 つずつ起こす。一時的なエラーはジョブの中でやり直し、最後の実行のあとは例外を発生させる。メッセージのエラーは捨てる。アカウントのエラーはキューのために例外を発生させる |
 | worker だけ | `raise_delivery_errors` は `REDMINE_ROLE=worker` のときだけ設定する |
-| プロジェクトごとの送信元 | インターセプターは、設定が有効なときだけ、送信元と `Reply-To` を替える |
+| プロジェクト別の送信元 | インターセプターは、設定が有効なときだけ、送信元と `Reply-To` を替える |

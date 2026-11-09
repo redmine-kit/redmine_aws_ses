@@ -16,7 +16,7 @@ Redmine Serverless SES(`redmine_serverless_ses`)は、Redmine のメールを Am
 | --- | --- | --- | --- |
 | メールの送信のやり直し | ジョブを動かすプロセスでの `raise_delivery_errors`、SES のエラーの種類ごとのやり直し(一時的なエラーはやり直し、アカウントの問題は送り直しのために残し、メッセージの問題は捨てる) | Lambda では `REDMINE_ROLE=worker`。Lambda 以外のときは、ジョブを動かすプロセス | [sending.md](sending.md) |
 | メールの受信 | SES が S3 に置いたメールの取り込み(rake のタスク `redmine_serverless_ses:receive_mail`。中では Redmine の標準の `MailHandler` を使う)、SES のイベントの判定の確認(迷惑メールと DMARC は設定で選べ、ウイルスはいつも捨てる)、取り込みの記録 | 受信の設定がある | [receiving.md](receiving.md#importing) |
-| プロジェクトごとのアドレス | プロジェクトごとの受信のアドレスと送信元、全体用のアドレス、プロジェクトの設定の「メール」のタブ | プラグインの設定で有効にする。無効なら Redmine の標準と同じ(送信元は 1 つで、プロジェクトはサブアドレス `redmine+識別子@…` で選ぶ) | [receiving.md](receiving.md#addresses-per-project) |
+| プロジェクト別のアドレス | プロジェクトごとの受信のアドレスと送信元、全体用のアドレス、プロジェクトの設定の「メール」のタブ | プラグインの設定で有効にする。無効なら Redmine の標準と同じ(送信元は 1 つで、プロジェクトはサブアドレス `redmine+識別子@…` で選ぶ) | [receiving.md](receiving.md#addresses-per-project) |
 | 管理画面 | 共有の「Serverless」のメニューの「メールの送信」(SES の状態)と「メールの受信」のタブ、プロジェクトの設定の中のプロジェクトのメールの設定 | 管理者。使っていない機能の画面は出さない | [admin.md](admin.md) |
 
 <a id="outside-lambda"></a>

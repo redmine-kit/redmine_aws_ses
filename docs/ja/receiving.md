@@ -6,7 +6,7 @@ Redmine Serverless SES が、SES の受け取ったメールを取り込むし�
 
 <a id="addresses-per-project"></a>
 
-## プロジェクトごとのアドレス
+## プロジェクト別のアドレス
 
 | アドレス | 使い方 |
 | --- | --- |
@@ -23,7 +23,7 @@ Redmine Serverless SES が、SES の受け取ったメールを取り込むし�
 
 <a id="without-addresses-per-project"></a>
 
-## プロジェクトごとのアドレスを使わないとき
+## プロジェクト別のアドレスを使わないとき
 
 プロジェクトごとのアドレスが無効(既定)なら、Redmine の標準と同じに受け取ります。
 
