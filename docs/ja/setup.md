@@ -15,13 +15,22 @@ Redmine Serverless SES を使う Redmine に要るもの(インストール、�
 
 ## インストール
 
-**プラグインの取り方:** Docker なら、ghcr.io のプラグインのイメージから、digest で固定して写します(タグは、`main` への push のたびに `main` と `sha-<コミット>`、リリースは `v*`)。
+**プラグインの取り方:** バージョンのタグごとに、プラグインを gem として GitHub Packages(`https://rubygems.pkg.github.com/redmine-kit`)に公開します。まだどのバージョンも公開していません。GitHub Packages から入れるには、公開のパッケージでも、`read:packages` の権限を持つ GitHub のトークンが要ります。gem はプラグインの動かすためのファイルを持ちます。Redmine は `plugins/` のプラグインだけを読み込むので、入れた gem をそこにリンクします。
 
-```dockerfile
-COPY --from=ghcr.io/redmine-kit/redmine_serverless_ses:main@sha256:<digest> /redmine_serverless_ses plugins/redmine_serverless_ses/
+```ruby
+# Redmine の Gemfile.local
+source 'https://rubygems.pkg.github.com/redmine-kit' do
+  gem 'redmine_serverless_ses'
+end
 ```
 
-Docker を使わないなら、リポジトリを clone するか(`git clone https://github.com/redmine-kit/redmine_serverless_ses.git plugins/redmine_serverless_ses`)、リリースを公開したあとは、そのアーカイブを `plugins/redmine_serverless_ses` に展開します。
+```sh
+bundle config set --global rubygems.pkg.github.com <ユーザー>:<トークン>   # か、変数 BUNDLE_RUBYGEMS__PKG__GITHUB__COM
+bundle install
+ln -s "$(bundle info --path redmine_serverless_ses)" plugins/redmine_serverless_ses
+```
+
+gem を使わないなら、リポジトリを `plugins/redmine_serverless_ses` に clone します(`git clone https://github.com/redmine-kit/redmine_serverless_ses.git plugins/redmine_serverless_ses`)。
 
 1. プラグインを `plugins/redmine_serverless_ses` に置き、`bundle install` を実行します(プラグインの `Gemfile` は Redmine の `Gemfile` が読み込みます)。
 2. `bin/rake redmine:plugins:migrate` を実行します。受け取ったメールの記録(`serverless_received_mails`)と、プロジェクトのメールの設定(`serverless_project_mail_settings`)の表ができます。
