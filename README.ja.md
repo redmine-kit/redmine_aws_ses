@@ -1,6 +1,6 @@
 # Redmine Serverless SES
 
-Redmine のメールを Amazon SES で送受信するための Redmine のプラグインです。エラーの種類ごとの送信のやり直し、なりすましと迷惑メールの確認を付けた受信の取り込み、プロジェクトごとのメールアドレス、SES の管理画面を持ちます。AWS Lambda でも、Lambda でなくても動きます。[Serverless](https://github.com/redmine-kit/serverless) は、[Redmine Serverless](https://github.com/redmine-kit/redmine_serverless) といっしょに使います。
+Redmine のメールを Amazon SES で送受信するための Redmine のプラグインです。エラーの種類ごとの送信のやり直し、なりすましと迷惑メールの確認を付けた受信の取り込み、プロジェクトごとのメールアドレス、SES の管理画面を持ちます。AWS Lambda でも、Lambda 以外でも動きます。[Serverless](https://github.com/redmine-kit/serverless) は、[Redmine Serverless](https://github.com/redmine-kit/redmine_serverless) といっしょに使います。
 
 [English](README.md)
 
