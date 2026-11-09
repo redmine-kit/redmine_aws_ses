@@ -65,7 +65,7 @@ bundle install
 ln -s "$(bundle info --path redmine_serverless_ses)" plugins/redmine_serverless_ses
 ```
 
-- **アクセス:** GitHub Packages からインストールするには、公開のパッケージでも、`read:packages` の権限を持つ GitHub のトークンが要ります。ほかのリポジトリのワークフローは、パッケージの設定(「Manage Actions access」)でそのリポジトリに Read を与えると、自分の `GITHUB_TOKEN`(`packages: read`)で読めます。
+GitHub Packages からインストールするには、公開のパッケージでも、`read:packages` の権限を持つ GitHub のトークンが要ります。ほかのリポジトリのワークフローは、パッケージの設定(「Manage Actions access」)でそのリポジトリに Read を与えると、自分の `GITHUB_TOKEN`(`packages: read`)で読めます。
 
 <a id="configuration"></a>
 
@@ -83,16 +83,43 @@ ln -s "$(bundle info --path redmine_serverless_ses)" plugins/redmine_serverless_
 | プロジェクトごとのアドレス | 使うか使わないか。既定は使わない(Redmine の標準と同じ)。プロジェクトごとの設定は、各プロジェクトの「メール」のタブ([admin.md](admin.md#project-email-settings)) | プラグインの設定 |
 | 「この行以降を切り捨てる」 | 引用の前の行。返信の引用が注記に入らないようにする | Redmine の管理画面の設定 |
 
-- **受信の設定の既定:** `@` の前は `redmine` です。迷惑メール(`import_spam`)と DMARC が通らないメール(`import_without_dmarc_pass`)の取り込みは、どちらも既定はオフです。
-- **やり直しは worker だけ:** プラグインは、ジョブを動かすプロセス(`REDMINE_ROLE=worker`。Lambda 以外では、取り出し役のプロセスに設定する)でだけ `raise_delivery_errors` を `true` にします。SES のエラーが Redmine のメールのジョブ(`Mailer::DeliveryJob`)に届くようにするためです。ほかのプロセスは Redmine の `false` のままにし、1 通の失敗で rake のタスクが止まらないようにします([sending.md](sending.md))。
-- **エラーの種類ごとに:** 一時的なエラーはジョブの中でやり直し、メッセージのエラーはジョブを捨て、アカウントのエラーはキューのやり直しとデッドレターキューに任せます([sending.md](sending.md#handling-by-kind-of-error))。
-- **取り込み:** rake のタスク `redmine_serverless_ses:receive_mail` が、受け取ったメールを 1 通取り込みます。メールごとに、何かがこれを起動する必要があります。Lambda では、SES の受信のルールがタスクの関数を非同期で呼び、そのハンドラーが SES のイベントの値を変数で渡します。`MESSAGE_ID`(`mail.messageId`)、`SES_RECIPIENTS`(`receipt.recipients`。カンマ区切り)と、判定の `SES_SPAM_VERDICT`、`SES_VIRUS_VERDICT`、`SES_DMARC_VERDICT`、`SES_SPF_VERDICT`、`SES_DKIM_VERDICT`、`SES_DMARC_POLICY` です([Serverless の tasks.md](https://redmine-kit.github.io/serverless/ja/tasks.html#kinds-of-events))。
-- **SES の確認の結果:** イベントのウイルスの判定が `PASS` で、迷惑メールと DMARC の判定が `PASS` のメールだけを取り込みます(受信の設定で、迷惑メールと DMARC は取り込むようにもできます)。判定と宛先はイベントから取り、ヘッダーからは取りません([receiving.md](receiving.md#spoofing-and-spam))。
-- **記録の保持:** 次のタスクが、指定した日数より古い取り込みの記録を消します(既定は 90 日)。Serverless は毎日動かします([Serverless の security.md](https://redmine-kit.github.io/serverless/ja/security.html#retention-periods))。
+<a id="receiving-defaults"></a>
 
-  ```sh
-  bin/rake redmine_serverless_ses:prune_records[<日数>]
-  ```
+### 受信の設定の既定
+
+既定では、`@` の前は `redmine` です。迷惑メール(`import_spam`)と、DMARC が通らないメール(`import_without_dmarc_pass`)の取得は、どちらもオフです。
+
+<a id="sending-errors"></a>
+
+### 送信のエラー
+
+プラグインは、ジョブを動かすプロセス(`REDMINE_ROLE=worker`。Lambda 以外では取り出し役のプロセスに設定する)でだけ、`raise_delivery_errors` を `true` にします。SES のエラーを、Redmine のメールのジョブ(`Mailer::DeliveryJob`)に届けるためです。ほかのプロセスは Redmine の `false` のままなので、1 通の失敗で rake のタスクが止まることはありません([sending.md](sending.md))。
+
+ジョブの中では、エラーの種類で扱いが決まります。一時的なエラーはジョブの中でやり直し、メッセージのエラーはジョブを捨て、アカウントのエラーはキューのやり直しとデッドレターキューに任せます([sending.md](sending.md#handling-by-kind-of-error))。
+
+<a id="importing-received-mail"></a>
+
+### 受信したメールの取得
+
+rake のタスク `redmine_serverless_ses:receive_mail` は、受信したメールを 1 通取得します。そのため、メールごとに何かがこのタスクを起動する必要があります。Lambda では、SES の受信のルールがタスクの関数を非同期で呼び、そのハンドラーが SES のイベントの値を変数で渡します([Serverless の tasks.md](https://redmine-kit.github.io/serverless/ja/tasks.html#kinds-of-events))。
+
+| 変数 | SES のイベントの値 |
+| --- | --- |
+| `MESSAGE_ID` | `mail.messageId` |
+| `SES_RECIPIENTS` | `receipt.recipients`(カンマ区切り) |
+| `SES_SPAM_VERDICT`<br>`SES_VIRUS_VERDICT`<br>`SES_DMARC_VERDICT`<br>`SES_SPF_VERDICT`<br>`SES_DKIM_VERDICT`<br>`SES_DMARC_POLICY` | 判定の結果 |
+
+取得するのは、ウイルスの判定が `PASS` で、迷惑メールと DMARC の判定も `PASS` のメールだけです。受信の設定で、迷惑メールと DMARC が通らないメールも取得するようにできます。判定と宛先はイベントから取り、メールのヘッダーからは取りません([receiving.md](receiving.md#spoofing-and-spam))。
+
+<a id="keeping-records"></a>
+
+### 記録の保持
+
+次のタスクが、指定した日数より古い取得の記録を消します(既定は 90 日)。Serverless は毎日動かします([Serverless の security.md](https://redmine-kit.github.io/serverless/ja/security.html#retention-periods))。
+
+```sh
+bin/rake redmine_serverless_ses:prune_records[<日数>]
+```
 
 <a id="aws-resources"></a>
 
