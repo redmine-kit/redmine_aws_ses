@@ -24,7 +24,7 @@ Redmine Serverless SES (`redmine_serverless_ses`) is a Redmine plugin for sendin
 
 ## Sponsors
 
-<Sponsors><a href="https://localstack.cloud">LocalStack</a></Sponsors>
+<Sponsors><a href="https://www.keyselect.co.jp/">KEY SELECT</a> <a href="https://localstack.cloud">LocalStack</a></Sponsors>
 
 ## License
 
