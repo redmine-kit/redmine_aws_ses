@@ -11,6 +11,14 @@ What a Redmine needs to use Redmine Serverless SES: installation, configuration,
 
 ## Installation
 
+**Getting the plugin:** with Docker, copy it from the plugin's image on ghcr.io, pinned by digest (tags: `main` and `sha-<commit>` for every push to `main`, `v*` for releases):
+
+```dockerfile
+COPY --from=ghcr.io/redmine-kit/redmine_serverless_ses:main@sha256:<digest> /redmine_serverless_ses plugins/redmine_serverless_ses/
+```
+
+Without Docker, clone the repository (`git clone https://github.com/redmine-kit/redmine_serverless_ses.git plugins/redmine_serverless_ses`) or, once releases are published, extract a release archive into `plugins/redmine_serverless_ses`.
+
 1. Put the plugin in `plugins/redmine_serverless_ses` and run `bundle install` (Redmine's `Gemfile` loads the plugin's `Gemfile`).
 2. Run `bin/rake redmine:plugins:migrate`. It creates the tables of received mail records (`serverless_received_mails`) and project mail settings (`serverless_project_mail_settings`).
 3. Set sending in `config/configuration.yml`:

@@ -15,6 +15,14 @@ Redmine Serverless SES を使う Redmine に要るもの(インストール、�
 
 ## インストール
 
+**プラグインの取り方:** Docker なら、ghcr.io のプラグインのイメージから、digest で固定して写します(タグは、`main` への push のたびに `main` と `sha-<コミット>`、リリースは `v*`)。
+
+```dockerfile
+COPY --from=ghcr.io/redmine-kit/redmine_serverless_ses:main@sha256:<digest> /redmine_serverless_ses plugins/redmine_serverless_ses/
+```
+
+Docker を使わないなら、リポジトリを clone するか(`git clone https://github.com/redmine-kit/redmine_serverless_ses.git plugins/redmine_serverless_ses`)、リリースを公開したあとは、そのアーカイブを `plugins/redmine_serverless_ses` に展開します。
+
 1. プラグインを `plugins/redmine_serverless_ses` に置き、`bundle install` を実行します(プラグインの `Gemfile` は Redmine の `Gemfile` が読み込みます)。
 2. `bin/rake redmine:plugins:migrate` を実行します。受け取ったメールの記録(`serverless_received_mails`)と、プロジェクトのメールの設定(`serverless_project_mail_settings`)の表ができます。
 3. `config/configuration.yml` に送信を設定します。
