@@ -24,7 +24,8 @@ module RedmineServerlessSes
       assert_select 'div.box.tabular p', text: /redmine@#{Regexp.escape(DOMAIN)}/
       assert_select '#serverless-received-mails tbody tr', 2
       assert_select '#serverless-received-mails tr.dropped', text: /DMARC/
-      assert_select '#serverless-mail-settings .box.tabular.settings label.block', text: /Also fetch email that fails DMARC/ do
+      assert_select '#serverless-mail-settings .box.tabular.settings label.block',
+                    text: /Also fetch email that fails DMARC/ do
         assert_select 'input[type=checkbox][name=?]', 'settings[import_without_dmarc_pass]'
       end
       assert_select '#serverless-mail-settings label.block', text: /Also fetch email marked as spam/ do

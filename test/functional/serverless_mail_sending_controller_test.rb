@@ -42,7 +42,8 @@ module RedmineServerlessSes
 
       assert_response :success
       assert_select 'div.flash.error', 3
-      assert_select 'div.flash.error', text: 'Could not call the SES API (AccessDeniedException). See the log for details.'
+      assert_select 'div.flash.error',
+                    text: 'Could not call the SES API (AccessDeniedException). See the log for details.'
       assert_select 'div.flash.error', text: /NotFoundException/
       assert_not_includes response.body, 'stubbed response error', 'the raw exception message stays in the log'
     end
