@@ -15,5 +15,5 @@ Redmine Serverless SES (`redmine_serverless_ses`) is a Redmine plugin for sendin
 
 - **With or without Lambda:** Sending through SES (`aws-actionmailer-ses`) and receiving work in any Redmine that can reach SES and S3; the receiving task is started with the message ID of the received email. On AWS Lambda, [Serverless](https://redmine-kit.github.io/serverless/) installs it together with [Redmine Serverless](https://redmine-kit.github.io/redmine_serverless/), which records jobs that fail for the last time and lets them be resent.
 - **Gems:** Gems the plugin uses go in the plugin's `Gemfile`. Redmine's `Gemfile` also loads `plugins/*/Gemfile`.
-- **Tests:** Tests are written with Redmine's standard mechanism (`rake redmine:plugins:test`). Mail import tests use Redmine's test mail samples with the headers SES adds ([testing.md](https://redmine-kit.github.io/serverless/testing.html#running-on-lambda-and-email)).
+- **Tests:** Tests are written with Redmine's standard mechanism (`rake redmine:plugins:test`). Mail import tests use Redmine's test mail samples with the headers SES adds ([testing.md](https://redmine-kit.github.io/serverless/testing.html#email-redmine_serverless_ses)).
 - **Migrations:** Add tables for received mail records (`serverless_received_mails`) and project mail settings (`serverless_project_mail_settings`) ([admin.md](admin.md)).

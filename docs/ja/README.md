@@ -17,5 +17,5 @@ Redmine Serverless SES(`redmine_serverless_ses`)は、Redmine のメールを Am
 
 - **Lambda でも、Lambda でなくても:** SES での送信(`aws-actionmailer-ses`)と受信は、SES と S3 に届く Redmine なら動きます。受信のタスクは、受けたメールのメッセージの ID を渡して動かします。AWS Lambda では、[Serverless](https://redmine-kit.github.io/serverless/ja/) が [Redmine Serverless](https://redmine-kit.github.io/redmine_serverless/ja/) といっしょに入れます。最後に失敗したジョブの記録と送り直しは、Redmine Serverless が持ちます。
 - **gem:** プラグインが使う gem は、プラグインの `Gemfile` に書きます。Redmine の `Gemfile` は、`plugins/*/Gemfile` も読み込みます。
-- **テスト:** Redmine の標準の仕組み(`rake redmine:plugins:test`)でテストを書きます。メールの取り込みのテストには、Redmine のテスト用のメールの見本に、SES が足すヘッダーを付けて使います([testing.md](https://redmine-kit.github.io/serverless/ja/testing.html#running-on-lambda-and-email))。
+- **テスト:** Redmine の標準の仕組み(`rake redmine:plugins:test`)でテストを書きます。メールの取り込みのテストには、Redmine のテスト用のメールの見本に、SES が足すヘッダーを付けて使います([testing.md](https://redmine-kit.github.io/serverless/ja/testing.html#email-redmine_serverless_ses))。
 - **migration:** 受け取ったメールの記録(`serverless_received_mails`)と、プロジェクトのメールの設定(`serverless_project_mail_settings`)のテーブルを足します([admin.md](admin.md))。
