@@ -42,9 +42,9 @@ production:
 - **やり直しは worker だけ:** プラグインは、ジョブを動かすプロセス(`REDMINE_ROLE=worker`)でだけ `raise_delivery_errors` を `true` にします。SES のエラーでジョブが失敗し、種類ごとにやり直されるようにするためです([Serverless の mail.md](https://redmine-kit.github.io/serverless/ja/mail.html#when-sending-fails))。
 - **取り込み:** rake のタスク `redmine_serverless_ses:receive_mail MESSAGE_ID=<メッセージ ID>` が、受け取ったメールを 1 通取り込みます。メールごとに、何かがこれを起動する必要があります。Lambda では、SES の受信のルールがタスクの関数を非同期で呼びます。
 
-<a id="ses-and-s3-resources"></a>
+<a id="aws-resources"></a>
 
-## SES と S3 のリソース
+## AWS のリソース
 
 | リソース | 設定 |
 | --- | --- |
@@ -58,16 +58,20 @@ production:
 
 ## IAM の権限
 
-| 権限 | リソース | ロール | 使いみち |
-| --- | --- | --- | --- |
-| `ses:SendEmail`、`ses:SendRawEmail` | サブドメインの SES の ID | メールを送るすべてのプロセス(テストのメールのための画面の要求、ジョブ、rake) | SES v2 の `SendEmail` で、メール全体(raw)を送る。v2 で `ses:SendRawEmail` が要るかは未確認 |
-| `ses:GetEmailIdentity` | SES の ID | 画面の要求 | 管理画面の「メールの送信」 |
-| `ses:GetAccount`、`ses:ListSuppressedDestinations`、`ses:DeleteSuppressedDestination` | `*`(絞れない) | 画面の要求 | 同じ画面の、アカウントの状態、サプレッションリストと、そこからの削除。`GetAccount` は、Redmine Serverless の接続の確認の SES の確認にも使う |
-| `s3:GetObject`、`s3:DeleteObject` | メールのバケットの `inbound/*` | 取り込み(rake) | 受け取ったメールを読み、移したあとに消す |
-| `s3:PutObject` | メールのバケットの `processed/*` | 取り込み(rake) | 取り込んだメールを移す |
-| `inbound/*` と `processed/*` への `s3:GetObject`、`s3:DeleteObject`、`processed/*` への `s3:PutObject` | メールのバケット | ジョブ | 「メールの受信」の画面からの取り込み直し |
+| 操作 | 対象 | 理由 |
+| --- | --- | --- |
+| `ses:SendEmail`、`ses:SendRawEmail` | サブドメインの SES の ID | メールを送るすべてのプロセス(テストのメールのための画面の要求、ジョブ、rake)。SES v2 の `SendEmail` で、メール全体(raw)を送る |
+| `ses:GetEmailIdentity` | SES の ID | 画面の要求。管理画面の「メールの送信」 |
+| `ses:GetAccount`、`ses:ListSuppressedDestinations`、`ses:DeleteSuppressedDestination` | `*`(絞れない) | 画面の要求。同じ画面の、アカウントの状態、サプレッションリストと、そこからの削除。`GetAccount` は、Redmine Serverless の「状態と接続」の SES の確認にも使う |
+| `s3:GetObject`、`s3:DeleteObject` | メールのバケットの `inbound/*` | 取り込み(rake)。受け取ったメールを読み、移したあとに消す |
+| `s3:PutObject` | メールのバケットの `processed/*` | 取り込み(rake)。取り込んだメールを移す |
+| `inbound/*` と `processed/*` への `s3:GetObject`、`s3:DeleteObject`、`processed/*` への `s3:PutObject` | メールのバケット | ジョブ。「メールの受信」の画面からの取り込み直し |
 
-メールを取り込むプロセスの、ポリシーの例です。
+<a id="example-policy"></a>
+
+### 例のポリシー
+
+メールを取り込むプロセスのポリシーです。
 
 ```json
 {
@@ -95,6 +99,10 @@ production:
 }
 ```
 
+<a id="resource-based-policies"></a>
+
+### リソースベースのポリシー
+
 SES が受け取ったメールを置けるようにする、バケットポリシーの文です(ほかのバケットと同じく、TLS でない要求を拒む文も付けます)。
 
 ```json
@@ -113,6 +121,12 @@ SES が受け取ったメールを置けるようにする、バケットポリ�
 
 - **Lambda:** 受信のルールが Lambda の関数を呼ぶときは、関数のリソースベースのポリシーで、`ses.amazonaws.com` に `lambda:InvokeFunction` を、同じ `aws:SourceAccount` と `aws:SourceArn` の条件で許します。関数は SES と同じリージョンに置きます([Serverless の iam.md](https://redmine-kit.github.io/serverless/ja/iam.html#resource-based-policies))。
 
+<a id="not-checked-yet"></a>
+
+### 未確認のこと
+
+- メッセージ全体を渡す SES v2 の `SendEmail` に、`ses:SendRawEmail` が要るか。
+
 <a id="network"></a>
 
 ## ネットワーク
@@ -128,3 +142,11 @@ SES が受け取ったメールを置けるようにする、バケットポリ�
 ## テスト
 
 Redmine の標準のプラグインのテスト(`bin/rake redmine:plugins:test NAME=redmine_serverless_ses`)です。SES のエラーは SDK の `stub_responses` で 1 つずつ起こし、取り込みのテストは、SES が足すヘッダーを付けた Redmine のテスト用のメール(`test/fixtures/mail_handler/`)を使います([Serverless の testing.md](https://redmine-kit.github.io/serverless/ja/testing.html#email-redmine_serverless_ses))。
+
+<a id="to-verify"></a>
+
+## 確認すること
+
+- メッセージ全体を渡す SES v2 の `SendEmail` に、`ses:SendRawEmail` が要るか
+- SES の API のインターフェースのエンドポイントのサービスの名前
+- メールの設計の、[Serverless の mail.md](https://redmine-kit.github.io/serverless/ja/mail.html#to-verify) にある項目

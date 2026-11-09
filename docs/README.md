@@ -2,12 +2,12 @@
 
 Redmine Serverless SES (`redmine_serverless_ses`) is a Redmine plugin for sending and receiving Redmine's email with Amazon SES: retries of sending by error type, importing email that SES received, checks against spoofing and spam, and addresses per project. It does not modify Redmine's own files and uses only Redmine's standard extension mechanisms. The plugin is in the design stage, and only the documentation exists.
 
-- [Setup](setup.md): installation, configuration, SES and S3 resources, IAM permissions, network
+- [Setup](setup.md): requirements, installation, configuration, AWS resources, IAM permissions, network, tests
 - [Administration pages](admin.md): sending email, receiving email, project email settings
 
 ## Features
 
-| Feature | Contents | Enabled when | Design |
+| Feature | Contents | Enabled when | Page |
 | --- | --- | --- | --- |
 | Retrying mail sending | `raise_delivery_errors` in the process that runs jobs, retries by SES error type (temporary errors are retried, account problems are kept for resending, message problems are dropped) | `REDMINE_ROLE=worker` on Lambda. Outside Lambda, in the process that runs jobs | [mail.md](https://redmine-kit.github.io/serverless/mail.html#when-sending-fails) |
 | Mail receiving | Importing email that SES stored in S3 (the rake task `redmine_serverless_ses:receive_mail`, which uses Redmine's standard `MailHandler` inside), spoofing and spam checks, import records | Receiving settings exist | [mail.md](https://redmine-kit.github.io/serverless/mail.html#importing) |

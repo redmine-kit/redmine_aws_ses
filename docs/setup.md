@@ -36,7 +36,7 @@ production:
 - **Retries only in the worker:** The plugin sets `raise_delivery_errors` to `true` only in the process that runs jobs (`REDMINE_ROLE=worker`), so that SES errors fail the job and are retried by kind ([Serverless mail.md](https://redmine-kit.github.io/serverless/mail.html#when-sending-fails)).
 - **Importing:** The rake task `redmine_serverless_ses:receive_mail MESSAGE_ID=<message ID>` imports one received message. Something must start it for each message: on Lambda, the SES receipt rule invokes the task function asynchronously.
 
-## SES and S3 resources
+## AWS resources
 
 | Resource | Settings |
 | --- | --- |
@@ -48,16 +48,18 @@ production:
 
 ## IAM permissions
 
-| Permission | Resource | Role | Use |
-| --- | --- | --- | --- |
-| `ses:SendEmail`, `ses:SendRawEmail` | The SES identity of the subdomain | Every process that sends email (web requests for test email, jobs, rake) | Sending the full message (raw) with SES v2 `SendEmail`. Whether `ses:SendRawEmail` is needed with v2 is not checked yet |
-| `ses:GetEmailIdentity` | The SES identity | Web requests | The "Sending email" administration page |
-| `ses:GetAccount`, `ses:ListSuppressedDestinations`, `ses:DeleteSuppressedDestination` | `*` (cannot be scoped) | Web requests | The same page: account status, the suppression list and removing an address from it. `GetAccount` is also the SES check of the connection check of Redmine Serverless |
-| `s3:GetObject`, `s3:DeleteObject` | `inbound/*` in the mail bucket | The import (rake) | Reading received email, removing it after the move |
-| `s3:PutObject` | `processed/*` in the mail bucket | The import (rake) | Moving imported email |
-| `s3:GetObject`, `s3:DeleteObject` on `inbound/*` and `processed/*`, `s3:PutObject` on `processed/*` | The mail bucket | Jobs | Re-importing from the "Receiving email" page |
+| Action | Resource | Why |
+| --- | --- | --- |
+| `ses:SendEmail`, `ses:SendRawEmail` | The SES identity of the subdomain | Every process that sends email (web requests for test email, jobs, rake): sending the full message (raw) with SES v2 `SendEmail` |
+| `ses:GetEmailIdentity` | The SES identity | Web requests: the "Sending email" administration page |
+| `ses:GetAccount`, `ses:ListSuppressedDestinations`, `ses:DeleteSuppressedDestination` | `*` (cannot be scoped) | Web requests: the same page (account status, the suppression list and removing an address from it). `GetAccount` is also the SES check on Redmine Serverless's "Status and connections" |
+| `s3:GetObject`, `s3:DeleteObject` | `inbound/*` in the mail bucket | The import (rake): reading received email, removing it after the move |
+| `s3:PutObject` | `processed/*` in the mail bucket | The import (rake): moving imported email |
+| `s3:GetObject`, `s3:DeleteObject` on `inbound/*` and `processed/*`, `s3:PutObject` on `processed/*` | The mail bucket | Jobs: re-importing from the "Receiving email" page |
 
-Example policy for the process that imports email:
+### Example policy
+
+For the process that imports email:
 
 ```json
 {
@@ -85,6 +87,8 @@ Example policy for the process that imports email:
 }
 ```
 
+### Resource-based policies
+
 Bucket policy statement that lets SES store received email (with the TLS-only deny as in other buckets):
 
 ```json
@@ -103,6 +107,10 @@ Bucket policy statement that lets SES store received email (with the TLS-only de
 
 - **Lambda:** When the receipt rule invokes a Lambda function, the function's resource-based policy allows `lambda:InvokeFunction` by `ses.amazonaws.com` with the same `aws:SourceAccount` and `aws:SourceArn` conditions. The function must be in the same Region as SES ([Serverless iam.md](https://redmine-kit.github.io/serverless/iam.html#resource-based-policies)).
 
+### Not checked yet
+
+- Whether SES v2 `SendEmail` with the full message needs `ses:SendRawEmail`.
+
 ## Network
 
 | From | To | In a VPC without internet access |
@@ -114,3 +122,9 @@ Bucket policy statement that lets SES store received email (with the TLS-only de
 ## Tests
 
 Redmine's standard plugin tests (`bin/rake redmine:plugins:test NAME=redmine_serverless_ses`). SES errors are raised one by one with the SDK's `stub_responses`, and the import tests use Redmine's test mail samples (`test/fixtures/mail_handler/`) with the headers SES adds ([Serverless testing.md](https://redmine-kit.github.io/serverless/testing.html#email-redmine_serverless_ses)).
+
+## To verify
+
+- Whether SES v2 `SendEmail` with the full message needs `ses:SendRawEmail`
+- The service name of the interface endpoint for the SES API
+- The open questions of the mail design in [Serverless mail.md](https://redmine-kit.github.io/serverless/mail.html#to-verify)
