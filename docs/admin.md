@@ -55,7 +55,7 @@ An "Email" tab is added to project settings. It configures the address per proje
 
 ## Permissions
 
-For these pages, the role that runs Redmine's web requests gets permission to read SES status and to remove addresses from the suppression list. The list and an example policy are in [setup.md](setup.md#iam-permissions).
+For these pages, the role that runs Redmine's web requests gets permission to read SES status and to remove addresses from the suppression list. The list and an example policy are in [iam.md](iam.md).
 
 ## Tests
 

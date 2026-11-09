@@ -9,7 +9,7 @@ A Redmine plugin for sending and receiving Redmine's email with Amazon SES: retr
 ## Documentation
 
 - Website: https://redmine-kit.github.io/redmine_serverless_ses/ (日本語: https://redmine-kit.github.io/redmine_serverless_ses/ja/)
-- Markdown: [docs/README.md](docs/README.md) (日本語: [docs/ja/README.md](docs/ja/README.md)), with [setup](docs/setup.md) and the [administration pages](docs/admin.md)
+- Markdown: [docs/README.md](docs/README.md) (日本語: [docs/ja/README.md](docs/ja/README.md)), with [setup](docs/setup.md), [IAM permissions](docs/iam.md) and the [administration pages](docs/admin.md)
 
 ## License
 
