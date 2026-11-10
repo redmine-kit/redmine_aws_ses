@@ -16,13 +16,13 @@ Redmine Serverless SES を使う Redmine に要るもの(インストール、�
 ## インストール
 
 1. プラグインを、Redmine 7.0 の `plugins/redmine_serverless_ses` に置きます。下の gem か、このリポジトリのチェックアウトです。
-2. プラグインを gem として `Gemfile.local` に足し、インストールします。
+2. プラグインを gem として `Gemfile.local` に追加し、インストールします。
 
    ```sh
    bundle install
    ```
 
-   こうすると、Bundler が、Rails の初期化より前に `boot/redmine_serverless_ses.rb` を読み込みます。配送の方法 `:ses_v2` を登録する `aws-actionmailer-ses` と、プロジェクトごとの送信元のためのインターセプターを読み込みます。チェックアウトなら、パスで足します。
+   こうすると、Bundler が、Rails の初期化より前に `boot/redmine_serverless_ses.rb` を読み込みます。配送の方法 `:ses_v2` を登録する `aws-actionmailer-ses` と、プロジェクトごとの送信元のためのインターセプターを読み込みます。チェックアウトなら、パスで追加します。
 
    ```ruby
    # Redmine の Gemfile.local
@@ -91,7 +91,7 @@ GitHub Packages からインストールするには、公開のパッケージ�
 
 <a id="sending-errors"></a>
 
-### 送信のエラー
+### 送信エラー
 
 プラグインは、ジョブを動かすプロセス(`REDMINE_ROLE=worker`。Lambda 以外では取り出し役のプロセスに設定する)でだけ、`raise_delivery_errors` を `true` にします。SES のエラーを、Redmine のメールのジョブ(`Mailer::DeliveryJob`)に届けるためです。ほかのプロセスは Redmine の `false` のままなので、1 通の失敗で rake のタスクが止まることはありません([sending.md](sending.md))。
 
@@ -147,7 +147,7 @@ bin/rake redmine_serverless_ses:prune_records[<日数>]
 | --- | --- | --- |
 | Redmine | SES v2 の API(`SendEmail`、管理画面) | SES の API のインターフェースのエンドポイントか、NAT インスタンス。エンドポイントのサービスの名前は、作るときに確認する(未確認) |
 | Redmine | S3(メールのバケット) | S3 のゲートウェイのエンドポイント(`com.amazonaws.<region>.s3`) |
-| 送り手 | SES の受信(SMTP) | VPC の外。SES が受け取る |
+| 送信者 | SES の受信(SMTP) | VPC の外。SES が受け取る |
 
 <a id="tests"></a>
 

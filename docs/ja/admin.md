@@ -1,6 +1,6 @@
 # 管理画面
 
-Redmine Serverless SES の管理画面です。Redmine の管理者だけが開けます(`require_admin`)。プロジェクトのメール設定だけは、プラグインが足すプロジェクトの権限を持つ人も変えられます(下記)。画面は、[Redmine Serverless](https://redmine-kit.github.io/redmine_serverless/ja/admin.html#the-serverless-menu) をインストールしているかどうかにかかわらず、すべての Redmine Serverless のプラグインが共有する Redmine の管理のメニューの「Serverless」の下の、「メール送信」と「メール受信」のタブになります。プロジェクトのメール設定は、代わりにプロジェクトの設定のタブになります。
+Redmine Serverless SES の管理画面です。Redmine の管理者だけが開けます(`require_admin`)。プロジェクトのメール設定だけは、プラグインが追加するプロジェクトの権限を持つ人も変えられます(下記)。画面は、[Redmine Serverless](https://redmine-kit.github.io/redmine_serverless/ja/admin.html#the-serverless-menu) をインストールしているかどうかにかかわらず、すべての Redmine Serverless のプラグインが共有する Redmine の管理のメニューの「Serverless」の下の、「メール送信」と「メール受信」のタブになります。プロジェクトのメール設定は、代わりにプロジェクトの設定のタブになります。
 
 この資料の仕様は、2026-11-08 時点の公式の情報と、Redmine 7.0.3 のソースで確認したものです。出典は [sources.md](https://redmine-kit.github.io/serverless/ja/sources.html) にあります。
 
@@ -24,7 +24,7 @@ Redmine Serverless SES の管理画面です。Redmine の管理者だけが開�
 | ドメイン | 管理画面の送信元のアドレスのドメイン、「検証済み」か、DKIM の状態(成功、保留中、失敗、一時的な失敗、未開始) | SES v2 の `GetEmailIdentity` |
 | サプレッションリスト | SES が送信を止めているアドレス。列は、メールアドレス、ユーザー(そのアドレスを持つ Redmine のユーザー)、理由(バウンスか苦情)、更新日。最初の 100 件 | SES v2 の `ListSuppressedDestinations` |
 | 削除 | サプレッションリストのアドレスごとの「削除」のボタン。確認のあとで消す | SES v2 の `DeleteSuppressedDestination` |
-| テストメールを送信 | 上の、Redmine の標準の「テストメールを送信」(管理 › 設定 の「メール通知」)へのリンク。同じ機能は足さない | — |
+| テストメールを送信 | 上の、Redmine の標準の「テストメールを送信」(管理 › 設定 の「メール通知」)へのリンク。同じ機能は追加しない | — |
 | 失敗したジョブ | Redmine Serverless SQS を入れているときは、上の、その「ジョブ」の画面の、失敗したメールに絞った一覧へのリンク | — |
 
 | 項目 | 内容 |
@@ -48,7 +48,7 @@ Redmine Serverless SES の管理画面です。Redmine の管理者だけが開�
 
 | 結果 | 意味 |
 | --- | --- |
-| チケット(例: `#123`)か「取得済み」 | 取り込んだ。チケットを作ったか、注記を足した |
+| チケット(例: `#123`)か「取得済み」 | 取り込んだ。チケットを作ったか、注記を追加した |
 | 未取得(判定なし) | SES の判定がない(イベントを通して受け取っていないメール) |
 | 未取得(ウイルス) | ウイルスの判定が `PASS` でない |
 | 未取得(スパム) | スパムの判定が `PASS` でなく、「迷惑メールも取得」がオフ |
@@ -59,16 +59,16 @@ Redmine Serverless SES の管理画面です。Redmine の管理者だけが開�
 
 | 項目 | 内容 |
 | --- | --- |
-| 取得の記録 | `redmine_serverless_ses:receive_mail` は、メールごとの結果を、プラグインの表(`serverless_received_mails`)に入れます。送信者、件名、SES のイベントのエンベロープの宛先と判定、プロジェクト、作ったチケットや足した注記です。本文は入れず、メールのバケットのキー(`inbound/` か `processed/`)を入れます。再取得は、同じ記録を書き換えます。90 日より古い記録は、`rake redmine_serverless_ses:prune_records` が消します。Serverless は毎日動かします([security.md](https://redmine-kit.github.io/serverless/ja/security.html#retention-periods)) |
+| 取得の記録 | `redmine_serverless_ses:receive_mail` は、メールごとの結果を、プラグインの表(`serverless_received_mails`)に入れます。送信者、件名、SES のイベントのエンベロープの宛先と判定、プロジェクト、作ったチケットや追加した注記です。本文は入れず、メールのバケットのキー(`inbound/` か `processed/`)を入れます。再取得は、同じ記録を書き換えます。90 日より古い記録は、`rake redmine_serverless_ses:prune_records` が消します。Serverless は毎日動かします([security.md](https://redmine-kit.github.io/serverless/ja/security.html#retention-periods)) |
 | 未取得のメール | `inbound/` に残り、原因を直してから再取得できます |
-| 再取得 | 画面は `redmine-task` を直接は呼ばず、キューにジョブを入れます。こうすると、`redmine-web` に、メールのバケットを読む権限も、Lambda を呼ぶ権限も要りません。Redmine Serverless SQS を入れていれば、このジョブのクラスを、実行してよいジョブのクラスに足します |
+| 再取得 | 画面は `redmine-task` を直接は呼ばず、キューにジョブを入れます。こうすると、`redmine-web` に、メールのバケットを読む権限も、Lambda を呼ぶ権限も要りません。Redmine Serverless SQS を入れていれば、このジョブのクラスを、実行を許可するジョブクラスに追加します |
 | 受信設定を画面に置く理由 | デフォルトのプロジェクトを変えるたびにデプロイしなくて済みます。`redmine_serverless_ses:receive_mail` は、動くたびにデータベースから設定を読みます |
 
 <a id="project-email-settings"></a>
 
 ## プロジェクトのメール設定
 
-プロジェクトごとのアドレスを使うとき、プロジェクトの設定に「メール」のタブを足します。プロジェクトごとのアドレスを設定します([receiving.md](receiving.md#addresses-per-project))。設定は、プラグインの表(`serverless_project_mail_settings`)に入ります。Redmine の設定(`Setting`。名前と値)は Redmine 全体のものだけで、プロジェクトごとの設定の表がないためです。プロジェクトを削除すると、その行も消えます。
+プロジェクトごとのアドレスを使うとき、プロジェクトの設定に「メール」のタブを追加します。プロジェクトごとのアドレスを設定します([receiving.md](receiving.md#addresses-per-project))。設定は、プラグインの表(`serverless_project_mail_settings`)に入ります。Redmine の設定(`Setting`。名前と値)は Redmine 全体のものだけで、プロジェクトごとの設定の表がないためです。プロジェクトを削除すると、その行も消えます。
 
 ![プロジェクトの設定の「メール」のタブ](./images/project-mail.png)
 
@@ -81,7 +81,7 @@ Redmine Serverless SES の管理画面です。Redmine の管理者だけが開�
 
 | 項目 | 内容 |
 | --- | --- |
-| 変えられる人 | Redmine の管理者と、プラグインが足すプロジェクトの権限「メール設定の管理」を持つメンバーです |
+| 変えられる人 | Redmine の管理者と、プラグインが追加するプロジェクトの権限「メール設定の管理」を持つメンバーです |
 | 未登録の送信者のメールを取得するとき | 問い合わせの窓口のように、外の人からのメールを受けるときに使います。迷惑メールが増えるので、DMARC の確認は外しません([receiving.md](receiving.md#spoofing-and-spam)) |
 
 <a id="permissions"></a>

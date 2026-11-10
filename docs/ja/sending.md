@@ -16,7 +16,7 @@ Redmine の本番の設定(`production.rb`)は `raise_delivery_errors = false` �
 
 ## エラーの種類別の扱い
 
-SES v2 の `SendEmail` のエラー(API リファレンスの一覧)を、3 つの種類に分けます。プラグインは、`Mailer::DeliveryJob` に SES のエラーのハンドラーを足します(`rescue_from`。ActionMailer のものより後に宣言するので、先に試されます)。
+SES v2 の `SendEmail` のエラー(API リファレンスの一覧)を、3 つの種類に分けます。プラグインは、`Mailer::DeliveryJob` に SES のエラーのハンドラーを追加します(`rescue_from`。ActionMailer のものより後に宣言するので、先に試されます)。
 
 | エラー | 意味 | 扱い |
 | --- | --- | --- |
