@@ -80,14 +80,14 @@ GitHub Packages からインストールするには、公開のパッケージ�
 | --- | --- | --- |
 | 送信元メールアドレス(`Setting.mail_from`) | デフォルトアドレス。確認済みのドメインのもの(例: `noreply@redmine.example.com`)([receiving.md](receiving.md#address-for-the-whole-redmine)) | Redmine の管理画面の設定 |
 | 受信設定 | デフォルトアドレスの `@` の前、そこに届いたメールの扱い、デフォルトのプロジェクト、迷惑メールと DMARC 未通過メールを取得するか([admin.md](admin.md#receiving-email)) | プラグインの設定。Serverless では `redmine.json` の `pluginSettings` |
-| プロジェクト別のアドレス | 使うか使わないか。既定は使わない(Redmine の標準と同じ)。プロジェクトごとの設定は、各プロジェクトの「メール」のタブ([admin.md](admin.md#project-email-settings)) | プラグインの設定 |
+| プロジェクト別のアドレス | 使うか使わないか。デフォルトは使わない(Redmine の標準と同じ)。プロジェクトごとの設定は、各プロジェクトの「メール」のタブ([admin.md](admin.md#project-email-settings)) | プラグインの設定 |
 | 「この行以降を切り捨てる」 | 引用の前の行。返信の引用が注記に入らないようにする | Redmine の管理画面の設定 |
 
 <a id="receiving-defaults"></a>
 
-### 受信設定の既定
+### 受信設定のデフォルト値
 
-既定では、デフォルトアドレスの `@` の前は `noreply` で、そこに届いたメールは取得しません(「取得しない」)。取得するときは、「デフォルトのプロジェクトで取得」に切り替えるときに、`@` の前を決めます(例: `redmine`)。受信設定を保存済みの環境では、保存した値のままです。迷惑メール(`import_spam`)と、DMARC 未通過メール(`import_without_dmarc_pass`)の取得は、どちらも既定はオフです。
+デフォルトの設定では、デフォルトアドレスの `@` の前は `noreply` で、そこに届いたメールは取得しません(「取得しない」)。取得するときは、「デフォルトのプロジェクトで取得」に切り替えるときに、`@` の前を決めます(例: `redmine`)。受信設定を保存済みの環境では、保存した値のままです。迷惑メール(`import_spam`)と、DMARC 未通過メール(`import_without_dmarc_pass`)の取得は、どちらもデフォルトはオフです。
 
 <a id="sending-errors"></a>
 
@@ -115,7 +115,7 @@ rake のタスク `redmine_serverless_ses:receive_mail` は、受信したメー
 
 ### 記録の保持
 
-次のタスクが、指定した日数より古い取得の記録を消します(既定は 90 日)。Serverless は毎日動かします([Serverless の security.md](https://redmine-kit.github.io/serverless/ja/security.html#retention-periods))。
+次のタスクが、指定した日数より古い取得の記録を消します(デフォルトは 90 日)。Serverless は毎日動かします([Serverless の security.md](https://redmine-kit.github.io/serverless/ja/security.html#retention-periods))。
 
 ```sh
 bin/rake redmine_serverless_ses:prune_records[<日数>]
