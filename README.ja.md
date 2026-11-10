@@ -9,7 +9,7 @@ Redmine のメールを Amazon SES で送受信するための Redmine のプラ
 
 [English](README.md)
 
-> **状態:** 開発の初期です。エラーの種類ごとにやり直す送信、SES の確認の結果を使う取り込み、プロジェクトごとのアドレス、管理画面を実装し、Redmine 7.0.3 と moto でテストしています。
+> **状態:** 開発の初期です。実装し、Redmine 7.0.3 でテストしています。
 
 <a id="documentation"></a>
 

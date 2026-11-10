@@ -9,7 +9,7 @@ A Redmine plugin for sending and receiving Redmine's email with Amazon SES: retr
 
 [日本語](README.ja.md)
 
-> **Status:** early development. Sending with retries by error type, importing with the checks of SES, addresses per project and the administration pages are implemented and tested on Redmine 7.0.3 with moto.
+> **Status:** early development. It is implemented and tested on Redmine 7.0.3.
 
 ## Documentation
 
