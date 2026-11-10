@@ -99,7 +99,7 @@
     <%= text_field_tag 'settings[global_local_part]', @settings['global_local_part'], size: 20 %>@<%= @domain %>
   </p>
   <p>
-    <%= label_tag 'settings_global_mail', l(:label_serverless_mail_global_mail) %>
+    <%= label_tag 'settings_global_mail', l(:label_incoming_emails) %>
     <%= select_tag 'settings[global_mail]',
                    options_for_select([[l(:label_serverless_mail_global_drop), 'drop'],
                                        [l(:label_serverless_mail_global_default_project), 'default_project']],
@@ -119,9 +119,7 @@
       <%= check_box_tag "settings[#{name}]", '1', @settings[name] == '1' %>
       <%= l(:"label_serverless_mail_#{name}") %>
     </label>
-    <em class="info"><%= l(:"text_serverless_mail_#{name}") %></em>
     <% end %>
-    <em class="info"><%= l(:text_serverless_mail_virus) %></em>
   </p>
   <p>
     <label><%= l(:label_project_plural) %></label>

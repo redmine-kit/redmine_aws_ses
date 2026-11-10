@@ -45,7 +45,6 @@ ja:
   label_serverless_mail_reason_no_project: 未取得 (プロジェクトなし)
   label_serverless_mail_reason_import_error: 取得エラー
   label_serverless_mail_settings: 受信設定
-  label_serverless_mail_global_mail: デフォルトアドレス宛て
   label_serverless_mail_global_drop: 取得しない
   label_serverless_mail_global_default_project: デフォルトのプロジェクトで取得
   label_serverless_mail_default_project: デフォルトのプロジェクト
@@ -65,14 +64,19 @@ ja:
   text_serverless_mail_no_bucket: REDMINE_MAIL_BUCKET が未設定のため、受信メールを取得できません。
   text_serverless_mail_mx_unknown: 不明
   label_serverless_mail_import_without_dmarc_pass: DMARC 未通過メールも取得
-  text_serverless_mail_import_without_dmarc_pass: オフを推奨 (なりすまし対策)
   label_serverless_mail_import_spam: 迷惑メールも取得
-  text_serverless_mail_import_spam: オフを推奨
-  text_serverless_mail_virus: ウイルス判定メールは取得しない
   label_serverless_mail_verdicts: 判定
-  label_serverless_mail_verdict_virus: ウイルス
-  label_serverless_mail_verdict_spam: スパム
   label_serverless_mail_import: 取得対象
   label_serverless_mail_from: 差出人
   text_serverless_mail_sending_check: "送信: %{sending}、本稼働アクセス: %{production}"
   text_serverless_mail_api_error: "SES の API を呼べませんでした (%{error})。詳しくはログを参照してください。"
+  label_serverless_mail_verdicts_passed: 合格
+  label_serverless_mail_verdict_virus_fail: ウイルス
+  label_serverless_mail_verdict_virus_gray: ウイルス判定不能
+  label_serverless_mail_verdict_virus_processing_failed: ウイルススキャン失敗
+  label_serverless_mail_verdict_spam_fail: スパム
+  label_serverless_mail_verdict_spam_gray: スパム判定不能
+  label_serverless_mail_verdict_spam_processing_failed: スパムスキャン失敗
+  label_serverless_mail_verdict_dmarc_fail: DMARC 失敗
+  label_serverless_mail_verdict_dmarc_gray: DMARC ポリシーなし
+  label_serverless_mail_verdict_dmarc_processing_failed: DMARC 判定失敗

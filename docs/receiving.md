@@ -25,7 +25,7 @@ Checked against the Redmine 7.0.3 source on 2026-11-09.
 When addresses per project are off (the default), email is received as standard Redmine does.
 
 - **Receiving address:** Only the default address.
-- **Choosing the project:** With Redmine's subaddress (`noreply+<identifier>@<domain>`). The plugin reads the subaddress from the envelope recipients, not from the `To` and `Cc` headers, so Bcc works too. Email without a subaddress is fetched into the default project or not fetched, as set in "Email to the default address" on the "Email receiving" tab.
+- **Choosing the project:** With Redmine's subaddress (`noreply+<identifier>@<domain>`). The plugin reads the subaddress from the envelope recipients, not from the `To` and `Cc` headers, so Bcc works too. Email without a subaddress is fetched into the default project or not fetched, as set in "Incoming emails" on the "Email receiving" tab.
 - **Sender:** All notifications are sent from the default address.
 
 <a id="address-for-the-whole-redmine"></a>
@@ -45,8 +45,8 @@ Email that does not belong to a project is sent from the emission address (`Sett
 
 The methods above are the Redmine 7.0.3 mailer methods that do not add the project header (`X-Redmine-Project`) (`app/models/mailer.rb`).
 
-- **The part before `@`:** Set in "Default address" under "Receiving settings" on the "Email receiving" tab. The default is `noreply`, to match "Do not fetch", the default of "Email to the default address". When you switch to fetching, choose the part before `@` (for example `redmine`). An installation that has already saved the receiving settings keeps its value. A project with the same identifier cannot receive email at it.
-- **Email sent to it:** "Email to the default address" chooses "Do not fetch" (default) or "Fetch into the default project". Replies to password resets and similar usually need not be fetched.
+- **The part before `@`:** Set in "Default address" under "Receiving settings" on the "Email receiving" tab. The default is `noreply`, to match "Do not fetch", the default of "Incoming emails". When you switch to fetching, choose the part before `@` (for example `redmine`). An installation that has already saved the receiving settings keeps its value. A project with the same identifier cannot receive email at it.
+- **Email sent to it:** "Incoming emails" chooses "Do not fetch" (default) or "Fetch into the default project". Replies to password resets and similar usually need not be fetched.
 
 ## Importing
 

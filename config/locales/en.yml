@@ -45,7 +45,6 @@ en:
   label_serverless_mail_reason_no_project: Not fetched (no project)
   label_serverless_mail_reason_import_error: Fetch error
   label_serverless_mail_settings: Receiving settings
-  label_serverless_mail_global_mail: Email to the default address
   label_serverless_mail_global_drop: Do not fetch
   label_serverless_mail_global_default_project: Fetch into the default project
   label_serverless_mail_default_project: Default project
@@ -65,14 +64,19 @@ en:
   text_serverless_mail_no_bucket: REDMINE_MAIL_BUCKET is not set, so received email cannot be fetched.
   text_serverless_mail_mx_unknown: Unknown
   label_serverless_mail_import_without_dmarc_pass: Also fetch email failing DMARC
-  text_serverless_mail_import_without_dmarc_pass: Off recommended (spoofing)
   label_serverless_mail_import_spam: Also fetch spam
-  text_serverless_mail_import_spam: Off recommended
-  text_serverless_mail_virus: Email with a virus verdict is never fetched
   label_serverless_mail_verdicts: Verdicts
-  label_serverless_mail_verdict_virus: Virus
-  label_serverless_mail_verdict_spam: Spam
   label_serverless_mail_import: Fetched email
   label_serverless_mail_from: From
   text_serverless_mail_sending_check: "Sending: %{sending}, production access: %{production}"
   text_serverless_mail_api_error: "Could not call the SES API (%{error}). See the log for details."
+  label_serverless_mail_verdicts_passed: Passed
+  label_serverless_mail_verdict_virus_fail: Virus
+  label_serverless_mail_verdict_virus_gray: Virus undetermined
+  label_serverless_mail_verdict_virus_processing_failed: Virus scan failed
+  label_serverless_mail_verdict_spam_fail: Spam
+  label_serverless_mail_verdict_spam_gray: Spam undetermined
+  label_serverless_mail_verdict_spam_processing_failed: Spam scan failed
+  label_serverless_mail_verdict_dmarc_fail: DMARC fail
+  label_serverless_mail_verdict_dmarc_gray: DMARC no policy
+  label_serverless_mail_verdict_dmarc_processing_failed: DMARC check failed

@@ -42,9 +42,9 @@ Redmine Serverless SES の管理画面です。Redmine の管理者だけが開�
 | --- | --- | --- |
 | メールアドレス | 「ドメイン」(Redmine のドメイン。送信元のアドレスのドメイン)、「デフォルトアドレス」、「MX」(下記)。プロジェクト別のアドレスを使うときは、プロジェクトの一覧(プロジェクト、メールアドレス、メール受信) | プラグインの設定と、プロジェクトのメール設定 |
 | MX | Redmine のドメインの MX のホスト。SES の受信のエンドポイントになっているかを確認する。問い合わせに失敗すると「不明」、MX のレコードがなければ「なし」 | DNS の問い合わせ。タイムアウトは 2 秒 |
-| 受信履歴 | 受信日時、差出人、題名、プロジェクト、判定(SES のウイルス、スパム、DMARC の判定。例: 「ウイルス PASS, スパム PASS, DMARC FAIL」)、結果(下記)。新しい 100 件。一覧の上の「すべて \| 未取得」で絞り込める | プラグインの表(下記) |
+| 受信履歴 | 受信日時、差出人、題名、プロジェクト、判定 (SES のウイルス、スパム、DMARC の判定のうち合格しなかったもの。例: 「スパム, DMARC 失敗」。すべて合格なら「合格」。語は下の「用語」)、結果(下記)。新しい 100 件。一覧の上の「すべて \| 未取得」で絞り込める | プラグインの表(下記) |
 | 再取得 | 一覧のチェックボックスでメールを選ぶ。Redmine のチケットの一覧と同じく、見出しの行のチェックボックスで全部を選べる。「再取得」で、選んだメールをもう一度取得する | メールごとのジョブ(`ServerlessReimportMailJob`。Serverless では SQS に入り、`redmine-worker` が取り込む) |
-| 受信設定 | 「デフォルトアドレス」(`@` の前)、「デフォルトアドレス宛て」(「取得しない」(既定)か「デフォルトのプロジェクトで取得」)、「デフォルトのプロジェクト」、「取得対象」(「DMARC 未通過メールも取得」と「迷惑メールも取得」。どちらも既定はオフで、画面に注記を出す。ウイルス判定メールは取得しない)、「プロジェクト」(「プロジェクト別のアドレスを使用」、「プロジェクトのアドレスから通知を送信」) | プラグインの設定(画面で変える)。[receiving.md](receiving.md#spoofing-and-spam) も参照 |
+| 受信設定 | 「デフォルトアドレス」(`@` の前)、「受信メール」(「取得しない」(既定) か「デフォルトのプロジェクトで取得」。Redmine の「受信メール」の語)、「デフォルトのプロジェクト」、「取得対象」(「DMARC 未通過メールも取得」と「迷惑メールも取得」。どちらも既定はオフで、オフを推奨。DMARC 未通過メールを取得すると、差出人のなりすましでチケットを作成できるため。ウイルスと判定されたメールは、設定にかかわらず取得しない)、「プロジェクト」(「プロジェクト別のアドレスを使用」、「プロジェクトのアドレスから通知を送信」) | プラグインの設定(画面で変える)。[receiving.md](receiving.md#spoofing-and-spam) も参照 |
 
 | 結果 | 意味 |
 | --- | --- |
@@ -54,7 +54,7 @@ Redmine Serverless SES の管理画面です。Redmine の管理者だけが開�
 | 未取得 (スパム) | スパムの判定が `PASS` でなく、「迷惑メールも取得」がオフ |
 | 未取得 (DMARC 未通過) | DMARC の判定が `PASS` でなく、「DMARC 未通過メールも取得」がオフ |
 | 未取得 (自動返信) | 自動の返信([receiving.md](receiving.md#importing)) |
-| 未取得 (プロジェクトなし) | 受け取るプロジェクトがない。または、「デフォルトアドレス宛て」が「取得しない」のときの、デフォルトアドレス宛てのメール |
+| 未取得 (プロジェクトなし) | 受け取るプロジェクトがない。または、「受信メール」が「取得しない」のときの、デフォルトアドレス宛てのメール |
 | 取得エラー | Redmine が取り込まなかった(たとえば、「取得しない」での未登録の送信者や、権限のない送信者)。理由は Redmine のログにある |
 
 | 項目 | 内容 |
@@ -113,4 +113,4 @@ Redmine Serverless SES の管理画面です。Redmine の管理者だけが開�
 | 検証済み / Verified | `VerifiedForSendingStatus` | 「検証済み ID」(https://docs.aws.amazon.com/ja_jp/ses/latest/dg/send-email-authentication-dkim-easy-managing.html) | ドキュメント |
 | DKIM の成功 / Successful、保留中 / Pending、失敗 / Failed、一時的な失敗 / Temporary failure、未開始 / Not started | `DkimAttributes.Status`(`SUCCESS`、`PENDING`、`FAILED`、`TEMPORARY_FAILURE`、`NOT_STARTED`) | ドキュメントは API の値を英語のまま書く。日本語の値は、このプラグインで付けたもの | コンソールで要確認 |
 | サプレッションリスト / Suppression list。バウンス / Bounce、苦情 / Complaint。削除 / Remove | `ListSuppressedDestinations`(`Reason`: `BOUNCE`、`COMPLAINT`)、`DeleteSuppressedDestination` | https://docs.aws.amazon.com/ja_jp/ses/latest/dg/sending-email-suppression-list.html | ドキュメント |
-| 判定 / Verdicts のスパム / Spam、ウイルス / Virus | `spamVerdict`、`virusVerdict` | https://docs.aws.amazon.com/ja_jp/ses/latest/dg/receiving-email-concepts.html。値の `PASS` と `FAIL` は、ドキュメントと同じく英語のまま | ドキュメント |
+| 判定 / Verdicts: スパム / Spam、ウイルス / Virus、DMARC 失敗 / DMARC fail、…判定不能 / … undetermined、…スキャン失敗 / … scan failed、DMARC ポリシーなし / DMARC no policy、合格 / Passed | `spamVerdict`、`virusVerdict`、`dmarcVerdict` (`PASS`、`FAIL`、`GRAY`、`PROCESSING_FAILED`) | https://docs.aws.amazon.com/ja_jp/ses/latest/dg/receiving-email-notifications-contents.html の値の説明 (「認証に合格」「認証に失敗」「断定できませんでした」「スキャンできませんでした」)。コンソールには日本語の表示がないので、短いラベルは当プラグインの語 | ドキュメントから作成 |

@@ -9,11 +9,17 @@ module ServerlessMailHelper
     l(:"label_serverless_mail_#{kind}_#{value.to_s.downcase}", default: value.to_s)
   end
 
-  # "Virus PASS, Spam PASS, DMARC FAIL": SES leaves the verdicts in English.
+  # The verdicts that did not pass, as short labels ("Spam, DMARC fail"), or
+  # "Passed"; terms from SES's descriptions of the verdicts
+  # (docs/admin.md#terms). An unknown value counts as a failure.
   def serverless_mail_verdicts(verdicts)
-    verdicts.to_h.slice(:virus, :spam, :dmarc).map do |name, verdict|
-      label = name == :dmarc ? 'DMARC' : l(:"label_serverless_mail_verdict_#{name}")
-      "#{label} #{verdict}"
-    end.join(', ')
+    verdicts = verdicts.to_h.slice(:virus, :spam, :dmarc)
+    return '-' if verdicts.empty?
+
+    labels = verdicts.reject { |_, verdict| verdict == 'PASS' }.map do |name, verdict|
+      value = %w[GRAY PROCESSING_FAILED].include?(verdict) ? verdict.downcase : 'fail'
+      l(:"label_serverless_mail_verdict_#{name}_#{value}")
+    end
+    labels.empty? ? l(:label_serverless_mail_verdicts_passed) : labels.join(', ')
   end
 end

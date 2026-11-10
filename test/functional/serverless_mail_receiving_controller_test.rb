@@ -39,6 +39,21 @@ module RedmineServerlessSes
       assert_select '#serverless-received-mails tbody tr', 1
     end
 
+    # The verdicts that did not pass, in short labels; never the raw values.
+    def test_the_verdicts
+      ServerlessReceivedMail.create!(message_id: 'm1', status: 'imported', subject: 'Clean',
+                                     verdicts: { spam: 'PASS', virus: 'PASS', dmarc: 'PASS' })
+      ServerlessReceivedMail.create!(message_id: 'm2', status: 'dropped', reason: 'spam', subject: 'Offer',
+                                     verdicts: { spam: 'FAIL', virus: 'PASS', dmarc: 'GRAY' })
+      with_ses_settings { get :index }
+
+      assert_select '#serverless-received-mails tr', text: /Clean.*Passed/m
+      assert_select '#serverless-received-mails tr', text: /Offer.*Spam, DMARC no policy/m
+      assert_not_includes response.body, 'PASS'
+      assert_select 'em.info', 0
+      assert_select 'label[for=settings_global_mail]', text: 'Incoming emails'
+    end
+
     def test_update_settings
       with_ses_settings do
         post :update, params: { settings: { global_local_part: 'HelpDesk', global_mail: 'default_project',
