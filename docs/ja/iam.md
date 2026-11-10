@@ -1,4 +1,4 @@
-# IAM の権限
+# IAM 権限
 
 プロセスごとの、プラグインが自分で呼ぶ AWS の操作です。Lambda そのものの権限(ログ、VPC の中での実行)は入れていません。ロールの全体は [Serverless の iam.md](https://redmine-kit.github.io/serverless/ja/iam.html) にあります。
 

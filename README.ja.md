@@ -16,7 +16,7 @@ Redmine のメールを Amazon SES で送受信するための Redmine のプラ
 ## ドキュメント
 
 - Web サイト: https://redmine-kit.github.io/redmine_serverless_ses/ja/ (English: https://redmine-kit.github.io/redmine_serverless_ses/)
-- Markdown: [docs/ja/README.md](docs/ja/README.md) (English: [docs/README.md](docs/README.md))。[導入](docs/ja/setup.md)、[IAM の権限](docs/ja/iam.md)と[管理画面](docs/ja/admin.md)があります。
+- Markdown: [docs/ja/README.md](docs/ja/README.md) (English: [docs/README.md](docs/README.md))。[導入](docs/ja/setup.md)、[IAM 権限](docs/ja/iam.md)と[管理画面](docs/ja/admin.md)があります。
 
 <a id="sponsors"></a>
 

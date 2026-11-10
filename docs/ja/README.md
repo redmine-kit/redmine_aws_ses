@@ -2,8 +2,8 @@
 
 Redmine Serverless SES(`redmine_serverless_ses`)は、Redmine のメールを Amazon SES で送受信するための Redmine のプラグインです。エラーの種類ごとの送信のやり直し、SES で受けたメールの取り込み、なりすましと迷惑メールの確認、プロジェクトごとのアドレスを持ちます。Redmine 本体のファイルは書き換えず、Redmine の標準の拡張の仕組みだけで作ります。今は開発の初期です(バージョン 0.2.0)。
 
-- [導入](setup.md): 動作環境、インストール、設定、AWS のリソース、ネットワーク、テスト
-- [IAM の権限](iam.md): 権限、ポリシーの例、リソースベースのポリシー
+- [導入](setup.md): 動作環境、インストール、設定、AWS リソース、ネットワーク、テスト
+- [IAM 権限](iam.md): 権限、ポリシーの例、リソースベースのポリシー
 - [送信](sending.md): エラーの種類ごとのやり直し、送り直し、プロジェクトごとの送信元
 - [受信](receiving.md): アドレス、取り込み、なりすましと迷惑メール
 - [管理画面](admin.md): メール送信、メール受信、プロジェクトのメール設定
@@ -43,7 +43,7 @@ Redmine の標準の仕組みでテストを書き、Docker の中で動かし�
 
 <a id="database-tables"></a>
 
-## データベースのテーブル
+## データベーステーブル
 
 受信したメールの記録(`serverless_received_mails`)と、プロジェクトのメール設定(`serverless_project_mail_settings`)の 2 つのテーブルを追加します([admin.md](admin.md))。
 
