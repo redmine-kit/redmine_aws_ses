@@ -9,12 +9,12 @@
 | 操作 | 対象 | 理由 |
 | --- | --- | --- |
 | `ses:SendEmail`<br>`ses:SendRawEmail` | サブドメインの SES の ID | メールを送るすべてのプロセス(テストのメールのための画面の要求、ジョブ、rake)。SES v2 の `SendEmail` で、メール全体(raw)を送る |
-| `ses:GetEmailIdentity` | SES の ID | 画面の要求。管理画面の「メールの送信」 |
-| `ses:GetAccount`<br>`ses:ListSuppressedDestinations`<br>`ses:DeleteSuppressedDestination` | `*`(絞れない) | 画面の要求。同じ画面の、アカウントの状態、サプレッションリストと、そこからの削除。`GetAccount` は、Redmine Serverless の「状態と接続」の SES の確認にも使う |
+| `ses:GetEmailIdentity` | SES の ID | 画面の要求。管理画面の「メール送信」 |
+| `ses:GetAccount`<br>`ses:ListSuppressedDestinations`<br>`ses:DeleteSuppressedDestination` | `*`(絞れない) | 画面の要求。同じ画面の、SES アカウント、サプレッションリストと、そこからの削除。`GetAccount` は、Redmine Serverless の「ステータス」のタブの「接続テスト」の SES にも使う |
 | `s3:GetObject`<br>`s3:DeleteObject` | メールのバケットの `inbound/*` | 取り込み(rake)。受け取ったメールを読み、移したあとに消す |
 | `s3:PutObject` | メールのバケットの `processed/*` | 取り込み(rake)。取り込んだメールを移す(`processed/` への `CopyObject` のあと、`inbound/` で `DeleteObject`) |
 | `s3:GetObject` | メールのバケットの `processed/*` | 取り込み済みのメールの取り込み直し(rake か、下のジョブ) |
-| `inbound/*` と `processed/*` への `s3:GetObject`、`s3:DeleteObject`、`processed/*` への `s3:PutObject` | メールのバケット | ジョブ。「メールの受信」の画面からの取り込み直し |
+| `inbound/*` と `processed/*` への `s3:GetObject`、`s3:DeleteObject`、`processed/*` への `s3:PutObject` | メールのバケット | ジョブ。「メール受信」の画面の「再取得」 |
 
 <a id="example-policy"></a>
 

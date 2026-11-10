@@ -70,14 +70,14 @@ Installing from GitHub Packages needs a GitHub token with `read:packages`, even 
 
 | Item | Description | Where to change |
 | --- | --- | --- |
-| Emission email address (`Setting.mail_from`) | The address for the whole Redmine, on the verified domain (for example `redmine@redmine.example.com`) ([receiving.md](receiving.md#address-for-the-whole-redmine)) | Redmine's administration settings |
-| Receiving settings | The part before `@` of the address for the whole Redmine, what to do with email sent to it, the default project, and whether to import spam and email that fails DMARC ([admin.md](admin.md#receiving-email)) | Plugin settings. In Serverless, `pluginSettings` in `redmine.json` |
+| Emission email address (`Setting.mail_from`) | The default address, on the verified domain (for example `noreply@redmine.example.com`) ([receiving.md](receiving.md#address-for-the-whole-redmine)) | Redmine's administration settings |
+| Receiving settings | The part before `@` of the default address, what to do with email sent to it, the default project, and whether to fetch spam and email that fails DMARC ([admin.md](admin.md#receiving-email)) | Plugin settings. In Serverless, `pluginSettings` in `redmine.json` |
 | Addresses per project | On or off. Default off, the same as standard Redmine. Per-project settings are in the "Email" tab of each project ([admin.md](admin.md#project-email-settings)) | Plugin settings |
 | Truncate emails after one of these lines | A line before the quoted text, so that replies do not bring the quote into notes | Redmine's administration settings |
 
 ### Receiving defaults
 
-By default, the part before `@` is `redmine`, and importing spam (`import_spam`) and email that fails DMARC (`import_without_dmarc_pass`) are both off.
+By default, the part before `@` of the default address is `noreply`, and email to it is not fetched ("Do not fetch"). To fetch it, choose the part before `@` (for example `redmine`) when switching to "Fetch into the default project". An installation that has already saved the receiving settings keeps its value. Fetching spam (`import_spam`) and email that fails DMARC (`import_without_dmarc_pass`) are both off by default.
 
 ### Sending errors
 
@@ -135,7 +135,7 @@ Calls that LocalStack does not emulate as real AWS behaves are mocked with SDK r
 
 | Call | Why it is mocked | The mocked answer |
 | --- | --- | --- |
-| SES v2 `GetAccount` (the connection check, the "Sending email" page) | LocalStack answers that it does not support it; moto does not have it (checked on 2026-11-09) | The fields of the API reference (`ProductionAccessEnabled`, `SendingEnabled`, `SendQuota`, ...), and its errors |
+| SES v2 `GetAccount` (the connection test, the "Email sending" tab) | LocalStack answers that it does not support it; moto does not have it (checked on 2026-11-09) | The fields of the API reference (`ProductionAccessEnabled`, `SendingEnabled`, `SendQuota`, ...), and its errors |
 | SES v2 `SendEmail` from a sender that is not a verified identity | Real SES rejects it with `MessageRejected`; LocalStack sends it | `MessageRejected` with SES's message ("Email address is not verified. ...") |
 | Each `SendEmail` error by kind ([sending.md](sending.md#handling-by-kind-of-error)) | The emulators cannot be made to answer throttling or account errors | Each error code of the API reference | What each test checks is in [sending.md](sending.md#tests) and [receiving.md](receiving.md#tests). SES errors are raised one by one through the delivery method with SDK response stubs; the pages use stubs too. The import tests store messages in moto's S3 and import them with the event's verdicts and recipients: the project of the recipient, Bcc, a `Project:` keyword that cannot change the project, each reason for dropping, forged SES headers that change nothing, and re-imports from the record. `bin/test` runs the plugin's tests, then Redmine's tests around email (`MailHandler`, `Mailer`, projects, settings, administration); `bin/test --redmine` runs every Redmine test with the plugin installed, as the CI does.
 

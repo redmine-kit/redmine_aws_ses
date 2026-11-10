@@ -9,6 +9,8 @@ class ServerlessMailReceivingController < ApplicationController
   self.main_menu = false
   menu_item :serverless
 
+  helper :serverless_mail
+
   before_action :require_admin
 
   MX_TIMEOUT = 2

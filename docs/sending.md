@@ -27,27 +27,27 @@ Errors from SES v2 `SendEmail` (the list in the API reference) are split into th
 ## Sending again
 
 1. **Get notified:** An alarm on the dead-letter queue or on the failure records tells you that email failed (in Serverless, a CloudWatch alarm).
-2. **Fix the cause:** On "Sending email" in the administration pages, check the SES account, the sender domain and the suppression list ([admin.md](admin.md#sending-email)).
-3. **Send again:** On Redmine Serverless SQS's "Jobs" page, select the failed email and resend it, or move the dead-letter queue back ([its admin.md](https://redmine-kit.github.io/redmine_serverless_sqs/admin.html#jobs)).
+2. **Fix the cause:** On the "Email sending" tab of the administration pages, check the SES account, the domain and the suppression list ([admin.md](admin.md#sending-email)).
+3. **Send again:** Follow "Failed jobs" to Redmine Serverless SQS's "Jobs" page, select the failed email and resend it, or move the dead-letter queue back ([its admin.md](https://redmine-kit.github.io/redmine_serverless_sqs/admin.html#jobs)).
 
-- **Failures after SES accepts the message:** Messages rejected by the recipient's mail server after SES accepted them (bounces) are not API errors. SES adds the address to the suppression list and stops sending to it; "Sending email" shows the list.
+- **Failures after SES accepts the message:** Messages rejected by the recipient's mail server after SES accepted them (bounces) are not API errors. SES adds the address to the suppression list and stops sending to it; the "Email sending" tab shows the list.
 
 ## Senders per project
 
 Redmine sends every notification from the emission address (`Setting.mail_from`). With addresses per project and per-project senders on ([receiving.md](receiving.md#addresses-per-project)), the plugin sends project notifications from the project's address.
 
-- **How they are identified:** Redmine adds the project identifier in the `X-Redmine-Project` header to project notifications (issues, news, documents, files, forums, wiki) (`Mailer#redmine_headers`). An ActionMailer interceptor (the standard Rails mechanism that rewrites email before sending; registered by `boot/`) reads it and changes the sender to `<identifier>@<domain>` (or the project's alias).
+- **How they are identified:** Redmine adds the project identifier in the `X-Redmine-Project` header to project notifications (issues, news, documents, files, forums, wiki) (`Mailer#redmine_headers`). An ActionMailer interceptor (the standard Rails mechanism that rewrites email before sending; registered by `boot/`) reads it and changes the sender to `<identifier>@<domain>`.
 - **Display name:** Redmine's display name (the author's name, when the emission address has none) is kept.
-- **Email without the header:** Email that does not belong to a project keeps the address for the whole Redmine ([receiving.md](receiving.md#address-for-the-whole-redmine)).
+- **Email without the header:** Email that does not belong to a project keeps the emission address, the default address ([receiving.md](receiving.md#address-for-the-whole-redmine)).
 - **Projects that do not receive email:** The sender is the project's address, but replies would not be imported, so `Reply-To` is the emission address.
-- **Optional:** Off by default; the "Receiving email" tab turns it on.
+- **Optional:** Off by default. "Send notifications from project addresses" in "Receiving settings" on the "Email receiving" tab turns it on.
 
 ## Tests
 
 | Target | What is checked |
 | --- | --- |
 | Sending through SES | A notification is sent through `aws-actionmailer-ses` to SES v2 (LocalStack, or moto without its token). A sender that is not a verified identity raises `MessageRejected` in the worker (a mocked answer, below) |
-| Connection check | SES v2 `GetAccount` (a mocked answer, below) |
+| Connection test | SES v2 `GetAccount` (a mocked answer, below) |
 | Errors by kind | Each `SendEmail` error raised one by one with SDK response stubs: temporary errors are retried in the job and raised after the last run, message errors are dropped, account errors are raised for the queue |
 | Only in the worker | `raise_delivery_errors` is set only with `REDMINE_ROLE=worker` |
 | Senders per project | The interceptor changes the sender and `Reply-To` only when the settings are on |

@@ -35,7 +35,7 @@ Redmine Serverless SES を使う Redmine に要るもの(インストール、�
    bin/rake redmine:plugins:migrate
    ```
 
-   受け取ったメールの記録(`serverless_received_mails`)と、プロジェクトのメールの設定(`serverless_project_mail_settings`)の表ができます。
+   受け取ったメールの記録(`serverless_received_mails`)と、プロジェクトのメール設定(`serverless_project_mail_settings`)の表ができます。
 4. `config/configuration.yml` に送信を設定します。
 
    ```yaml
@@ -78,16 +78,16 @@ GitHub Packages からインストールするには、公開のパッケージ�
 
 | 項目 | 説明 | 変える場所 |
 | --- | --- | --- |
-| 送信元メールアドレス(`Setting.mail_from`) | Redmine 全体のアドレス。確認済みのドメインのもの(例: `redmine@redmine.example.com`)([receiving.md](receiving.md#address-for-the-whole-redmine)) | Redmine の管理画面の設定 |
-| 受信の設定 | Redmine 全体のアドレスの `@` の前、そこに届いたメールの扱い、既定のプロジェクト、迷惑メールと DMARC が通らないメールを取り込むか([admin.md](admin.md#receiving-email)) | プラグインの設定。Serverless では `redmine.json` の `pluginSettings` |
+| 送信元メールアドレス(`Setting.mail_from`) | デフォルトアドレス。確認済みのドメインのもの(例: `noreply@redmine.example.com`)([receiving.md](receiving.md#address-for-the-whole-redmine)) | Redmine の管理画面の設定 |
+| 受信設定 | デフォルトアドレスの `@` の前、そこに届いたメールの扱い、デフォルトのプロジェクト、迷惑メールと DMARC 未通過メールを取得するか([admin.md](admin.md#receiving-email)) | プラグインの設定。Serverless では `redmine.json` の `pluginSettings` |
 | プロジェクト別のアドレス | 使うか使わないか。既定は使わない(Redmine の標準と同じ)。プロジェクトごとの設定は、各プロジェクトの「メール」のタブ([admin.md](admin.md#project-email-settings)) | プラグインの設定 |
 | 「この行以降を切り捨てる」 | 引用の前の行。返信の引用が注記に入らないようにする | Redmine の管理画面の設定 |
 
 <a id="receiving-defaults"></a>
 
-### 受信の設定の既定
+### 受信設定の既定
 
-既定では、`@` の前は `redmine` です。迷惑メール(`import_spam`)と、DMARC が通らないメール(`import_without_dmarc_pass`)の取得は、どちらもオフです。
+既定では、デフォルトアドレスの `@` の前は `noreply` で、そこに届いたメールは取得しません(「取得しない」)。取得するときは、「デフォルトのプロジェクトで取得」に切り替えるときに、`@` の前を決めます(例: `redmine`)。受信設定を保存済みの環境では、保存した値のままです。迷惑メール(`import_spam`)と、DMARC 未通過メール(`import_without_dmarc_pass`)の取得は、どちらも既定はオフです。
 
 <a id="sending-errors"></a>
 
@@ -109,7 +109,7 @@ rake のタスク `redmine_serverless_ses:receive_mail` は、受信したメー
 | `SES_RECIPIENTS` | `receipt.recipients`(カンマ区切り) |
 | `SES_SPAM_VERDICT`<br>`SES_VIRUS_VERDICT`<br>`SES_DMARC_VERDICT`<br>`SES_SPF_VERDICT`<br>`SES_DKIM_VERDICT`<br>`SES_DMARC_POLICY` | 判定の結果 |
 
-取得するのは、ウイルスの判定が `PASS` で、迷惑メールと DMARC の判定も `PASS` のメールだけです。受信の設定で、迷惑メールと DMARC が通らないメールも取得するようにできます。判定と宛先はイベントから取り、メールのヘッダーからは取りません([receiving.md](receiving.md#spoofing-and-spam))。
+取得するのは、ウイルスの判定が `PASS` で、迷惑メールと DMARC の判定も `PASS` のメールだけです。受信設定で、迷惑メールと DMARC 未通過メールも取得するようにできます。判定と宛先はイベントから取り、メールのヘッダーからは取りません([receiving.md](receiving.md#spoofing-and-spam))。
 
 <a id="keeping-records"></a>
 
@@ -159,7 +159,7 @@ LocalStack が実際の AWS のとおりに再現しない呼び出しは、そ�
 
 | 呼び出し | モックする理由 | モックした応答 |
 | --- | --- | --- |
-| SES v2 の `GetAccount`(接続の確認、「メールの送信」の画面) | LocalStack は対応していないと答え、moto にもない(2026-11-09 に確認) | API リファレンスの項目(`ProductionAccessEnabled`、`SendingEnabled`、`SendQuota` など)と、そのエラー |
+| SES v2 の `GetAccount`(接続テスト、「メール送信」のタブ) | LocalStack は対応していないと答え、moto にもない(2026-11-09 に確認) | API リファレンスの項目(`ProductionAccessEnabled`、`SendingEnabled`、`SendQuota` など)と、そのエラー |
 | 確認済みの ID でない送信元からの SES v2 の `SendEmail` | 実際の SES は `MessageRejected` で拒むが、LocalStack は送ってしまう | SES のメッセージ(「Email address is not verified. ...」)を持つ `MessageRejected` |
 | `SendEmail` の種類別のエラー([sending.md](sending.md#handling-by-kind-of-error)) | エミュレーターに、スロットリングやアカウントのエラーを返させられない | API リファレンスのそれぞれのエラーコード |それぞれのテストで確認することは、[sending.md](sending.md#tests) と [receiving.md](receiving.md#tests) にあります。SES のエラーは、SDK の応答のスタブで、配送の方法を通して 1 つずつ起こします。画面もスタブを使います。取り込みのテストは、メールを moto の S3 に置き、イベントの判定と宛先といっしょに取り込みます。宛先のプロジェクト、Bcc、プロジェクトを変えられない `Project:` のキーワード、取り込まないそれぞれの理由、何も変えない偽の SES のヘッダー、記録からの取り込み直しを確認します。`bin/test` は、プラグインのテストのあと、メールのまわりの Redmine 本体のテスト(`MailHandler`、`Mailer`、プロジェクト、設定、管理)を動かします。`bin/test --redmine` は、プラグインを入れた状態で Redmine 本体のすべてのテストを動かします。CI はこちらです。
 

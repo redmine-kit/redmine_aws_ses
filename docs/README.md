@@ -1,12 +1,12 @@
 # Redmine Serverless SES
 
-Redmine Serverless SES (`redmine_serverless_ses`) is a Redmine plugin for sending and receiving Redmine's email with Amazon SES: retries of sending by error type, importing email that SES received, checks against spoofing and spam, and addresses per project. It does not modify Redmine's own files and uses only Redmine's standard extension mechanisms. The plugin is in early development (version 0.1.1).
+Redmine Serverless SES (`redmine_serverless_ses`) is a Redmine plugin for sending and receiving Redmine's email with Amazon SES: retries of sending by error type, importing email that SES received, checks against spoofing and spam, and addresses per project. It does not modify Redmine's own files and uses only Redmine's standard extension mechanisms. The plugin is in early development (version 0.2.0).
 
 - [Setup](setup.md): requirements, installation, configuration, AWS resources, network, tests
 - [IAM permissions](iam.md): permissions, example policy, resource-based policies
 - [Sending](sending.md): errors by kind and retries, sending again, senders per project
 - [Receiving](receiving.md): addresses, importing, spoofing and spam
-- [Administration pages](admin.md): sending email, receiving email, project email settings
+- [Administration pages](admin.md): email sending, email receiving, project email settings
 
 ## Features
 
@@ -14,8 +14,8 @@ Redmine Serverless SES (`redmine_serverless_ses`) is a Redmine plugin for sendin
 | --- | --- | --- | --- |
 | Retrying mail sending | `raise_delivery_errors` in the process that runs jobs, retries by SES error type (temporary errors are retried, account problems are kept for resending, message problems are dropped) | `REDMINE_ROLE=worker` on Lambda. Outside Lambda, in the process that runs jobs | [sending.md](sending.md) |
 | Mail receiving | Importing email that SES stored in S3 (the rake task `redmine_serverless_ses:receive_mail`, which uses Redmine's standard `MailHandler` inside), checks of the SES event's verdicts (spam and DMARC configurable, viruses always dropped), import records | Receiving settings exist | [receiving.md](receiving.md#importing) |
-| Addresses per project | Receiving address and sender per project, a global address, an "Email" tab in project settings | Enabled in the plugin settings. When disabled, same as standard Redmine (one sender, projects selected by subaddress `redmine+identifier@…`) | [receiving.md](receiving.md#addresses-per-project) |
-| Administration pages | The "Sending email" and "Receiving email" tabs under the shared "Serverless" menu (SES status, received email), and the project email settings in project settings | Administrators. Pages for unused features are not shown | [admin.md](admin.md) |
+| Addresses per project | Receiving address and sender per project, a default address, an "Email" tab in project settings | Enabled in the plugin settings. When disabled, same as standard Redmine (one sender, projects selected by subaddress `noreply+identifier@…`) | [receiving.md](receiving.md#addresses-per-project) |
+| Administration pages | The "Email sending" and "Email receiving" tabs under the shared "Serverless" menu (SES account, received emails), and the project email settings in project settings | Administrators. Pages for unused features are not shown | [admin.md](admin.md) |
 
 ## Outside Lambda
 

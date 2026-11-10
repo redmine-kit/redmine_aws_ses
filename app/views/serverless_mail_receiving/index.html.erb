@@ -1,4 +1,8 @@
 <%= render partial: 'serverless_admin/tabs', locals: { selected: 'mail_receiving' } %>
+<% content_for :header_tags do %>
+  <%# Redmine's toggle of the list's checkboxes (the check box in the header row) %>
+  <%= javascript_include_tag 'context_menu' %>
+<% end %>
 
 <h3><%= l(:label_serverless_mail_addresses) %></h3>
 
@@ -8,7 +12,7 @@
 <div class="box tabular settings">
   <p><label><%= l(:label_serverless_mail_domain) %></label><%= @domain %></p>
   <p><label><%= l(:label_serverless_mail_global_address) %></label><%= RedmineServerlessSes.global_address %></p>
-  <p><label>MX</label><%= @mx.nil? ? l(:text_serverless_mail_mx_unknown) : (@mx.empty? ? l(:text_serverless_mail_mx_none) : @mx.join(', ')) %></p>
+  <p><label>MX</label><%= @mx.nil? ? l(:text_serverless_mail_mx_unknown) : (@mx.empty? ? l(:label_none) : @mx.join(', ')) %></p>
 </div>
 
 <% if RedmineServerlessSes.per_project_addresses? && @project_settings.any? %>
@@ -49,7 +53,9 @@
 <div class="autoscroll">
 <table class="list mails"><thead>
 <tr>
-    <th class="checkbox hide-when-print"></th>
+    <th class="checkbox hide-when-print">
+      <%= check_box_tag 'check_all', '', false, class: 'toggle-selection', title: "#{l(:button_check_all)}/#{l(:button_uncheck_all)}" %>
+    </th>
     <th><%= l(:label_serverless_mail_received_at) %></th>
     <th><%= l(:label_serverless_mail_from) %></th>
     <th><%= l(:field_subject) %></th>
@@ -65,8 +71,8 @@
     <td class="name"><%= mail.mail_from %></td>
     <td class="subject"><%= mail.subject %></td>
     <td class="name"><%= mail.project ? link_to_project(mail.project) : '' %></td>
-    <td><%= mail.verdicts.to_h.slice(:virus, :spam, :dmarc).map { |k, v| "#{k.to_s.upcase} #{v}" }.join(', ') %></td>
-    <td>
+    <td><%= serverless_mail_verdicts(mail.verdicts) %></td>
+    <td class="description">
       <% if mail.status == 'imported' %>
       <%= mail.issue_id ? link_to("##{mail.issue_id}", issue_path(mail.issue_id)) : l(:label_serverless_mail_imported) %>
       <% else %>
@@ -78,7 +84,6 @@
 </tbody>
 </table>
 </div>
-<p><%= check_all_links 'serverless-received-mails' %></p>
 <p><%= submit_tag l(:button_serverless_mail_reimport), data: { confirm: l(:text_are_you_sure) } %></p>
 <% end %>
 <% else %>
@@ -90,7 +95,7 @@
 <%= form_tag({ action: 'update' }, id: 'serverless-mail-settings') do %>
 <div class="box tabular settings">
   <p>
-    <%= label_tag 'settings_global_local_part', l(:label_serverless_mail_global_local_part) %>
+    <%= label_tag 'settings_global_local_part', l(:label_serverless_mail_global_address) %>
     <%= text_field_tag 'settings[global_local_part]', @settings['global_local_part'], size: 20 %>@<%= @domain %>
   </p>
   <p>

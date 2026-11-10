@@ -13,7 +13,7 @@ module RedmineServerlessSes
       result = RedmineServerlessAdmin.run_checks.find { |r| r.name == 'ses' }
 
       assert result.ok, result.detail
-      assert_equal 'sending enabled, production', result.detail
+      assert_equal 'Sending: Enabled, production access: Yes', result.detail
     end
 
     def test_a_failing_check

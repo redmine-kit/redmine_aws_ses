@@ -9,30 +9,32 @@ Checked against the Redmine 7.0.3 source on 2026-11-09.
 | Address | Use |
 | --- | --- |
 | `<project identifier>@<domain>` | The project's address. Email sent to it becomes an issue in that project, and the project's notifications can be sent from it ([sending.md](sending.md#senders-per-project)) |
-| `redmine@<domain>` (the address for the whole Redmine) | Sender of email that does not belong to a project ("Address for the whole Redmine" below) |
+| `noreply@<domain>` (the default address) | Sender of email that does not belong to a project ("Default address" below) |
 
 `<domain>` is Redmine's domain: the domain of the emission address (`Setting.mail_from`).
 
 - **Identifiers and addresses:** A project's address is its identifier before the `@`; there are no other addresses per project. Redmine project identifiers consist of lowercase letters, digits, `-` and `_`, so they can be used as they are. A project cannot receive email, and its notifications keep the emission address, when its identifier:
   - is longer than 64 characters (the limit of the part before `@`),
   - is a role address that never goes to a project (`postmaster`, `abuse`, `hostmaster`, `webmaster`, `mailer-daemon`, `root`, `admin`, `administrator`, `noreply`, `no-reply`, `security`; RFC 2142 and common ones), or
-  - is the part before `@` of the address for the whole Redmine, which that address takes.
-- **Whether to receive:** Each project chooses whether to receive email (default: no). Email to a project that does not receive is dropped and recorded.
+  - is the part before `@` of the default address, which that address takes.
+- **Whether to receive:** Each project chooses whether to receive email ("Receive email", default off). Email to a project that does not receive is dropped and recorded.
 - **Project settings:** The "Email" tab of project settings sets whether to receive and the defaults ([admin.md](admin.md#project-email-settings)). The settings are in the plugin's table (`serverless_project_mail_settings`).
 
 ## Without addresses per project
 
 When addresses per project are off (the default), email is received as standard Redmine does.
 
-- **Receiving address:** Only the address for the whole Redmine.
-- **Choosing the project:** With Redmine's subaddress (`redmine+<identifier>@<domain>`). The plugin reads the subaddress from the envelope recipients, not from the `To` and `Cc` headers, so Bcc works too. Email without a subaddress goes to the default project or is dropped, as set on the "Receiving email" tab.
-- **Sender:** All notifications are sent from the address for the whole Redmine.
+- **Receiving address:** Only the default address.
+- **Choosing the project:** With Redmine's subaddress (`noreply+<identifier>@<domain>`). The plugin reads the subaddress from the envelope recipients, not from the `To` and `Cc` headers, so Bcc works too. Email without a subaddress is fetched into the default project or not fetched, as set in "Email to the default address" on the "Email receiving" tab.
+- **Sender:** All notifications are sent from the default address.
 
-## Address for the whole Redmine
+<a id="address-for-the-whole-redmine"></a>
 
-Email that does not belong to a project is sent from the emission address (`Setting.mail_from`), the address for the whole Redmine.
+## Default address
 
-| Email sent from the address for the whole Redmine | Redmine mailer method |
+Email that does not belong to a project is sent from the emission address (`Setting.mail_from`), the default address.
+
+| Email sent from the default address | Redmine mailer method |
 | --- | --- |
 | Password reset (lost password) | `lost_password` |
 | Account registration confirmation, activation request, activation notice | `register`<br>`account_activation_request`<br>`account_activated` |
@@ -43,8 +45,8 @@ Email that does not belong to a project is sent from the emission address (`Sett
 
 The methods above are the Redmine 7.0.3 mailer methods that do not add the project header (`X-Redmine-Project`) (`app/models/mailer.rb`).
 
-- **The part before `@`:** Set on the "Receiving email" tab (default `redmine`; `noreply` is also possible). A project with the same identifier cannot receive email at it.
-- **Email sent to it:** Put in the default project, or dropped (default). Replies to password resets and similar usually need not be imported.
+- **The part before `@`:** Set in "Default address" under "Receiving settings" on the "Email receiving" tab. The default is `noreply`, to match "Do not fetch", the default of "Email to the default address". When you switch to fetching, choose the part before `@` (for example `redmine`). An installation that has already saved the receiving settings keeps its value. A project with the same identifier cannot receive email at it.
+- **Email sent to it:** "Email to the default address" chooses "Do not fetch" (default) or "Fetch into the default project". Replies to password resets and similar usually need not be fetched.
 
 ## Importing
 
@@ -93,8 +95,8 @@ Redmine decides which user an email comes from by the sender (`From`) address. I
 | Verdict in the event (`receipt`) | Not `PASS` | Setting |
 | --- | --- | --- |
 | `virusVerdict.status` | Always dropped: the attachments would be served to everyone | — |
-| `spamVerdict.status` | Dropped | "Also fetch email marked as spam" (`import_spam`, default off) |
-| `dmarcVerdict.status` | Dropped | "Also fetch email that fails DMARC" (`import_without_dmarc_pass`, default off) |
+| `spamVerdict.status` | Dropped | "Also fetch spam" (`import_spam`, default off) |
+| `dmarcVerdict.status` | Dropped | "Also fetch email failing DMARC" (`import_without_dmarc_pass`, default off) |
 
 The values are `PASS`, `FAIL`, `GRAY` or `PROCESSING_FAILED`; a verdict that is missing counts as not `PASS`. `spfVerdict`, `dkimVerdict` and `dmarcPolicy` are recorded but do not decide. The verdicts are recorded whether or not the message is imported.
 
@@ -107,7 +109,7 @@ The values are `PASS`, `FAIL`, `GRAY` or `PROCESSING_FAILED`; a verdict that is 
 
 | Setting | Value | Reason |
 | --- | --- | --- |
-| "Emission email address" in Redmine's administration settings | The address for the whole Redmine (for example, `redmine@redmine.example.com`) | Also gives the plugin Redmine's domain |
+| "Emission email address" in Redmine's administration settings | The default address (for example, `noreply@redmine.example.com`) | Also gives the plugin Redmine's domain |
 | "Truncate emails after one of these lines" | A line before the quoted text (such as "--- Please write your reply above this line ---") | Keeps the quoted part of replies out of notes |
 
 ## Tests
@@ -116,5 +118,5 @@ The values are `PASS`, `FAIL`, `GRAY` or `PROCESSING_FAILED`; a verdict that is 
 | --- | --- |
 | The verdicts | Each combination of the settings; a virus is never imported; missing verdicts |
 | Importing | On the mail bucket in S3 (LocalStack or moto), with the values of an SES event (`test/fixtures/ses_event.json`): the project of the recipient, Bcc, a `Project:` keyword that cannot change the project, each reason for dropping, forged SES headers that change nothing, the move to `processed/`, re-imports from the record, the rake task |
-| Choosing the project | Addresses per project, identifiers that cannot be an address (longer than 64 characters, role addresses), projects that do not receive, the address for the whole Redmine, subaddresses |
-| Project settings | A project whose identifier cannot be an address shows no address and cannot turn receiving on; only people with the permission can change the settings |
+| Choosing the project | Addresses per project, identifiers that cannot be an address (longer than 64 characters, role addresses), projects that do not receive, the default address, subaddresses |
+| Project settings | A project whose identifier cannot be an address shows no address and cannot turn "Receive email" on; only people with the permission can change the settings |

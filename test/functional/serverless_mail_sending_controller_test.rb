@@ -29,9 +29,16 @@ module RedmineServerlessSes
 
       assert_response :success
       assert_select 'div.flash.error', 0, response.body[%r{<div class="flash error">.*?</div>}m]
-      assert_select 'div.box.tabular p', text: %r{12 / 50000}
-      assert_select 'div.box.tabular p', text: /DKIM\s*SUCCESS/
-      assert_select 'table.list.suppressed tr', text: /jsmith@somenet\.foo\s*John Smith\s*BOUNCE/
+      assert_select 'div.box.tabular p', text: /Account status\s*Healthy/
+      assert_select 'div.box.tabular p', text: /Sending\s*Enabled/
+      assert_select 'div.box.tabular p', text: /Daily sending quota\s*50,000/
+      assert_select 'div.box.tabular p', text: /Sent in the last 24 hours\s*12/
+      assert_select 'div.box.tabular p', text: /Maximum send rate\s*14 per second/
+      assert_select 'div.box.tabular p', text: /DKIM\s*Successful/
+      assert_select 'table.list.suppressed tr', text: /jsmith@somenet\.foo\s*John Smith\s*Bounce/
+      assert_select 'table.list.suppressed td.buttons a.icon-del', text: 'Remove'
+      assert_not_includes response.body, 'HEALTHY'
+      assert_select 'p', text: /SES does not send/, count: 0
       assert_select 'p a.icon.icon-email[data-method=post][href=?]', '/admin/test_email'
     end
 

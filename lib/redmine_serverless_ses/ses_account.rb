@@ -47,7 +47,9 @@ module RedmineServerlessSes
 
     def check
       a = @client.get_account
-      "sending #{a.sending_enabled ? 'enabled' : 'paused'}, #{a.production_access_enabled ? 'production' : 'sandbox'}"
+      sending = ::I18n.t(:"label_serverless_mail_sending_status_#{a.sending_enabled ? 'enabled' : 'paused'}")
+      production = ::I18n.t(a.production_access_enabled ? :general_text_Yes : :general_text_No)
+      ::I18n.t(:text_serverless_mail_sending_check, sending: sending, production: production)
     end
 
     private

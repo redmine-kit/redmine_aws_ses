@@ -1,64 +1,78 @@
 en:
   label_serverless_admin: Serverless
-  label_serverless_mail_sending: Sending email
-  label_serverless_mail_receiving: Receiving email
+  label_serverless_mail_sending: Email sending
+  label_serverless_mail_receiving: Email receiving
   label_serverless_check_ses: SES
   label_serverless_project_mail: Email
   permission_manage_serverless_mail_settings: Manage email settings
   label_serverless_mail_account: SES account
   label_serverless_mail_production_access: Production access
-  label_serverless_mail_sending_enabled: Sending enabled
-  label_serverless_mail_enforcement_status: Enforcement status
-  label_serverless_mail_quota: Sent in the last 24 hours / limit
-  label_serverless_mail_rate: Messages per second
+  label_serverless_mail_sending_enabled: Sending
+  label_serverless_mail_sending_status_enabled: Enabled
+  label_serverless_mail_sending_status_paused: Paused
+  label_serverless_mail_enforcement_status: Account status
+  label_serverless_mail_enforcement_status_healthy: Healthy
+  label_serverless_mail_enforcement_status_probation: Under review
+  label_serverless_mail_enforcement_status_shutdown: Paused
+  label_serverless_mail_quota: Daily sending quota
+  label_serverless_mail_sent_last_24_hours: Sent in the last 24 hours
+  label_serverless_mail_rate: Maximum send rate
+  text_serverless_mail_rate_value: "%{count} per second"
   label_serverless_mail_domain: Domain
-  label_serverless_mail_verified: Verified for sending
+  label_serverless_mail_verified: Verified
+  label_serverless_mail_dkim_status_success: Successful
+  label_serverless_mail_dkim_status_pending: Pending
+  label_serverless_mail_dkim_status_failed: Failed
+  label_serverless_mail_dkim_status_temporary_failure: Temporary failure
+  label_serverless_mail_dkim_status_not_started: Not started
   label_serverless_mail_suppressed: Suppression list
   label_serverless_mail_reason: Reason
-  label_serverless_mail_failed: Failed email
-  label_serverless_mail_addresses: Addresses
-  label_serverless_mail_global_address: Address for the whole Redmine
-  label_serverless_mail_received: Received email
-  label_serverless_mail_dropped_only: Dropped only
+  label_serverless_mail_suppression_reason_bounce: Bounce
+  label_serverless_mail_suppression_reason_complaint: Complaint
+  label_serverless_mail_failed: Failed jobs
+  label_serverless_mail_addresses: Email addresses
+  label_serverless_mail_global_address: Default address
+  label_serverless_mail_received: Received emails
+  label_serverless_mail_dropped_only: Not fetched
   label_serverless_mail_received_at: Received
   label_serverless_mail_result: Result
   label_serverless_mail_imported: Fetched
-  label_serverless_mail_reason_no_verdict: "Dropped: no verdicts from SES"
-  label_serverless_mail_reason_virus: "Dropped: virus"
-  label_serverless_mail_reason_spam: "Dropped: spam"
-  label_serverless_mail_reason_dmarc: "Dropped: DMARC failed"
-  label_serverless_mail_reason_auto_reply: "Dropped: auto-reply"
-  label_serverless_mail_reason_no_project: "Dropped: no project receives it"
-  label_serverless_mail_reason_import_error: "Not fetched by Redmine (see the log)"
+  label_serverless_mail_reason_no_verdict: Not fetched (no verdicts)
+  label_serverless_mail_reason_virus: Not fetched (virus)
+  label_serverless_mail_reason_spam: Not fetched (spam)
+  label_serverless_mail_reason_dmarc: Not fetched (DMARC fail)
+  label_serverless_mail_reason_auto_reply: Not fetched (auto-reply)
+  label_serverless_mail_reason_no_project: Not fetched (no project)
+  label_serverless_mail_reason_import_error: Fetch error
   label_serverless_mail_settings: Receiving settings
-  label_serverless_mail_global_local_part: Address for the whole Redmine
-  label_serverless_mail_global_mail: Email to that address
-  label_serverless_mail_global_drop: Drop
-  label_serverless_mail_global_default_project: Put in the default project
+  label_serverless_mail_global_mail: Email to the default address
+  label_serverless_mail_global_drop: Do not fetch
+  label_serverless_mail_global_default_project: Fetch into the default project
   label_serverless_mail_default_project: Default project
-  label_serverless_mail_per_project: Use an address per project
-  label_serverless_mail_project_senders: Send project notifications from the project's address
+  label_serverless_mail_per_project: Use per-project addresses
+  label_serverless_mail_project_senders: Send notifications from project addresses
   label_serverless_mail_receive: Receive email
-  label_serverless_mail_unknown_user: Senders not registered in Redmine
+  label_serverless_mail_unknown_user: Unknown senders
   label_serverless_mail_unknown_user_ignore: Do not fetch
-  label_serverless_mail_unknown_user_accept: Accept as the anonymous user
-  label_serverless_mail_unknown_user_create: Create an account
-  button_serverless_mail_unsuppress: Remove from the list
+  label_serverless_mail_unknown_user_accept: Fetch as the anonymous user
+  label_serverless_mail_unknown_user_create: Create a user
+  button_serverless_mail_unsuppress: Remove
   button_serverless_mail_reimport: Fetch again
   notice_serverless_mail_unsuppressed: "%{address} was removed from the suppression list."
   notice_serverless_mail_reimport: "%{count} message(s) will be fetched again."
   error_serverless_mail_local_part: The address may contain only lowercase letters, digits, ".", "_" and "-".
-  text_serverless_mail_no_domain: Set the emission email address (Administration › Settings › Email notifications) to an address on Redmine's domain.
+  text_serverless_mail_no_domain: Set the emission email address (Administration › Settings › Email notifications) to an address on the domain verified in SES.
   text_serverless_mail_no_bucket: REDMINE_MAIL_BUCKET is not set, so received email cannot be fetched.
-  text_serverless_mail_suppressed: SES does not send to these addresses. Remove an address once its mailbox works again.
-  text_serverless_mail_mx_unknown: Could not be read
-  text_serverless_mail_mx_none: None
-  label_serverless_mail_import_without_dmarc_pass: Also fetch email that fails DMARC
-  text_serverless_mail_import_without_dmarc_pass: "Off (recommended): email whose sender domain SES could not verify is dropped. Redmine takes the user from the sender's address, so such email could create issues as someone else."
-  label_serverless_mail_import_spam: Also fetch email marked as spam
-  text_serverless_mail_import_spam: Off (recommended) drops it. Turn on only if SES drops email you need.
-  text_serverless_mail_virus: Email in which SES finds a virus is always dropped, because its attachments would be served to everyone.
-  label_serverless_mail_verdicts: SES verdicts
-  label_serverless_mail_import: Email to fetch
+  text_serverless_mail_mx_unknown: Unknown
+  label_serverless_mail_import_without_dmarc_pass: Also fetch email failing DMARC
+  text_serverless_mail_import_without_dmarc_pass: Off recommended (spoofing)
+  label_serverless_mail_import_spam: Also fetch spam
+  text_serverless_mail_import_spam: Off recommended
+  text_serverless_mail_virus: Email with a virus verdict is never fetched
+  label_serverless_mail_verdicts: Verdicts
+  label_serverless_mail_verdict_virus: Virus
+  label_serverless_mail_verdict_spam: Spam
+  label_serverless_mail_import: Fetched email
   label_serverless_mail_from: From
+  text_serverless_mail_sending_check: "Sending: %{sending}, production access: %{production}"
   text_serverless_mail_api_error: "Could not call the SES API (%{error}). See the log for details."

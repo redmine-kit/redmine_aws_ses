@@ -3,10 +3,10 @@
 # Redmine's email through Amazon SES (docs/README.md): retries of sending by
 # error type, importing email that SES received, and addresses per project.
 module RedmineServerlessSes
-  VERSION = '0.1.1'
+  VERSION = '0.2.0'
 
   DEFAULTS = {
-    'global_local_part' => 'redmine',
+    'global_local_part' => 'noreply',
     'global_mail' => 'drop',
     'default_project' => '',
     'per_project_addresses' => '0',

@@ -33,10 +33,10 @@ SES v2 の `SendEmail` のエラー(API リファレンスの一覧)を、3 つ�
 ## 送り直し
 
 1. **通知を受ける:** デッドレターキューか失敗の記録のアラームで、メールの失敗を知ります(Serverless では CloudWatch のアラーム)。
-2. **原因を直す:** 管理画面の「メールの送信」で、SES のアカウント、送信元のドメイン、サプレッションリストを確認します([admin.md](admin.md#sending-email))。
-3. **送り直す:** Redmine Serverless SQS の「ジョブ」の画面で、失敗したメールを選んで送り直すか、デッドレターキューを戻します([その admin.md](https://redmine-kit.github.io/redmine_serverless_sqs/ja/admin.html#jobs))。
+2. **原因を直す:** 管理画面の「メール送信」のタブで、SES アカウント、ドメイン、サプレッションリストを確認します([admin.md](admin.md#sending-email))。
+3. **送り直す:** 「失敗したジョブ」のリンクから Redmine Serverless SQS の「ジョブ」の画面を開き、失敗したメールを選んで送り直すか、デッドレターキューを戻します([その admin.md](https://redmine-kit.github.io/redmine_serverless_sqs/ja/admin.html#jobs))。
 
-- **SES が受け付けたあとの失敗:** SES が受け付けたあとで、相手のメールサーバーが拒んだメール(バウンス)は、API のエラーではありません。SES はアドレスをサプレッションリストに入れ、そこへは送らなくなります。「メールの送信」でリストを見られます。
+- **SES が受け付けたあとの失敗:** SES が受け付けたあとで、相手のメールサーバーが拒んだメール(バウンス)は、API のエラーではありません。SES はアドレスをサプレッションリストに入れ、そこへは送らなくなります。「メール送信」のタブでリストを見られます。
 
 <a id="senders-per-project"></a>
 
@@ -44,11 +44,11 @@ SES v2 の `SendEmail` のエラー(API リファレンスの一覧)を、3 つ�
 
 Redmine は、すべての通知を送信元のアドレス(`Setting.mail_from`)から送ります。プロジェクトごとのアドレスと、プロジェクトごとの送信元を有効にすると([receiving.md](receiving.md#addresses-per-project))、プラグインは、プロジェクトの通知を、そのプロジェクトのアドレスから送ります。
 
-- **見分け方:** Redmine は、プロジェクトの通知(チケット、ニュース、文書、ファイル、フォーラム、wiki)に、`X-Redmine-Project` のヘッダーでプロジェクトの識別子を付けます(`Mailer#redmine_headers`)。ActionMailer のインターセプター(送る前にメールを書き換える Rails の標準のしくみ。`boot/` が登録する)がこれを読み、送信元を `<識別子>@<ドメイン>`(別名があれば別名)に替えます。
+- **見分け方:** Redmine は、プロジェクトの通知(チケット、ニュース、文書、ファイル、フォーラム、wiki)に、`X-Redmine-Project` のヘッダーでプロジェクトの識別子を付けます(`Mailer#redmine_headers`)。ActionMailer のインターセプター(送る前にメールを書き換える Rails の標準のしくみ。`boot/` が登録する)がこれを読み、送信元を `<識別子>@<ドメイン>` に替えます。
 - **表示名:** Redmine の表示名(送信元のアドレスに表示名がなければ、作成者の名前)はそのまま使います。
-- **ヘッダーのないメール:** プロジェクトに属さないメールは、Redmine 全体のアドレスのままです([receiving.md](receiving.md#address-for-the-whole-redmine))。
+- **ヘッダーのないメール:** プロジェクトに属さないメールは、送信元のアドレス(デフォルトアドレス)のままです([receiving.md](receiving.md#address-for-the-whole-redmine))。
 - **メールを受け取らないプロジェクト:** 送信元はプロジェクトのアドレスですが、返信は取り込まれないので、`Reply-To` を送信元のアドレスにします。
-- **選べる:** 既定は無効で、「メールの受信」のタブで有効にします。
+- **選べる:** 既定は無効です。「メール受信」のタブの「受信設定」の「プロジェクトのアドレスから通知を送信」で有効にします。
 
 <a id="tests"></a>
 
@@ -57,7 +57,7 @@ Redmine は、すべての通知を送信元のアドレス(`Setting.mail_from`)
 | 対象 | 確認すること |
 | --- | --- |
 | SES での送信 | 通知が `aws-actionmailer-ses` を通って SES v2(LocalStack。トークンがなければ moto)に送られる。確認済みの ID でない送信元は、worker で `MessageRejected` の例外を発生させる(モックした応答。下記) |
-| 接続の確認 | SES v2 の `GetAccount`(モックした応答。下記) |
+| 接続テスト | SES v2 の `GetAccount`(モックした応答。下記) |
 | エラーの種類別 | SDK の応答のスタブで `SendEmail` のエラーを 1 つずつ起こす。一時的なエラーはジョブの中でやり直し、最後の実行のあとは例外を発生させる。メッセージのエラーは捨てる。アカウントのエラーはキューのために例外を発生させる |
 | worker だけ | `raise_delivery_errors` は `REDMINE_ROLE=worker` のときだけ設定する |
 | プロジェクト別の送信元 | インターセプターは、設定が有効なときだけ、送信元と `Reply-To` を替える |

@@ -62,17 +62,17 @@ module RedmineServerlessSes
     end
 
     def test_the_global_address
-      with_ses_settings('global_mail' => 'drop') { assert_nil target("redmine@#{DOMAIN}") }
+      with_ses_settings('global_mail' => 'drop') { assert_nil target("noreply@#{DOMAIN}") }
       with_ses_settings('global_mail' => 'default_project', 'default_project' => 'onlinestore') do
-        assert_equal 'onlinestore', target("redmine@#{DOMAIN}")
+        assert_equal 'onlinestore', target("noreply@#{DOMAIN}")
       end
     end
 
     def test_subaddress_without_per_project_addresses
       with_ses_settings do
-        assert_equal 'ecookbook', target("redmine+ecookbook@#{DOMAIN}")
+        assert_equal 'ecookbook', target("noreply+ecookbook@#{DOMAIN}")
         assert_nil target("ecookbook@#{DOMAIN}")
-        assert_nil target("redmine+missing@#{DOMAIN}")
+        assert_nil target("noreply+missing@#{DOMAIN}")
       end
     end
   end

@@ -7,6 +7,8 @@ class ServerlessMailSendingController < ApplicationController
   self.main_menu = false
   menu_item :serverless
 
+  helper :serverless_mail
+
   before_action :require_admin
 
   def index
