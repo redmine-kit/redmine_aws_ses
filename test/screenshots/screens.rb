@@ -78,7 +78,7 @@ class RedmineServerlessSesScreens < ScreenshotCase
       ['jsmith@somenet.foo', 'Oven does not heat up', "cookbook@#{DOMAIN}", 1, 'imported', nil, 'Issue', 1,
        %w[PASS PASS PASS], 20.minutes],
       ['offers@mailer.example.net', 'You have won a prize', "redmine@#{DOMAIN}", nil, 'dropped', 'spam', nil, nil,
-       %w[FAIL PASS NONE], 2.hours],
+       %w[FAIL PASS GRAY], 2.hours],
       ['billing@lookalike.example.org', 'Invoice overdue', "cookbook@#{DOMAIN}", 1, 'dropped', 'dmarc', nil, nil,
        %w[PASS PASS FAIL], 5.hours]
     ].each_with_index do |(from, subject, to, project, status, reason, type, id, (spam, virus, dmarc), ago), index|
