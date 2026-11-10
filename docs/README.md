@@ -1,6 +1,6 @@
 # Redmine Serverless SES
 
-Redmine Serverless SES (`redmine_serverless_ses`) is a Redmine plugin for sending and receiving Redmine's email with Amazon SES: retries of sending by error type, importing email that SES received, checks against spoofing and spam, and addresses per project. It does not modify Redmine's own files and uses only Redmine's standard extension mechanisms. The plugin is in early development (version 0.2.0).
+Redmine Serverless SES (`redmine_serverless_ses`) is a Redmine plugin for sending and receiving Redmine's email with Amazon SES: retries of sending by error type, importing email that SES received, checks against spoofing and spam, and addresses per project. It does not modify Redmine's own files and uses only Redmine's standard extension mechanisms. The plugin is in early development.
 
 - [Setup](setup.md): requirements, installation, configuration, AWS resources, network, tests
 - [IAM permissions](iam.md): permissions, example policy, resource-based policies
