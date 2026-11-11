@@ -1,5 +1,5 @@
-# プロジェクトのメールの設定
+# プロジェクトのメール設定
 
-プロジェクトの設定の「メール」のタブで、プロジェクトのメールの受け取り方を設定します。「メールを受け取る」か、プロジェクトのアドレス、メールから作るチケットの値です。このタブは、「メールの設定の管理」の権限のあるメンバーに表示されます。
+プロジェクトの設定の「メール」のタブで、プロジェクトのメールの受け取り方を設定します。プロジェクトのアドレス、「メール受信」、メールから作るチケットの値です。このタブは、「メール設定の管理」の権限のあるメンバーに表示されます。
 
-詳しくは [Redmine AWS SES のプロジェクトのメールの設定](https://redmine-kit.github.io/redmine_aws_ses/ja/admin.html#project-email-settings) を参照してください。
+詳しくは [Redmine AWS SES のプロジェクトのメール設定](https://redmine-kit.github.io/redmine_aws_ses/ja/admin.html#project-email-settings) を参照してください。
