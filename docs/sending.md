@@ -28,7 +28,7 @@ Errors from SES v2 `SendEmail` (the list in the API reference) are split into th
 
 1. **Get notified:** An alarm on the dead-letter queue or on the failure records tells you that email failed (in Serverless, a CloudWatch alarm).
 2. **Fix the cause:** On the "Email sending" tab of the administration pages, check the SES account, the domain and the suppression list ([admin.md](admin.md#sending-email)).
-3. **Send again:** Follow "Failed jobs" to Redmine AWS SQS's "Jobs" page, select the failed email and resend it, or move the dead-letter queue back ([its admin.md](https://redmine-kit.github.io/redmine_aws_sqs/admin.html#jobs)).
+3. **Send again:** Follow "Failed jobs" to Redmine AWS SQS's "Jobs" page, select the failed email and resend it, or redrive the dead-letter queue ([its admin.md](https://redmine-kit.github.io/redmine_aws_sqs/admin.html#jobs)).
 
 - **Failures after SES accepts the message:** Messages rejected by the recipient's mail server after SES accepted them (bounces) are not API errors. SES adds the address to the suppression list and stops sending to it; the "Email sending" tab shows the list.
 
