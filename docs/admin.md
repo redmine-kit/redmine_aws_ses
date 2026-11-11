@@ -74,12 +74,14 @@ An "Email" tab is added to project settings when addresses per project are on. I
 | --- | --- |
 | Email | `<identifier>@<Redmine's domain>`. Display only. A project whose identifier cannot be an address shows `-` and cannot receive email ([receiving.md](receiving.md#addresses-per-project)) |
 | Receive email | A check box. Off by default |
-| Default values | Tracker, Category, Priority, Assignee and Private of created issues |
-| Unknown senders | "Do not fetch" (default), "Fetch as the anonymous user" or "Create a user" (Redmine's `unknown_user` values `ignore`, `accept`, `create`) |
+| Default values | Tracker, Category, Priority, Assignee and Private of created issues. Only the project's trackers and categories, active priorities and the users the project's issues can be assigned to can be chosen, as in Redmine's issue form; other values are refused when saving |
+| Unknown senders | "Do not fetch" (default), "Fetch as the anonymous user" or "Create a user" (Redmine's `unknown_user` values `ignore`, `accept`, `create`). Only Redmine administrators can choose "Create a user" (below) |
 
 | Item | Details |
 | --- | --- |
 | Who can change it | Redmine administrators and members with the project permission "Manage email settings" that the plugin adds. The permission also opens project settings, as Redmine's permissions for the other tabs do |
+| "Create a user" | With it, Redmine's `MailHandler` creates an active user for every unknown sender whose email passes the checks, and sends the account information to that address. In Redmine only administrators create users, so only they can choose it; members with the permission see the other two values. When an administrator has chosen it, it stays when a member saves the tab |
+| Errors | When the values cannot be saved (for example, a tracker removed from the project while the form was open), the form is shown again with the errors, as Redmine's issue category form is |
 | When fetching email from unknown senders | Use this to receive email from outside people, such as for a contact desk. Spam increases, so keep the DMARC check ([receiving.md](receiving.md#spoofing-and-spam)) |
 
 ## Permissions

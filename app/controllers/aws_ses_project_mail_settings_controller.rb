@@ -7,14 +7,23 @@ class AwsSesProjectMailSettingsController < ApplicationController
   before_action :find_project_by_project_id, :authorize
 
   def update
-    setting = AwsSesProjectMailSetting.find_or_initialize_by(project: @project)
-    setting.safe_attributes = params.require(:aws_ses_project_mail_setting).permit!.to_h
-    if setting.save
+    @setting = AwsSesProjectMailSetting.find_or_initialize_by(project: @project)
+    @setting.safe_attributes = setting_params(@setting)
+    if @setting.save
       logger&.info "[redmine_aws_ses] #{User.current.login} changed the email settings of #{@project.identifier}"
       flash[:notice] = l(:notice_successful_update)
+      redirect_to settings_project_path(@project, tab: 'aws_ses_mail')
     else
-      flash[:error] = setting.errors.full_messages.join(', ')
+      render :edit
     end
-    redirect_to settings_project_path(@project, tab: 'aws_ses_mail')
+  end
+
+  private
+
+  # The safe attributes, each a single value; a parameter of another shape is
+  # ignored.
+  def setting_params(setting)
+    values = params[:aws_ses_project_mail_setting]
+    values.is_a?(ActionController::Parameters) ? values.permit(*setting.safe_attribute_names) : {}
   end
 end

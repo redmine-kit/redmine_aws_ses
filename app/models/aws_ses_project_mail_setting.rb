@@ -23,6 +23,7 @@ class AwsSesProjectMailSetting < ApplicationRecord
                   'unknown_user'
 
   validates :unknown_user, inclusion: { in: UNKNOWN_USER }
+  validate :validate_choices, :validate_unknown_user
 
   # The setting of the project that receives email at this part before @.
   def self.receiving_for(local)
@@ -45,8 +46,40 @@ class AwsSesProjectMailSetting < ApplicationRecord
       identifier != RedmineAws::SES.global_local_part
   end
 
+  # Keeps the user for the validation of unknown_user, as Redmine's
+  # Issue#safe_attributes= keeps it for its own checks.
+  def safe_attributes=(attrs, user = User.current)
+    @attributes_set_by = user
+    super
+  end
+
   def address
     self.class.address_for(project)
+  end
+
+  # The choices of the form, which the validation checks too: the values an
+  # issue of the project can take.
+  def trackers
+    project.trackers
+  end
+
+  def categories
+    project.issue_categories
+  end
+
+  def priorities
+    IssuePriority.active
+  end
+
+  def assignees
+    project.assignable_users
+  end
+
+  # The unknown_user values the user may choose. With "create", MailHandler
+  # creates an active user for every unknown sender, and only administrators
+  # create users in Redmine; a value already saved stays as it is.
+  def unknown_user_values(user = User.current)
+    user.admin? || unknown_user_in_database == 'create' ? UNKNOWN_USER : UNKNOWN_USER - %w[create]
   end
 
   # Default values of the issues the project creates from email, as
@@ -55,5 +88,27 @@ class AwsSesProjectMailSetting < ApplicationRecord
     { tracker: tracker&.name, category: category&.name, priority: priority&.name,
       assigned_to: assigned_to.is_a?(User) ? assigned_to.login : assigned_to&.name,
       is_private: is_private? ? '1' : nil }.compact
+  end
+
+  private
+
+  # A value that changes must be one of the choices. A value saved earlier
+  # that is no longer one (a tracker removed from the project) does not stop
+  # other changes: MailHandler checks it again on import.
+  def validate_choices
+    { tracker: trackers, category: categories, priority: priorities, assigned_to: assignees }.each do |name, choices|
+      attribute = :"#{name}_id"
+      id = self[attribute]
+      next if id.nil? || !attribute_changed?(attribute)
+
+      errors.add(attribute, :inclusion) unless choices.exists?(id)
+    end
+  end
+
+  # Checked when a user sets the values (safe_attributes=).
+  def validate_unknown_user
+    return unless @attributes_set_by && unknown_user_changed?
+
+    errors.add(:unknown_user, :inclusion) if unknown_user_values(@attributes_set_by).exclude?(unknown_user)
   end
 end

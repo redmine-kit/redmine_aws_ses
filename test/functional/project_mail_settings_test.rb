@@ -33,7 +33,58 @@ module RedmineAws
         end
 
         assert_nil AwsSesProjectMailSetting.find_by(project_id: 1)
-        assert_predicate flash[:error], :present?
+        # The form again with Redmine's error list, as after a failed save of
+        # an issue category; no flash.
+        assert_response :success
+        assert_select '#errorExplanation li', text: /Unknown user is not included in the list/
+        assert_select 'form#aws-ses-project-mail-setting select[name=?] option[value=create]',
+                      'aws_ses_project_mail_setting[unknown_user]'
+        assert_nil flash[:error]
+      end
+
+      def test_a_category_of_another_project_is_refused
+        @request.session[:user_id] = 1
+        with_ses_settings('per_project_addresses' => '1') do
+          patch :update, params: { project_id: 'ecookbook', aws_ses_project_mail_setting: { category_id: '3' } }
+        end
+
+        assert_nil AwsSesProjectMailSetting.find_by(project_id: 1)
+        assert_select '#errorExplanation li', text: 'Category is not included in the list'
+      end
+
+      # Each parameter of an unexpected shape is ignored, the others saved.
+      def test_unexpected_parameters
+        Role.find(1).add_permission! :manage_aws_ses_mail_settings
+        @request.session[:user_id] = 2
+        [['a string', {}], [{ receive: ['1'], tracker_id: { id: '2' } }, { 'receive' => false, 'tracker_id' => nil }],
+         [{ project_id: '2', receive: '1' }, { 'project_id' => 1, 'receive' => true }],
+         [{ category_id: '3' }, nil]].each do |values, saved|
+          AwsSesProjectMailSetting.delete_all
+          with_ses_settings('per_project_addresses' => '1') do
+            patch :update, params: { project_id: 'ecookbook', aws_ses_project_mail_setting: values }
+          end
+
+          setting = AwsSesProjectMailSetting.find_by(project_id: 1)
+          if saved
+            assert_redirected_to '/projects/ecookbook/settings/aws_ses_mail'
+            assert_equal saved, setting.attributes.slice(*saved.keys), values.inspect
+            assert_not AwsSesProjectMailSetting.exists?(project_id: 2)
+          else
+            assert_nil setting, values.inspect
+          end
+        end
+      end
+
+      def test_a_manager_cannot_choose_to_create_users
+        Role.find(1).add_permission! :manage_aws_ses_mail_settings
+        @request.session[:user_id] = 2
+        with_ses_settings('per_project_addresses' => '1') do
+          patch :update, params: { project_id: 'ecookbook', aws_ses_project_mail_setting: { unknown_user: 'create' } }
+        end
+
+        assert_nil AwsSesProjectMailSetting.find_by(project_id: 1)
+        assert_select '#errorExplanation li', text: /Unknown user/
+        assert_select 'select#aws_ses_project_mail_setting_unknown_user option', 2
       end
 
       def test_without_the_permission
