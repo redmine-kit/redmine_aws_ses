@@ -25,7 +25,16 @@ bin/services >/dev/null
 # REDMINE_AWS_DIR.
 aws_dir=${REDMINE_AWS_DIR:-../redmine_aws}
 [[ -f "$aws_dir/init.rb" ]] || { echo "redmine_aws is not in $aws_dir; set REDMINE_AWS_DIR" >&2; exit 1; }
-docker buildx build --load -q -t "$image" --build-context redmine_aws="$aws_dir" -f test/Dockerfile . >/dev/null
+# test/Dockerfile on its Ruby (4.0), or on RUBY_IMAGE in place of its FROM
+# ruby line (the CI also runs Ruby 3.2).
+dockerfile() {
+  if [[ -n "${RUBY_IMAGE:-}" ]]; then
+    sed "s|^FROM ruby:[^ ]*|FROM $RUBY_IMAGE|" test/Dockerfile
+  else
+    cat test/Dockerfile
+  fi
+}
+dockerfile | docker buildx build --load -q -t "$image" --build-context redmine_aws="$aws_dir" -f - . >/dev/null
 run() {
   docker run --rm --network redmine-aws-ses-test_default -e AWS_ENDPOINT_URL="$endpoint" -e TEST_AWS_BACKEND="$backend" \
     -e AWS_ENDPOINT_URL_SESV2="$ses_endpoint" -e AWS_ENDPOINT_URL_SES="$ses_endpoint" -e TEST_SES_BACKEND="$ses_backend" \
