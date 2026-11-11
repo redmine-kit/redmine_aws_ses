@@ -30,6 +30,10 @@ class AwsSesMailSendingController < ApplicationController
 
   private
 
+  # Any StandardError, as redmine_aws's connection checks do: a call to SES
+  # can fail with service, network, credential or region errors, which have
+  # no common class, and one failing section must not keep the page from
+  # opening. The page shows the code or the class only (api_error).
   def fetch
     [yield, nil]
   rescue StandardError => e

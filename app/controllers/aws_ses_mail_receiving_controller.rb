@@ -59,7 +59,9 @@ class AwsSesMailReceivingController < ApplicationController
     values
   end
 
-  # The MX hosts of Redmine's domain, from DNS; nil when they cannot be read.
+  # The MX hosts of Redmine's domain, from DNS; nil when they cannot be read
+  # (Resolv raises several classes: resolver errors, timeouts, socket errors),
+  # which the page shows as "Unknown".
   def mx_records
     Rails.cache.fetch(['redmine_aws_ses', 'mx', @domain], expires_in: 60) do
       Resolv::DNS.open do |dns|
