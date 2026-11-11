@@ -5,7 +5,7 @@ What a Redmine needs to use Redmine AWS SES: installation, configuration, the SE
 ## Requirements
 
 - Redmine 7.0 or later.
-- [Redmine AWS](https://redmine-kit.github.io/redmine_aws/) (`redmine_aws`) 0.1 or later, in `plugins/redmine_aws` (a dependency of the gem). It adds the "AWS" administration menu.
+- [Redmine AWS](https://redmine-kit.github.io/redmine_aws/) (`redmine_aws`) 0.1 or later, in `plugins/redmine_aws`. Redmine refuses to start without it (`requires_redmine_plugin` in `init.rb`), and the gem depends on it. It adds the "AWS" administration menu.
 - A process that can reach SES and S3 with AWS credentials (an execution role on Lambda, an instance profile or a task role elsewhere). No access keys or SMTP passwords are stored in Redmine.
 - For sending: the official AWS gem `aws-actionmailer-ses` (delivery method `:ses_v2`) ([Serverless mail.md](https://redmine-kit.github.io/serverless/mail.html#gems)).
 - For retries of sending: jobs that run in a process of their own (on Lambda, `REDMINE_ROLE=worker`; [Redmine AWS SQS](https://redmine-kit.github.io/redmine_aws_sqs/) records the jobs that fail for the last time).
@@ -19,7 +19,7 @@ What a Redmine needs to use Redmine AWS SES: installation, configuration, the SE
    bundle install
    ```
 
-   Bundler then loads `boot/redmine_aws_ses.rb` before Rails initializes: it loads `aws-actionmailer-ses`, which registers the delivery method `:ses_v2`, and the interceptor for per-project senders. With checkouts, add both by path; Redmine AWS is there because the plugin's gemspec requires it, and Bundler does not load it (Redmine does):
+   Bundler then loads `boot/redmine_aws_ses.rb` before Rails initializes: it loads `aws-actionmailer-ses`, which registers the delivery method `:ses_v2`, and the interceptor for per-project senders. With checkouts, add both by path. Redmine AWS must be listed too, because the plugin's gemspec requires it and it is not on rubygems.org; Bundler does not load it (Redmine does). List it once, even when you add several Redmine AWS plugins this way: Bundler refuses the same gem from two sources and warns about duplicates.
 
    ```ruby
    # Redmine's Gemfile.local
@@ -46,7 +46,7 @@ What a Redmine needs to use Redmine AWS SES: installation, configuration, the SE
 
 ### Gem
 
-Each version tag (`v*`) publishes the plugin as a gem to GitHub Packages (`https://rubygems.pkg.github.com/redmine-kit`; `.github/workflows/gem.yml`). The gem holds the run-time files (`init.rb`, `boot/`, `lib/`, `app/`, `config/`, `db/`, `help/`, `LICENSE`) and depends on `redmine_aws`, `aws-actionmailer-ses`, `aws-sdk-sesv2` and `aws-sdk-s3`; the plugin's `Gemfile` is not in it. Bundler installs the gem of Redmine AWS with it. Redmine loads plugins only from `plugins/`, so the installed gems are linked there:
+Each version tag (`v*`) publishes the plugin as a gem to GitHub Packages (`https://rubygems.pkg.github.com/redmine-kit`; `.github/workflows/gem.yml`). The gem holds the run-time files (`init.rb`, `boot/`, `lib/`, `app/`, `config/`, `db/`, `help/`, `LICENSE`) and depends on `redmine_aws`, `aws-actionmailer-ses`, `aws-sdk-sesv2` and `aws-sdk-s3`; the plugin's `Gemfile` is not in it. Bundler installs the gem of Redmine AWS with it, from the same source, so `Gemfile.local` names only the plugin. Redmine loads plugins only from `plugins/`, so the installed gems are linked there:
 
 ```ruby
 # Redmine's Gemfile.local

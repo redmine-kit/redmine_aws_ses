@@ -7,7 +7,7 @@ Redmine AWS SES を使う Redmine に要るもの (インストール、設定�
 ## 動作環境
 
 - Redmine 7.0 以降。
-- `plugins/redmine_aws` の [Redmine AWS](https://redmine-kit.github.io/redmine_aws/ja/) (`redmine_aws`) 0.1 以降 (gem の依存です)。「AWS」の管理画面のメニューを追加します。
+- `plugins/redmine_aws` の [Redmine AWS](https://redmine-kit.github.io/redmine_aws/ja/) (`redmine_aws`) 0.1 以降。これがないと Redmine は起動しません (`init.rb` の `requires_redmine_plugin`)。gem もこれに依存します。「AWS」の管理メニューを追加します。
 - AWS の認証情報で SES と S3 に届くプロセス (Lambda では実行ロール、ほかではインスタンスプロファイルやタスクのロール)。Redmine にアクセスキーや SMTP のパスワードは置きません。
 - 送信には、AWS の公式の gem `aws-actionmailer-ses` (配送の方法は `:ses_v2`) ([Serverless の mail.md](https://redmine-kit.github.io/serverless/ja/mail.html#gems))。
 - 送信のやり直しには、別のプロセスで動くジョブ (Lambda では `REDMINE_ROLE=worker`。最後まで失敗したジョブは [Redmine AWS SQS](https://redmine-kit.github.io/redmine_aws_sqs/ja/) が記録します)。
@@ -23,7 +23,7 @@ Redmine AWS SES を使う Redmine に要るもの (インストール、設定�
    bundle install
    ```
 
-   こうすると、Bundler が、Rails の初期化より前に `boot/redmine_aws_ses.rb` を読み込みます。配送の方法 `:ses_v2` を登録する `aws-actionmailer-ses` と、プロジェクトごとの送信元のためのインターセプターを読み込みます。チェックアウトなら、両方をパスで追加します。Redmine AWS は、プラグインの gemspec が必要とするので書きます。Bundler は読み込みません (Redmine が読み込みます)。
+   こうすると、Bundler が、Rails の初期化より前に `boot/redmine_aws_ses.rb` を読み込みます。配送の方法 `:ses_v2` を登録する `aws-actionmailer-ses` と、プロジェクトごとの送信元のためのインターセプターを読み込みます。チェックアウトなら、両方をパスで追加します。Redmine AWS も書きます。プラグインの gemspec が必要とし、rubygems.org にはないためです。Bundler は読み込みません (読み込むのは Redmine です)。Redmine AWS のプラグインを複数追加するときも、`redmine_aws` は 1 回だけ書きます。Bundler は、同じ gem を 2 つのソースから取ることを拒み、重複には警告を出します。
 
    ```ruby
    # Redmine の Gemfile.local
@@ -52,7 +52,7 @@ Redmine AWS SES を使う Redmine に要るもの (インストール、設定�
 
 ### gem
 
-バージョンのタグ (`v*`) ごとに、プラグインを gem として GitHub Packages (`https://rubygems.pkg.github.com/redmine-kit`) に公開します (`.github/workflows/gem.yml`)。gem は、動かすためのファイル (`init.rb`、`boot/`、`lib/`、`app/`、`config/`、`db/`、`help/`、`LICENSE`) を持ち、`redmine_aws`、`aws-actionmailer-ses`、`aws-sdk-sesv2`、`aws-sdk-s3` に依存します。プラグインの `Gemfile` は入れません。Redmine AWS の gem は、Bundler がいっしょにインストールします。Redmine は `plugins/` のプラグインだけを読み込むので、インストールした gem をそこにリンクします。
+バージョンのタグ (`v*`) ごとに、プラグインを gem として GitHub Packages (`https://rubygems.pkg.github.com/redmine-kit`) に公開します (`.github/workflows/gem.yml`)。gem は、動かすためのファイル (`init.rb`、`boot/`、`lib/`、`app/`、`config/`、`db/`、`help/`、`LICENSE`) を持ち、`redmine_aws`、`aws-actionmailer-ses`、`aws-sdk-sesv2`、`aws-sdk-s3` に依存します。プラグインの `Gemfile` は入れません。Redmine AWS の gem は、Bundler が同じソースからいっしょにインストールするので、`Gemfile.local` にはプラグインだけを書きます。Redmine は `plugins/` のプラグインだけを読み込むので、インストールした gem をそこにリンクします。
 
 ```ruby
 # Redmine の Gemfile.local
