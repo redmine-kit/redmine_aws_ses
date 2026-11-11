@@ -3,6 +3,9 @@
 module RedmineAws
   module SES
     # The "Email" tab of project settings, when addresses per project are on.
+    # Prepended to ProjectsHelper: it changes ProjectsHelper#project_settings_tabs,
+    # which lists the tabs, because Redmine has no hook for them. The tab is
+    # added after Redmine's own filter, so the permission is checked here.
     module ProjectSettingsTab
       def self.install
         ProjectsHelper.prepend(self) unless ProjectsHelper.include?(self)
