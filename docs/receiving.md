@@ -120,3 +120,4 @@ The values are `PASS`, `FAIL`, `GRAY` or `PROCESSING_FAILED`; a verdict that is 
 | Importing | On the mail bucket in S3 (LocalStack or moto), with the values of an SES event (`test/fixtures/ses_event.json`): the project of the recipient, Bcc, a `Project:` keyword that cannot change the project, each reason for dropping, forged SES headers that change nothing, the move to `processed/`, re-imports from the record, the rake task |
 | Choosing the project | Addresses per project, identifiers that cannot be an address (longer than 64 characters, role addresses), projects that do not receive, the default address, subaddresses |
 | Project settings | A project whose identifier cannot be an address shows no address and cannot turn "Receive email" on; only people with the permission can change the settings |
+| Untrusted messages | Headers with raw 8-bit text (Shift_JIS without MIME encoding) and a date that is not one still leave a record |

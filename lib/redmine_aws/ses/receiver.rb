@@ -32,9 +32,8 @@ module RedmineAws
         key, raw = fetch
         mail = Mail.new(raw)
         record = AwsSesReceivedMail.find_or_initialize_by(message_id: @message_id)
-        record.assign_attributes(s3_key: key, mail_from: mail.from&.first.to_s.first(255),
-                                 subject: mail.subject.to_s.first(255), received_at: mail.date || Time.current,
-                                 processed_at: Time.current)
+        record.assign_attributes(s3_key: key, mail_from: text(Array(mail.from).first), subject: text(mail.subject),
+                                 received_at: received_at(mail), processed_at: Time.current)
         record.recipients = @recipients.join(', ') if @recipients
         record.verdicts = @verdicts if @verdicts
         import(raw, mail, record, key)
@@ -44,13 +43,28 @@ module RedmineAws
 
       private
 
+      # A header for the record. Anyone can send to the domain, and a header
+      # in raw 8-bit text (Shift_JIS without MIME encoding) is not UTF-8, which
+      # the database refuses; invalid bytes are replaced as Redmine does.
+      def text(value)
+        Redmine::CodesetUtil.replace_invalid_utf8(value.to_s).first(255)
+      end
+
+      # The Date header when it is a date, otherwise the time of the import.
+      def received_at(mail)
+        date = mail.date
+        date.is_a?(DateTime) ? date : Time.current
+      end
+
       # Tries the key recorded by an earlier run first. Without s3:ListBucket,
       # S3 answers a missing key with AccessDenied instead of NoSuchKey.
       def fetch
         error = nil
         prefixes.each do |prefix|
           key = prefix + @message_id
-          return [key, @s3.get_object(bucket: @bucket, key: key).body.read]
+          # As bytes, as MailHandler.receive reads it (raw_mail.b): the body is
+          # tagged UTF-8, and 8-bit text in it is not.
+          return [key, @s3.get_object(bucket: @bucket, key: key).body.read.b]
         rescue ::Aws::S3::Errors::NoSuchKey, ::Aws::S3::Errors::AccessDenied => e
           error = e
         end

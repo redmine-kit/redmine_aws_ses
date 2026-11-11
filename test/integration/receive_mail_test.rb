@@ -185,6 +185,23 @@ module RedmineAws
         assert_equal %w[dropped dmarc], [dropped.status, dropped.reason]
       end
 
+      # Anyone can send to the domain: headers with raw 8-bit text (Shift_JIS
+      # without MIME encoding) and a date that is not one still leave a record.
+      def test_headers_that_are_not_utf8
+        sjis = '日本語'.encode('Shift_JIS').b
+        raw = ses_message(subject: "Re: #{sjis}").b
+        raw = raw.sub('From: John Smith', "From: #{sjis}").sub(/^Date: .*$/, 'Date: not a date')
+        record = receive(raw)
+
+        assert_predicate record, :persisted?
+        assert record.subject.start_with?('Re: ')
+        assert_predicate record.subject, :valid_encoding?
+        # The mail gem cannot parse the address, and keeps the header as it is.
+        assert_includes record.mail_from, '<jsmith@somenet.foo>'
+        assert_predicate record.mail_from, :valid_encoding?
+        assert_not_nil record.received_at
+      end
+
       def test_message_ids_are_checked
         assert_raises(ArgumentError) { RedmineAws::SES::Receiver.new('../etc/passwd', bucket: @bucket) }
       end
