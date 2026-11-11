@@ -1,6 +1,6 @@
 # Receiving
 
-How Redmine Serverless SES imports email that SES received: the addresses, how the project is chosen, the checks against spoofing and spam, and the options passed to Redmine's `MailHandler`. SES stores each message in the mail bucket (`inbound/<message ID>`) and starts the import; [Serverless mail.md](https://redmine-kit.github.io/serverless/mail.html#receiving) has the domain, the receipt rule and the bucket.
+How Redmine AWS SES imports email that SES received: the addresses, how the project is chosen, the checks against spoofing and spam, and the options passed to Redmine's `MailHandler`. SES stores each message in the mail bucket (`inbound/<message ID>`) and starts the import; [Serverless mail.md](https://redmine-kit.github.io/serverless/mail.html#receiving) has the domain, the receipt rule and the bucket.
 
 Checked against the Redmine 7.0.3 source on 2026-11-09.
 
@@ -18,7 +18,7 @@ Checked against the Redmine 7.0.3 source on 2026-11-09.
   - is a role address that never goes to a project (`postmaster`, `abuse`, `hostmaster`, `webmaster`, `mailer-daemon`, `root`, `admin`, `administrator`, `noreply`, `no-reply`, `security`; RFC 2142 and common ones), or
   - is the part before `@` of the default address, which that address takes.
 - **Whether to receive:** Each project chooses whether to receive email ("Receive email", default off). Email to a project that does not receive is dropped and recorded.
-- **Project settings:** The "Email" tab of project settings sets whether to receive and the defaults ([admin.md](admin.md#project-email-settings)). The settings are in the plugin's table (`serverless_project_mail_settings`).
+- **Project settings:** The "Email" tab of project settings sets whether to receive and the defaults ([admin.md](admin.md#project-email-settings)). The settings are in the plugin's table (`aws_ses_project_mail_settings`).
 
 ## Without addresses per project
 
@@ -50,7 +50,7 @@ The methods above are the Redmine 7.0.3 mailer methods that do not add the proje
 
 ## Importing
 
-The rake task `redmine_serverless_ses:receive_mail` imports one message:
+The rake task `redmine_aws_ses:receive_mail` imports one message:
 
 1. Check the verdicts of the SES event ("Spoofing and spam" below).
 2. Choose the project from the event's recipients (below).
@@ -86,7 +86,7 @@ On Lambda, the SES receipt rule invokes the task function, whose handler sets th
 
 - **Auto-replies:** Email with `Auto-Submitted` (`auto-replied`, `auto-generated`) or `X-Autoreply: yes` (`MailHandler.ignored_emails_headers`) is dropped and recorded as an auto-reply. This prevents loops of notifications and imports.
 - **Not imported by Redmine:** When `MailHandler` refuses a message (for example, an unregistered sender with `ignore`, or a sender without permission), it is recorded as not imported and stays in `inbound/`; Redmine's log has the reason.
-- **Attachments:** Attachments are saved as Redmine attachments (with [Redmine Serverless S3](https://redmine-kit.github.io/redmine_serverless_s3/), in S3).
+- **Attachments:** Attachments are saved as Redmine attachments (with [Redmine AWS S3](https://redmine-kit.github.io/redmine_aws_s3/), in S3).
 
 ## Spoofing and spam
 

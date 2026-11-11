@@ -8,7 +8,7 @@ The plugin's own calls to AWS, by the process. Lambda's own permissions (logs, r
 | --- | --- | --- |
 | `ses:SendEmail`<br>`ses:SendRawEmail` | The SES identity of the subdomain | Every process that sends email (web requests for test email, jobs, rake): sending the full message (raw) with SES v2 `SendEmail` |
 | `ses:GetEmailIdentity` | The SES identity | Web requests: the "Email sending" administration page |
-| `ses:GetAccount`<br>`ses:ListSuppressedDestinations`<br>`ses:DeleteSuppressedDestination` | `*` (cannot be scoped) | Web requests: the same page (account status, the suppression list and removing an address from it). `GetAccount` is also the SES check in the "Connection test" on Redmine Serverless's "Status" tab |
+| `ses:GetAccount`<br>`ses:ListSuppressedDestinations`<br>`ses:DeleteSuppressedDestination` | `*` (cannot be scoped) | Web requests: the same page (account status, the suppression list and removing an address from it). `GetAccount` is also the SES check in the "Connection test" on the "Status" tab of Redmine AWS |
 | `s3:GetObject`<br>`s3:DeleteObject` | `inbound/*` in the mail bucket | The import (rake): reading received email, removing it after the move |
 | `s3:PutObject` | `processed/*` in the mail bucket | The import (rake): moving imported email (`CopyObject` to `processed/`, then `DeleteObject` in `inbound/`) |
 | `s3:GetObject` | `processed/*` in the mail bucket | Re-importing a message that was already imported (rake, or the job below) |

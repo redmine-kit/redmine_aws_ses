@@ -1,32 +1,34 @@
 # 導入
 
-Redmine Serverless SES を使う Redmine に要るもの(インストール、設定、SES と S3 のリソース、IAM の権限、ネットワーク)です。AWS Lambda でも、ふつうのサーバーでも同じです。[Serverless](https://redmine-kit.github.io/serverless/ja/) は、これを CloudFormation でまとめて作ります。このページは、手で用意するときや、Serverless が作るものを確認するときのためのものです。
+Redmine AWS SES を使う Redmine に要るもの(インストール、設定、SES と S3 のリソース、IAM の権限、ネットワーク)です。AWS Lambda でも、ふつうのサーバーでも同じです。[Serverless](https://redmine-kit.github.io/serverless/ja/) は、これを CloudFormation でまとめて作ります。このページは、手で用意するときや、Serverless が作るものを確認するときのためのものです。
 
 <a id="requirements"></a>
 
 ## 動作環境
 
 - Redmine 7.0 以降。
+- `plugins/redmine_aws` の [Redmine AWS](https://redmine-kit.github.io/redmine_aws/ja/)(`redmine_aws`)0.1 以降(gem の依存です)。「AWS」の管理画面のメニューを追加します。
 - AWS の認証情報で SES と S3 に届くプロセス(Lambda では実行ロール、ほかではインスタンスプロファイルやタスクのロール)。Redmine にアクセスキーや SMTP のパスワードは置きません。
 - 送信には、AWS の公式の gem `aws-actionmailer-ses`(配送の方法は `:ses_v2`)([Serverless の mail.md](https://redmine-kit.github.io/serverless/ja/mail.html#gems))。
-- 送信のやり直しには、別のプロセスで動くジョブ(Lambda では `REDMINE_ROLE=worker`。最後まで失敗したジョブは [Redmine Serverless SQS](https://redmine-kit.github.io/redmine_serverless_sqs/ja/) が記録します)。
+- 送信のやり直しには、別のプロセスで動くジョブ(Lambda では `REDMINE_ROLE=worker`。最後まで失敗したジョブは [Redmine AWS SQS](https://redmine-kit.github.io/redmine_aws_sqs/ja/) が記録します)。
 
 <a id="installation"></a>
 
 ## インストール
 
-1. プラグインを、Redmine 7.0 の `plugins/redmine_serverless_ses` に置きます。下の gem か、このリポジトリのチェックアウトです。
+1. プラグインを Redmine 7.0 の `plugins/redmine_aws_ses` に、Redmine AWS を `plugins/redmine_aws` に置きます。下の gem か、リポジトリのチェックアウトです。
 2. プラグインを gem として `Gemfile.local` に追加し、インストールします。
 
    ```sh
    bundle install
    ```
 
-   こうすると、Bundler が、Rails の初期化より前に `boot/redmine_serverless_ses.rb` を読み込みます。配送の方法 `:ses_v2` を登録する `aws-actionmailer-ses` と、プロジェクトごとの送信元のためのインターセプターを読み込みます。チェックアウトなら、パスで追加します。
+   こうすると、Bundler が、Rails の初期化より前に `boot/redmine_aws_ses.rb` を読み込みます。配送の方法 `:ses_v2` を登録する `aws-actionmailer-ses` と、プロジェクトごとの送信元のためのインターセプターを読み込みます。チェックアウトなら、両方をパスで追加します。Redmine AWS は、プラグインの gemspec が必要とするので書きます。Bundler は読み込みません(Redmine が読み込みます)。
 
    ```ruby
    # Redmine の Gemfile.local
-   gem 'redmine_serverless_ses', path: 'plugins/redmine_serverless_ses'
+   gem 'redmine_aws', path: 'plugins/redmine_aws', require: false
+   gem 'redmine_aws_ses', path: 'plugins/redmine_aws_ses'
    ```
 
 3. プラグインの migration を実行します。
@@ -35,7 +37,7 @@ Redmine Serverless SES を使う Redmine に要るもの(インストール、�
    bin/rake redmine:plugins:migrate
    ```
 
-   受け取ったメールの記録(`serverless_received_mails`)と、プロジェクトのメール設定(`serverless_project_mail_settings`)の表ができます。
+   受け取ったメールの記録(`aws_ses_received_mails`)と、プロジェクトのメール設定(`aws_ses_project_mail_settings`)の表ができます。
 4. `config/configuration.yml` に送信を設定します。
 
    ```yaml
@@ -50,19 +52,20 @@ Redmine Serverless SES を使う Redmine に要るもの(インストール、�
 
 ### gem
 
-バージョンのタグ(`v*`)ごとに、プラグインを gem として GitHub Packages(`https://rubygems.pkg.github.com/redmine-kit`)に公開します(`.github/workflows/gem.yml`)。gem は、動かすためのファイル(`init.rb`、`boot/`、`lib/`、`app/`、`config/`、`db/`、`LICENSE`)を持ち、`aws-actionmailer-ses`、`aws-sdk-sesv2`、`aws-sdk-s3` に依存します。プラグインの `Gemfile` は入れません。Redmine は `plugins/` のプラグインだけを読み込むので、インストールした gem をそこにリンクします。
+バージョンのタグ(`v*`)ごとに、プラグインを gem として GitHub Packages(`https://rubygems.pkg.github.com/redmine-kit`)に公開します(`.github/workflows/gem.yml`)。gem は、動かすためのファイル(`init.rb`、`boot/`、`lib/`、`app/`、`config/`、`db/`、`help/`、`LICENSE`)を持ち、`redmine_aws`、`aws-actionmailer-ses`、`aws-sdk-sesv2`、`aws-sdk-s3` に依存します。プラグインの `Gemfile` は入れません。Redmine AWS の gem は、Bundler がいっしょにインストールします。Redmine は `plugins/` のプラグインだけを読み込むので、インストールした gem をそこにリンクします。
 
 ```ruby
 # Redmine の Gemfile.local
 source 'https://rubygems.pkg.github.com/redmine-kit' do
-  gem 'redmine_serverless_ses'
+  gem 'redmine_aws_ses'
 end
 ```
 
 ```sh
 bundle config set --global rubygems.pkg.github.com <ユーザー>:<トークン>   # か、変数 BUNDLE_RUBYGEMS__PKG__GITHUB__COM
 bundle install
-ln -s "$(bundle info --path redmine_serverless_ses)" plugins/redmine_serverless_ses
+ln -s "$(bundle info --path redmine_aws)" plugins/redmine_aws
+ln -s "$(bundle info --path redmine_aws_ses)" plugins/redmine_aws_ses
 ```
 
 GitHub Packages からインストールするには、公開のパッケージでも、`read:packages` の権限を持つ GitHub のトークンが要ります。ほかのリポジトリのワークフローは、パッケージの設定(「Manage Actions access」)でそのリポジトリに Read を与えると、自分の `GITHUB_TOKEN`(`packages: read`)で読めます。
@@ -101,7 +104,7 @@ GitHub Packages からインストールするには、公開のパッケージ�
 
 ### 受信したメールの取得
 
-rake のタスク `redmine_serverless_ses:receive_mail` は、受信したメールを 1 通取得します。そのため、メールごとに何かがこのタスクを起動する必要があります。Lambda では、SES の受信のルールがタスクの関数を非同期で呼び、そのハンドラーが SES のイベントの値を変数で渡します([Serverless の tasks.md](https://redmine-kit.github.io/serverless/ja/tasks.html#kinds-of-events))。
+rake のタスク `redmine_aws_ses:receive_mail` は、受信したメールを 1 通取得します。そのため、メールごとに何かがこのタスクを起動する必要があります。Lambda では、SES の受信のルールがタスクの関数を非同期で呼び、そのハンドラーが SES のイベントの値を変数で渡します([Serverless の tasks.md](https://redmine-kit.github.io/serverless/ja/tasks.html#kinds-of-events))。
 
 | 変数 | SES のイベントの値 |
 | --- | --- |
@@ -118,7 +121,7 @@ rake のタスク `redmine_serverless_ses:receive_mail` は、受信したメー
 次のタスクが、指定した日数より古い取得の記録を消します(デフォルトは 90 日)。Serverless は毎日動かします([Serverless の security.md](https://redmine-kit.github.io/serverless/ja/security.html#retention-periods))。
 
 ```sh
-bin/rake redmine_serverless_ses:prune_records[<日数>]
+bin/rake redmine_aws_ses:prune_records[<日数>]
 ```
 
 <a id="aws-resources"></a>
@@ -161,13 +164,18 @@ LocalStack が実際の AWS のとおりに再現しない呼び出しは、そ�
 | --- | --- | --- |
 | SES v2 の `GetAccount`(接続テスト、「メール送信」のタブ) | LocalStack は対応していないと答え、moto にもない(2026-11-09 に確認) | API リファレンスの項目(`ProductionAccessEnabled`、`SendingEnabled`、`SendQuota` など)と、そのエラー |
 | 確認済みの ID でない送信元からの SES v2 の `SendEmail` | 実際の SES は `MessageRejected` で拒むが、LocalStack は送ってしまう | SES のメッセージ(「Email address is not verified. ...」)を持つ `MessageRejected` |
-| `SendEmail` の種類別のエラー([sending.md](sending.md#handling-by-kind-of-error)) | エミュレーターに、スロットリングやアカウントのエラーを返させられない | API リファレンスのそれぞれのエラーコード |それぞれのテストで確認することは、[sending.md](sending.md#tests) と [receiving.md](receiving.md#tests) にあります。SES のエラーは、SDK の応答のスタブで、配送の方法を通して 1 つずつ起こします。画面もスタブを使います。取り込みのテストは、メールを moto の S3 に置き、イベントの判定と宛先といっしょに取り込みます。宛先のプロジェクト、Bcc、プロジェクトを変えられない `Project:` のキーワード、取り込まないそれぞれの理由、何も変えない偽の SES のヘッダー、記録からの取り込み直しを確認します。`bin/test` は、プラグインのテストのあと、メールのまわりの Redmine 本体のテスト(`MailHandler`、`Mailer`、プロジェクト、設定、管理)を動かします。`bin/test --redmine` は、プラグインを入れた状態で Redmine 本体のすべてのテストを動かします。CI はこちらです。
+| `SendEmail` の種類別のエラー([sending.md](sending.md#handling-by-kind-of-error)) | エミュレーターに、スロットリングやアカウントのエラーを返させられない | API リファレンスのそれぞれのエラーコード |
 
-プラグインのテストは、プラグイン自身のファイルのカバレッジ(SimpleCov。Cobertura の XML の `coverage/coverage.xml`)も書きます。CI は、それを [Codecov](https://codecov.io/gh/redmine-kit/redmine_serverless_ses) に送ります。
+それぞれのテストで確認することは、[sending.md](sending.md#tests) と [receiving.md](receiving.md#tests) にあります。SES のエラーは、SDK の応答のスタブで、配送の方法を通して 1 つずつ起こします。画面もスタブを使います。取り込みのテストは、メールを moto の S3 に置き、イベントの判定と宛先といっしょに取り込みます。宛先のプロジェクト、Bcc、プロジェクトを変えられない `Project:` のキーワード、取り込まないそれぞれの理由、何も変えない偽の SES のヘッダー、記録からの取り込み直しを確認します。`bin/test` は、プラグインのテストのあと、メールのまわりの Redmine 本体のテスト(`MailHandler`、`Mailer`、プロジェクト、設定、管理)を動かします。`bin/test --redmine` は、プラグインを入れた状態で Redmine 本体のすべてのテストを動かします。CI はこちらです。
+
+テストには Redmine AWS が要ります。このリポジトリの隣の [redmine_aws](https://github.com/redmine-kit/redmine_aws) のチェックアウト(`../redmine_aws`)か、`REDMINE_AWS_DIR` に指定したパスです。CI はチェックアウトします。
+
+プラグインのテストは、プラグイン自身のファイルのカバレッジ(SimpleCov。Cobertura の XML の `coverage/coverage.xml`)も書きます。CI は、それを [Codecov](https://codecov.io/gh/redmine-kit/redmine_aws_ses) に送ります。
 
 ```sh
 bin/test            # プラグインのテストと、メールのまわりの Redmine のテスト
 bin/test --redmine  # Redmine のすべてのテストも
+REDMINE_AWS_DIR=<ディレクトリ> bin/test  # redmine_aws を <ディレクトリ> から
 bin/lint            # RuboCop
 bin/services --down # PostgreSQL、moto、LocalStack を止める
 ```

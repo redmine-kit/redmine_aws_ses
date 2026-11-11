@@ -1,15 +1,15 @@
 # Administration pages
 
-These are the administration pages of Redmine Serverless SES. Only Redmine administrators can open them (`require_admin`), except the project email settings, which people with the project permission that the plugin adds can also change (below). The pages are the "Email sending" and "Email receiving" tabs under the "Serverless" item of Redmine's administration menu, which all the Redmine Serverless plugins share, whether or not [Redmine Serverless](https://redmine-kit.github.io/redmine_serverless/admin.html#the-serverless-menu) is installed. The project email settings are a tab in project settings instead.
+These are the administration pages of Redmine AWS SES. Only Redmine administrators can open them (`require_admin`), except the project email settings, which people with the project permission that the plugin adds can also change (below). The pages are the "Email sending" and "Email receiving" tabs under the "AWS" item of Redmine's administration menu, which [Redmine AWS](https://redmine-kit.github.io/redmine_aws/admin.html#the-aws-menu) adds and all the Redmine AWS plugins share. The project email settings are a tab in project settings instead.
 
 The specifications in this page were checked against official information and the Redmine 7.0.3 source as of 2026-11-08. Sources are in [sources.md](https://redmine-kit.github.io/serverless/sources.html).
 
 | Item | Details |
 | --- | --- |
 | No secrets shown | AWS credentials and the bodies of received email are not shown. State from SES and the MX record are cached for 1 minute |
-| Settings on the page | Receiving options are plugin settings (Redmine's `Setting.plugin_redmine_serverless_ses`, stored in the database) and are changed on the "Email receiving" tab. The plugin list has no "Configure" link |
-| Operations are logged | Removing an address from the suppression list, fetching again and changing settings are written to Redmine's log with who did what (`[redmine_serverless_ses] <login> ...`) |
-| Connection test | When Redmine Serverless is installed, its "Connection test" on the "Status" tab also calls SES v2 `GetAccount` ([its admin.md](https://redmine-kit.github.io/redmine_serverless/admin.html#status-and-connections)). The result reads "Sending: Enabled, production access: Yes" |
+| Settings on the page | Receiving options are plugin settings (Redmine's `Setting.plugin_redmine_aws_ses`, stored in the database) and are changed on the "Email receiving" tab. The plugin list has no "Configure" link |
+| Operations are logged | Removing an address from the suppression list, fetching again and changing settings are written to Redmine's log with who did what (`[redmine_aws_ses] <login> ...`) |
+| Connection test | The "Connection test" on the "Status" tab of Redmine AWS also calls SES v2 `GetAccount` ([its admin.md](https://redmine-kit.github.io/redmine_aws/admin.html#status)). The result reads "Sending: Enabled, production access: Yes" |
 
 <a id="sending-email"></a>
 
@@ -25,7 +25,7 @@ The specifications in this page were checked against official information and th
 | Suppression list | Addresses SES has stopped sending to. Columns: Email, User (the Redmine user who has the address), Reason (Bounce or Complaint), Updated. The first 100 | SES v2 `ListSuppressedDestinations` |
 | Remove | A "Remove" button per address of the suppression list, after confirmation | SES v2 `DeleteSuppressedDestination` |
 | Send a test email | A link at the top to Redmine's standard "Send a test email" (in "Email notifications" under Administration › Settings). The same feature is not added | — |
-| Failed jobs | When Redmine Serverless SQS is installed, a link at the top to its "Jobs" page, listing only failed email | — |
+| Failed jobs | When Redmine AWS SQS is installed, a link at the top to its "Jobs" page, listing only failed email | — |
 
 | Item | Details |
 | --- | --- |
@@ -43,7 +43,7 @@ The specifications in this page were checked against official information and th
 | Email addresses | "Domain" (Redmine's domain: the domain of the emission address), "Default address", "MX" (below), and with per-project addresses, a list of projects (Project, Email, Receive email) | Plugin settings and project email settings |
 | MX | The MX hosts of Redmine's domain, to check that they are the SES receiving endpoint. "Unknown" when the lookup fails, "none" when there is no MX record | DNS lookup, with a 2-second timeout |
 | Received emails | Received, From, Subject, Project, Verdicts (the SES virus, spam and DMARC verdicts that did not pass, for example "Spam, DMARC fail", or "Passed"; the terms are under "Terms" below), Result (below). The newest 100. "all \| Not fetched" above the list filters it | The plugin's table (below) |
-| Fetch again | The check boxes of the list select messages; the check box in the header row selects all, as in Redmine's issue list. "Fetch again" fetches the selected messages again | A job for each message (`ServerlessReimportMailJob`; SQS in Serverless, where `redmine-worker` imports it) |
+| Fetch again | The check boxes of the list select messages; the check box in the header row selects all, as in Redmine's issue list. "Fetch again" fetches the selected messages again | A job for each message (`AwsSesReimportMailJob`; SQS in Serverless, where `redmine-worker` imports it) |
 | Receiving settings | "Default address" (the part before `@`), "Incoming emails" ("Do not fetch", the default, or "Fetch into the default project"; Redmine's own term), "Default project", "Fetched email" ("Also fetch email failing DMARC" and "Also fetch spam", both off by default and best left off: fetching email that fails DMARC lets a forged sender create issues; email with a virus verdict is never fetched), and "Projects" ("Use per-project addresses", "Send notifications from project addresses") | Plugin settings (changed on the page). See [receiving.md](receiving.md#spoofing-and-spam) |
 
 | Result | Meaning |
@@ -59,14 +59,14 @@ The specifications in this page were checked against official information and th
 
 | Item | Details |
 | --- | --- |
-| Import records | `redmine_serverless_ses:receive_mail` stores the result for each message in the plugin's table (`serverless_received_mails`): the sender, the subject, the envelope recipients and the verdicts from the SES event, the project, and the issue created or the note added. The body is not stored; its key in the mail bucket (`inbound/` or `processed/`) is. Fetching again updates the same record. Records older than 90 days are deleted by `rake redmine_serverless_ses:prune_records`, which Serverless runs daily ([security.md](https://redmine-kit.github.io/serverless/security.html#retention-periods)) |
+| Import records | `redmine_aws_ses:receive_mail` stores the result for each message in the plugin's table (`aws_ses_received_mails`): the sender, the subject, the envelope recipients and the verdicts from the SES event, the project, and the issue created or the note added. The body is not stored; its key in the mail bucket (`inbound/` or `processed/`) is. Fetching again updates the same record. Records older than 90 days are deleted by `rake redmine_aws_ses:prune_records`, which Serverless runs daily ([security.md](https://redmine-kit.github.io/serverless/security.html#retention-periods)) |
 | Email that was not fetched | It stays in `inbound/` and can be fetched again after the cause is fixed |
-| Fetch again | The page does not call `redmine-task` directly; it puts a job on the queue. This way `redmine-web` needs no permission to read the mail bucket or to invoke Lambda. With Redmine Serverless SQS, the job class is added to the allowed job classes |
-| Why receiving settings are on the page | You do not have to deploy each time you change the default project. `redmine_serverless_ses:receive_mail` reads the settings from the database on every run |
+| Fetch again | The page does not call `redmine-task` directly; it puts a job on the queue. This way `redmine-web` needs no permission to read the mail bucket or to invoke Lambda. With Redmine AWS SQS, the job class is added to the allowed job classes |
+| Why receiving settings are on the page | You do not have to deploy each time you change the default project. `redmine_aws_ses:receive_mail` reads the settings from the database on every run |
 
 ## Project email settings
 
-An "Email" tab is added to project settings when addresses per project are on. It configures the address per project ([receiving.md](receiving.md#addresses-per-project)). The settings are in the plugin's table (`serverless_project_mail_settings`), because Redmine's settings are for the whole Redmine only (`Setting`, a name and a value) and Redmine has no table for per-project settings. Deleting a project deletes its row.
+An "Email" tab is added to project settings when addresses per project are on. It configures the address per project ([receiving.md](receiving.md#addresses-per-project)). The settings are in the plugin's table (`aws_ses_project_mail_settings`), because Redmine's settings are for the whole Redmine only (`Setting`, a name and a value) and Redmine has no table for per-project settings. Deleting a project deletes its row.
 
 ![The Email tab of a project's settings](./images/project-mail.png)
 

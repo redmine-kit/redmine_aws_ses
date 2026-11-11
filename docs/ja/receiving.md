@@ -1,6 +1,6 @@
 # 受信
 
-Redmine Serverless SES が、SES の受け取ったメールを取り込むしくみです。アドレス、プロジェクトの決め方、なりすましと迷惑メールの確認、Redmine の `MailHandler` に渡すオプションを書きます。SES は、メッセージをメールのバケット(`inbound/<メッセージ ID>`)に置き、取り込みを起動します。ドメイン、受信のルール、バケットは [Serverless の mail.md](https://redmine-kit.github.io/serverless/ja/mail.html#receiving) にあります。
+Redmine AWS SES が、SES の受け取ったメールを取り込むしくみです。アドレス、プロジェクトの決め方、なりすましと迷惑メールの確認、Redmine の `MailHandler` に渡すオプションを書きます。SES は、メッセージをメールのバケット(`inbound/<メッセージ ID>`)に置き、取り込みを起動します。ドメイン、受信のルール、バケットは [Serverless の mail.md](https://redmine-kit.github.io/serverless/ja/mail.html#receiving) にあります。
 
 2026-11-09 に、Redmine 7.0.3 のソースで確認しました。
 
@@ -20,7 +20,7 @@ Redmine Serverless SES が、SES の受け取ったメールを取り込むし�
   - プロジェクトに入れない役割のアドレス(`postmaster`、`abuse`、`hostmaster`、`webmaster`、`mailer-daemon`、`root`、`admin`、`administrator`、`noreply`、`no-reply`、`security`。RFC 2142 と一般的なもの)
   - デフォルトアドレスの `@` の前と同じ(そのアドレスが優先)
 - **受け取るか:** プロジェクトごとに、メールを受け取るかを選びます(「メール受信」。デフォルトはオフ)。受け取らないプロジェクトへのメールは、取り込まずに記録します。
-- **プロジェクトの設定:** プロジェクトの設定の「メール」のタブで、受け取るかとデフォルト値を決めます([admin.md](admin.md#project-email-settings))。設定は、プラグインの表(`serverless_project_mail_settings`)に入ります。
+- **プロジェクトの設定:** プロジェクトの設定の「メール」のタブで、受け取るかとデフォルト値を決めます([admin.md](admin.md#project-email-settings))。設定は、プラグインの表(`aws_ses_project_mail_settings`)に入ります。
 
 <a id="without-addresses-per-project"></a>
 
@@ -56,7 +56,7 @@ Redmine Serverless SES が、SES の受け取ったメールを取り込むし�
 
 ## 取り込み
 
-rake のタスク `redmine_serverless_ses:receive_mail` が、メッセージを 1 通取り込みます。
+rake のタスク `redmine_aws_ses:receive_mail` が、メッセージを 1 通取り込みます。
 
 1. SES のイベントの判定を確認します(下の「なりすましと迷惑メール」)。
 2. イベントの宛先から、プロジェクトを決めます(下記)。
@@ -92,7 +92,7 @@ Lambda では、SES の受信のルールがタスクの関数を呼び、その
 
 - **自動の返信:** `Auto-Submitted`(`auto-replied`、`auto-generated`)か `X-Autoreply: yes` のあるメール(`MailHandler.ignored_emails_headers`)は、取り込まずに、自動の返信として記録します。通知と取り込みが繰り返されないようにするためです。
 - **Redmine が取り込まないとき:** `MailHandler` が受け付けないメール(たとえば、`ignore` での登録のない送信者や、権限のない送信者)は、取り込まなかったものとして記録し、`inbound/` に残します。理由は Redmine のログにあります。
-- **添付ファイル:** 添付ファイルは Redmine の添付ファイルとして保存します([Redmine Serverless S3](https://redmine-kit.github.io/redmine_serverless_s3/ja/) があれば S3 に置きます)。
+- **添付ファイル:** 添付ファイルは Redmine の添付ファイルとして保存します([Redmine AWS S3](https://redmine-kit.github.io/redmine_aws_s3/ja/) があれば S3 に置きます)。
 
 <a id="spoofing-and-spam"></a>
 

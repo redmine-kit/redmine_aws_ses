@@ -1,15 +1,15 @@
 # 管理画面
 
-Redmine Serverless SES の管理画面です。Redmine の管理者だけが開けます(`require_admin`)。プロジェクトのメール設定だけは、プラグインが追加するプロジェクトの権限を持つ人も変えられます(下記)。画面は、[Redmine Serverless](https://redmine-kit.github.io/redmine_serverless/ja/admin.html#the-serverless-menu) をインストールしているかどうかにかかわらず、すべての Redmine Serverless のプラグインが共有する Redmine の管理のメニューの「Serverless」の下の、「メール送信」と「メール受信」のタブになります。プロジェクトのメール設定は、代わりにプロジェクトの設定のタブになります。
+Redmine AWS SES の管理画面です。Redmine の管理者だけが開けます(`require_admin`)。プロジェクトのメール設定だけは、プラグインが追加するプロジェクトの権限を持つ人も変えられます(下記)。画面は、[Redmine AWS](https://redmine-kit.github.io/redmine_aws/ja/admin.html#the-aws-menu) が追加し、すべての Redmine AWS のプラグインが共有する Redmine の管理のメニューの「AWS」の下の、「メール送信」と「メール受信」のタブになります。プロジェクトのメール設定は、代わりにプロジェクトの設定のタブになります。
 
 この資料の仕様は、2026-11-08 時点の公式の情報と、Redmine 7.0.3 のソースで確認したものです。出典は [sources.md](https://redmine-kit.github.io/serverless/ja/sources.html) にあります。
 
 | 項目 | 内容 |
 | --- | --- |
 | 秘密の値は出さない | AWS の認証情報と、受信したメールの本文は画面に出しません。SES の状態と MX のレコードは 1 分だけキャッシュします |
-| 設定は画面で変える | 受信のオプションは、プラグインの設定(Redmine の `Setting.plugin_redmine_serverless_ses`、データベースに入る)にし、「メール受信」のタブで変えます。プラグインの一覧に「設定」のリンクは出ません |
-| 操作を記録する | サプレッションリストからの削除、再取得、設定の変更は、誰が何をしたかを Redmine のログに書きます(`[redmine_serverless_ses] <ログイン> ...`) |
-| 接続テスト | Redmine Serverless を入れているときは、その「ステータス」のタブの「接続テスト」で、SES v2 の `GetAccount` も呼びます([その admin.md](https://redmine-kit.github.io/redmine_serverless/ja/admin.html#status-and-connections))。結果は「送信: 有効、本稼働アクセス: はい」のように出ます |
+| 設定は画面で変える | 受信のオプションは、プラグインの設定(Redmine の `Setting.plugin_redmine_aws_ses`、データベースに入る)にし、「メール受信」のタブで変えます。プラグインの一覧に「設定」のリンクは出ません |
+| 操作を記録する | サプレッションリストからの削除、再取得、設定の変更は、誰が何をしたかを Redmine のログに書きます(`[redmine_aws_ses] <ログイン> ...`) |
+| 接続テスト | Redmine AWS の「ステータス」のタブの「接続テスト」で、SES v2 の `GetAccount` も呼びます([その admin.md](https://redmine-kit.github.io/redmine_aws/ja/admin.html#status))。結果は「送信: 有効、本稼働アクセス: はい」のように出ます |
 
 <a id="sending-email"></a>
 
@@ -25,7 +25,7 @@ Redmine Serverless SES の管理画面です。Redmine の管理者だけが開�
 | サプレッションリスト | SES が送信を止めているアドレス。列は、メールアドレス、ユーザー(そのアドレスを持つ Redmine のユーザー)、理由(バウンスか苦情)、更新日。最初の 100 件 | SES v2 の `ListSuppressedDestinations` |
 | 削除 | サプレッションリストのアドレスごとの「削除」のボタン。確認のあとで消す | SES v2 の `DeleteSuppressedDestination` |
 | テストメールを送信 | 上の、Redmine の標準の「テストメールを送信」(管理 › 設定 の「メール通知」)へのリンク。同じ機能は追加しない | — |
-| 失敗したジョブ | Redmine Serverless SQS を入れているときは、上の、その「ジョブ」の画面の、失敗したメールに絞った一覧へのリンク | — |
+| 失敗したジョブ | Redmine AWS SQS を入れているときは、上の、その「ジョブ」の画面の、失敗したメールに絞った一覧へのリンク | — |
 
 | 項目 | 内容 |
 | --- | --- |
@@ -43,7 +43,7 @@ Redmine Serverless SES の管理画面です。Redmine の管理者だけが開�
 | メールアドレス | 「ドメイン」(Redmine のドメイン。送信元のアドレスのドメイン)、「デフォルトアドレス」、「MX」(下記)。プロジェクト別のアドレスを使うときは、プロジェクトの一覧(プロジェクト、メールアドレス、メール受信) | プラグインの設定と、プロジェクトのメール設定 |
 | MX | Redmine のドメインの MX のホスト。SES の受信のエンドポイントになっているかを確認する。問い合わせに失敗すると「不明」、MX のレコードがなければ「なし」 | DNS の問い合わせ。タイムアウトは 2 秒 |
 | 受信履歴 | 受信日時、差出人、題名、プロジェクト、判定 (SES のウイルス、スパム、DMARC の判定のうち合格しなかったもの。例: 「スパム, DMARC 失敗」。すべて合格なら「合格」。語は下の「用語」)、結果(下記)。新しい 100 件。一覧の上の「すべて \| 未取得」で絞り込める | プラグインの表(下記) |
-| 再取得 | 一覧のチェックボックスでメールを選ぶ。Redmine のチケットの一覧と同じく、見出しの行のチェックボックスで全部を選べる。「再取得」で、選んだメールをもう一度取得する | メールごとのジョブ(`ServerlessReimportMailJob`。Serverless では SQS に入り、`redmine-worker` が取り込む) |
+| 再取得 | 一覧のチェックボックスでメールを選ぶ。Redmine のチケットの一覧と同じく、見出しの行のチェックボックスで全部を選べる。「再取得」で、選んだメールをもう一度取得する | メールごとのジョブ(`AwsSesReimportMailJob`。Serverless では SQS に入り、`redmine-worker` が取り込む) |
 | 受信設定 | 「デフォルトアドレス」(`@` の前)、「受信メール」(「取得しない」(デフォルト) か「デフォルトのプロジェクトで取得」。Redmine の「受信メール」の語)、「デフォルトのプロジェクト」、「取得対象」(「DMARC 未通過メールも取得」と「迷惑メールも取得」。どちらもデフォルトはオフで、オフを推奨。DMARC 未通過メールを取得すると、差出人のなりすましでチケットを作成できるため。ウイルスと判定されたメールは、設定にかかわらず取得しない)、「プロジェクト」(「プロジェクト別のアドレスを使用」、「プロジェクトのアドレスから通知を送信」) | プラグインの設定(画面で変える)。[receiving.md](receiving.md#spoofing-and-spam) も参照 |
 
 | 結果 | 意味 |
@@ -59,16 +59,16 @@ Redmine Serverless SES の管理画面です。Redmine の管理者だけが開�
 
 | 項目 | 内容 |
 | --- | --- |
-| 取得の記録 | `redmine_serverless_ses:receive_mail` は、メールごとの結果を、プラグインの表(`serverless_received_mails`)に入れます。送信者、件名、SES のイベントのエンベロープの宛先と判定、プロジェクト、作ったチケットや追加した注記です。本文は入れず、メールのバケットのキー(`inbound/` か `processed/`)を入れます。再取得は、同じ記録を書き換えます。90 日より古い記録は、`rake redmine_serverless_ses:prune_records` が消します。Serverless は毎日動かします([security.md](https://redmine-kit.github.io/serverless/ja/security.html#retention-periods)) |
+| 取得の記録 | `redmine_aws_ses:receive_mail` は、メールごとの結果を、プラグインの表(`aws_ses_received_mails`)に入れます。送信者、件名、SES のイベントのエンベロープの宛先と判定、プロジェクト、作ったチケットや追加した注記です。本文は入れず、メールのバケットのキー(`inbound/` か `processed/`)を入れます。再取得は、同じ記録を書き換えます。90 日より古い記録は、`rake redmine_aws_ses:prune_records` が消します。Serverless は毎日動かします([security.md](https://redmine-kit.github.io/serverless/ja/security.html#retention-periods)) |
 | 未取得のメール | `inbound/` に残り、原因を直してから再取得できます |
-| 再取得 | 画面は `redmine-task` を直接は呼ばず、キューにジョブを入れます。こうすると、`redmine-web` に、メールのバケットを読む権限も、Lambda を呼ぶ権限も要りません。Redmine Serverless SQS を入れていれば、このジョブのクラスを、実行を許可するジョブクラスに追加します |
-| 受信設定を画面に置く理由 | デフォルトのプロジェクトを変えるたびにデプロイしなくて済みます。`redmine_serverless_ses:receive_mail` は、動くたびにデータベースから設定を読みます |
+| 再取得 | 画面は `redmine-task` を直接は呼ばず、キューにジョブを入れます。こうすると、`redmine-web` に、メールのバケットを読む権限も、Lambda を呼ぶ権限も要りません。Redmine AWS SQS を入れていれば、このジョブのクラスを、実行を許可するジョブクラスに追加します |
+| 受信設定を画面に置く理由 | デフォルトのプロジェクトを変えるたびにデプロイしなくて済みます。`redmine_aws_ses:receive_mail` は、動くたびにデータベースから設定を読みます |
 
 <a id="project-email-settings"></a>
 
 ## プロジェクトのメール設定
 
-プロジェクトごとのアドレスを使うとき、プロジェクトの設定に「メール」のタブを追加します。プロジェクトごとのアドレスを設定します([receiving.md](receiving.md#addresses-per-project))。設定は、プラグインの表(`serverless_project_mail_settings`)に入ります。Redmine の設定(`Setting`。名前と値)は Redmine 全体のものだけで、プロジェクトごとの設定の表がないためです。プロジェクトを削除すると、その行も消えます。
+プロジェクトごとのアドレスを使うとき、プロジェクトの設定に「メール」のタブを追加します。プロジェクトごとのアドレスを設定します([receiving.md](receiving.md#addresses-per-project))。設定は、プラグインの表(`aws_ses_project_mail_settings`)に入ります。Redmine の設定(`Setting`。名前と値)は Redmine 全体のものだけで、プロジェクトごとの設定の表がないためです。プロジェクトを削除すると、その行も消えます。
 
 ![プロジェクトの設定の「メール」のタブ](./images/project-mail.png)
 
