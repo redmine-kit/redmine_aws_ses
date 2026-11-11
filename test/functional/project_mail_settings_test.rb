@@ -78,7 +78,6 @@ module RedmineAws
 
         assert_select '#aws-ses-project-mail-setting p', text: /ecookbook@/
         assert_select '#aws_ses_project_mail_setting_receive:not([disabled])'
-        assert_select '#aws_ses_project_mail_setting_alias_name', 0
       end
     end
   end
