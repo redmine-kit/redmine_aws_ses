@@ -166,7 +166,7 @@ LocalStack が実際の AWS のとおりに再現しない呼び出しは、そ�
 | 確認済みの ID でない送信元からの SES v2 の `SendEmail` | 実際の SES は `MessageRejected` で拒むが、LocalStack は送ってしまう | SES のメッセージ(「Email address is not verified. ...」)を持つ `MessageRejected` |
 | `SendEmail` の種類別のエラー([sending.md](sending.md#handling-by-kind-of-error)) | エミュレーターに、スロットリングやアカウントのエラーを返させられない | API リファレンスのそれぞれのエラーコード |
 
-それぞれのテストで確認することは、[sending.md](sending.md#tests) と [receiving.md](receiving.md#tests) にあります。SES のエラーは、SDK の応答のスタブで、配送の方法を通して 1 つずつ起こします。画面もスタブを使います。取り込みのテストは、メールを moto の S3 に置き、イベントの判定と宛先といっしょに取り込みます。宛先のプロジェクト、Bcc、プロジェクトを変えられない `Project:` のキーワード、取り込まないそれぞれの理由、何も変えない偽の SES のヘッダー、記録からの取り込み直しを確認します。`bin/test` は、プラグインのテストのあと、メールのまわりの Redmine 本体のテスト(`MailHandler`、`Mailer`、プロジェクト、設定、管理)を動かします。`bin/test --redmine` は、プラグインを入れた状態で Redmine 本体のすべてのテストを動かします。CI はこちらです。
+それぞれのテストで確認することは、[sending.md](sending.md#tests) と [receiving.md](receiving.md#tests) にあります。SES のエラーは、SDK の応答のスタブで、配送の方法を通して 1 つずつ起こします。画面もスタブを使います。取り込みのテストは、メールを moto の S3 に置き、イベントの判定と宛先といっしょに取り込みます。宛先のプロジェクト、Bcc、プロジェクトを変えられない `Project:` のキーワード、取り込まないそれぞれの理由、何も変えない偽の SES のヘッダー、記録からの取り込み直しを確認します。Redmine のコードローダー (Zeitwerk) が、boot のファイルを先に読み込んだ状態で、Redmine AWS の名前空間の下のプラグインのファイルを読み込めることも、新しいプロセスで確認します (`bin/rails zeitwerk:check`)。`bin/test` は、プラグインのテストのあと、メールのまわりの Redmine 本体のテスト(`MailHandler`、`Mailer`、プロジェクト、設定、管理)を動かします。`bin/test --redmine` は、プラグインを入れた状態で Redmine 本体のすべてのテストを動かします。CI はこちらです。
 
 テストには Redmine AWS が要ります。このリポジトリの隣の [redmine_aws](https://github.com/redmine-kit/redmine_aws) のチェックアウト(`../redmine_aws`)か、`REDMINE_AWS_DIR` に指定したパスです。CI はチェックアウトします。
 
