@@ -1,82 +1,81 @@
 ja:
-  label_serverless_admin: Serverless
-  label_serverless_mail_sending: メール送信
-  label_serverless_mail_receiving: メール受信
-  label_serverless_check_ses: SES
-  label_serverless_project_mail: メール
-  permission_manage_serverless_mail_settings: メール設定の管理
-  label_serverless_mail_account: SES アカウント
-  label_serverless_mail_production_access: 本稼働アクセス
-  label_serverless_mail_sending_enabled: 送信
-  label_serverless_mail_sending_status_enabled: 有効
-  label_serverless_mail_sending_status_paused: 一時停止
-  label_serverless_mail_enforcement_status: アカウントステータス
-  label_serverless_mail_enforcement_status_healthy: 正常
-  label_serverless_mail_enforcement_status_probation: レビュー対象
-  label_serverless_mail_enforcement_status_shutdown: 一時停止
-  label_serverless_mail_quota: 日次送信クォータ
-  label_serverless_mail_sent_last_24_hours: 直近 24 時間の送信数
-  label_serverless_mail_rate: 最大送信レート
-  text_serverless_mail_rate_value: "%{count} 通/秒"
-  label_serverless_mail_domain: ドメイン
-  label_serverless_mail_verified: 検証済み
-  label_serverless_mail_dkim_status_success: 成功
-  label_serverless_mail_dkim_status_pending: 保留中
-  label_serverless_mail_dkim_status_failed: 失敗
-  label_serverless_mail_dkim_status_temporary_failure: 一時的な失敗
-  label_serverless_mail_dkim_status_not_started: 未開始
-  label_serverless_mail_suppressed: サプレッションリスト
-  label_serverless_mail_reason: 理由
-  label_serverless_mail_suppression_reason_bounce: バウンス
-  label_serverless_mail_suppression_reason_complaint: 苦情
-  label_serverless_mail_failed: 失敗したジョブ
-  label_serverless_mail_addresses: メールアドレス
-  label_serverless_mail_global_address: デフォルトアドレス
-  label_serverless_mail_received: 受信履歴
-  label_serverless_mail_dropped_only: 未取得
-  label_serverless_mail_received_at: 受信日時
-  label_serverless_mail_result: 結果
-  label_serverless_mail_imported: 取得済み
-  label_serverless_mail_reason_no_verdict: 未取得 (判定なし)
-  label_serverless_mail_reason_virus: 未取得 (ウイルス)
-  label_serverless_mail_reason_spam: 未取得 (スパム)
-  label_serverless_mail_reason_dmarc: 未取得 (DMARC 未通過)
-  label_serverless_mail_reason_auto_reply: 未取得 (自動返信)
-  label_serverless_mail_reason_no_project: 未取得 (プロジェクトなし)
-  label_serverless_mail_reason_import_error: 取得エラー
-  label_serverless_mail_settings: 受信設定
-  label_serverless_mail_global_drop: 取得しない
-  label_serverless_mail_global_default_project: デフォルトのプロジェクトで取得
-  label_serverless_mail_default_project: デフォルトのプロジェクト
-  label_serverless_mail_per_project: プロジェクト別のアドレスを使用
-  label_serverless_mail_project_senders: プロジェクトのアドレスから通知を送信
-  label_serverless_mail_receive: メール受信
-  label_serverless_mail_unknown_user: 未登録の送信者
-  label_serverless_mail_unknown_user_ignore: 取得しない
-  label_serverless_mail_unknown_user_accept: 匿名ユーザーとして取得
-  label_serverless_mail_unknown_user_create: ユーザーを作成
-  button_serverless_mail_unsuppress: 削除
-  button_serverless_mail_reimport: 再取得
-  notice_serverless_mail_unsuppressed: "%{address} をサプレッションリストから削除しました。"
-  notice_serverless_mail_reimport: "%{count} 通を再取得します。"
-  error_serverless_mail_local_part: アドレスには英小文字、数字、「.」「_」「-」のみ使用できます。
-  text_serverless_mail_no_domain: 送信元メールアドレス (管理 › 設定 › メール通知) を、SES で検証したドメインのアドレスにしてください。
-  text_serverless_mail_no_bucket: REDMINE_MAIL_BUCKET が未設定のため、受信メールを取得できません。
-  text_serverless_mail_mx_unknown: 不明
-  label_serverless_mail_import_without_dmarc_pass: DMARC 未通過メールも取得
-  label_serverless_mail_import_spam: 迷惑メールも取得
-  label_serverless_mail_verdicts: 判定
-  label_serverless_mail_import: 取得対象
-  label_serverless_mail_from: 差出人
-  text_serverless_mail_sending_check: "送信: %{sending}、本稼働アクセス: %{production}"
-  text_serverless_mail_api_error: "SES の API を呼べませんでした (%{error})。詳しくはログを参照してください。"
-  label_serverless_mail_verdicts_passed: 合格
-  label_serverless_mail_verdict_virus_fail: ウイルス
-  label_serverless_mail_verdict_virus_gray: ウイルス判定不能
-  label_serverless_mail_verdict_virus_processing_failed: ウイルススキャン失敗
-  label_serverless_mail_verdict_spam_fail: スパム
-  label_serverless_mail_verdict_spam_gray: スパム判定不能
-  label_serverless_mail_verdict_spam_processing_failed: スパムスキャン失敗
-  label_serverless_mail_verdict_dmarc_fail: DMARC 失敗
-  label_serverless_mail_verdict_dmarc_gray: DMARC ポリシーなし
-  label_serverless_mail_verdict_dmarc_processing_failed: DMARC 判定失敗
+  label_aws_ses_mail_sending: メール送信
+  label_aws_ses_mail_receiving: メール受信
+  label_aws_ses_check: SES
+  label_aws_ses_project_mail: メール
+  permission_manage_aws_ses_mail_settings: メール設定の管理
+  label_aws_ses_mail_account: SES アカウント
+  label_aws_ses_mail_production_access: 本稼働アクセス
+  label_aws_ses_mail_sending_enabled: 送信
+  label_aws_ses_mail_sending_status_enabled: 有効
+  label_aws_ses_mail_sending_status_paused: 一時停止
+  label_aws_ses_mail_enforcement_status: アカウントステータス
+  label_aws_ses_mail_enforcement_status_healthy: 正常
+  label_aws_ses_mail_enforcement_status_probation: レビュー対象
+  label_aws_ses_mail_enforcement_status_shutdown: 一時停止
+  label_aws_ses_mail_quota: 日次送信クォータ
+  label_aws_ses_mail_sent_last_24_hours: 直近 24 時間の送信数
+  label_aws_ses_mail_rate: 最大送信レート
+  text_aws_ses_mail_rate_value: "%{count} 通/秒"
+  label_aws_ses_mail_domain: ドメイン
+  label_aws_ses_mail_verified: 検証済み
+  label_aws_ses_mail_dkim_status_success: 成功
+  label_aws_ses_mail_dkim_status_pending: 保留中
+  label_aws_ses_mail_dkim_status_failed: 失敗
+  label_aws_ses_mail_dkim_status_temporary_failure: 一時的な失敗
+  label_aws_ses_mail_dkim_status_not_started: 未開始
+  label_aws_ses_mail_suppressed: サプレッションリスト
+  label_aws_ses_mail_reason: 理由
+  label_aws_ses_mail_suppression_reason_bounce: バウンス
+  label_aws_ses_mail_suppression_reason_complaint: 苦情
+  label_aws_ses_mail_failed: 失敗したジョブ
+  label_aws_ses_mail_addresses: メールアドレス
+  label_aws_ses_mail_global_address: デフォルトアドレス
+  label_aws_ses_mail_received: 受信履歴
+  label_aws_ses_mail_dropped_only: 未取得
+  label_aws_ses_mail_received_at: 受信日時
+  label_aws_ses_mail_result: 結果
+  label_aws_ses_mail_imported: 取得済み
+  label_aws_ses_mail_reason_no_verdict: 未取得 (判定なし)
+  label_aws_ses_mail_reason_virus: 未取得 (ウイルス)
+  label_aws_ses_mail_reason_spam: 未取得 (スパム)
+  label_aws_ses_mail_reason_dmarc: 未取得 (DMARC 未通過)
+  label_aws_ses_mail_reason_auto_reply: 未取得 (自動返信)
+  label_aws_ses_mail_reason_no_project: 未取得 (プロジェクトなし)
+  label_aws_ses_mail_reason_import_error: 取得エラー
+  label_aws_ses_mail_settings: 受信設定
+  label_aws_ses_mail_global_drop: 取得しない
+  label_aws_ses_mail_global_default_project: デフォルトのプロジェクトで取得
+  label_aws_ses_mail_default_project: デフォルトのプロジェクト
+  label_aws_ses_mail_per_project: プロジェクト別のアドレスを使用
+  label_aws_ses_mail_project_senders: プロジェクトのアドレスから通知を送信
+  label_aws_ses_mail_receive: メール受信
+  label_aws_ses_mail_unknown_user: 未登録の送信者
+  label_aws_ses_mail_unknown_user_ignore: 取得しない
+  label_aws_ses_mail_unknown_user_accept: 匿名ユーザーとして取得
+  label_aws_ses_mail_unknown_user_create: ユーザーを作成
+  button_aws_ses_mail_unsuppress: 削除
+  button_aws_ses_mail_reimport: 再取得
+  notice_aws_ses_mail_unsuppressed: "%{address} をサプレッションリストから削除しました。"
+  notice_aws_ses_mail_reimport: "%{count} 通を再取得します。"
+  error_aws_ses_mail_local_part: アドレスには英小文字、数字、「.」「_」「-」のみ使用できます。
+  text_aws_ses_mail_no_domain: 送信元メールアドレス (管理 › 設定 › メール通知) を、SES で検証したドメインのアドレスにしてください。
+  text_aws_ses_mail_no_bucket: REDMINE_MAIL_BUCKET が未設定のため、受信メールを取得できません。
+  text_aws_ses_mail_mx_unknown: 不明
+  label_aws_ses_mail_import_without_dmarc_pass: DMARC 未通過メールも取得
+  label_aws_ses_mail_import_spam: 迷惑メールも取得
+  label_aws_ses_mail_verdicts: 判定
+  label_aws_ses_mail_import: 取得対象
+  label_aws_ses_mail_from: 差出人
+  text_aws_ses_mail_sending_check: "送信: %{sending}、本稼働アクセス: %{production}"
+  text_aws_ses_mail_api_error: "SES の API を呼べませんでした (%{error})。詳しくはログを参照してください。"
+  label_aws_ses_mail_verdicts_passed: 合格
+  label_aws_ses_mail_verdict_virus_fail: ウイルス
+  label_aws_ses_mail_verdict_virus_gray: ウイルス判定不能
+  label_aws_ses_mail_verdict_virus_processing_failed: ウイルススキャン失敗
+  label_aws_ses_mail_verdict_spam_fail: スパム
+  label_aws_ses_mail_verdict_spam_gray: スパム判定不能
+  label_aws_ses_mail_verdict_spam_processing_failed: スパムスキャン失敗
+  label_aws_ses_mail_verdict_dmarc_fail: DMARC 失敗
+  label_aws_ses_mail_verdict_dmarc_gray: DMARC ポリシーなし
+  label_aws_ses_mail_verdict_dmarc_processing_failed: DMARC 判定失敗

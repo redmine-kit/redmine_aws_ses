@@ -1,6 +1,6 @@
 # The sidebar section of this plugin's help, read by redmine_help
 # (https://github.com/redmine-kit/redmine_help, docs/extending.md).
 sections:
-  - id: serverless-ses
-    title: Redmine Serverless SES
-    topics: [serverless-ses/sending, serverless-ses/receiving, serverless-ses/project-mail]
+  - id: aws-ses
+    title: Redmine AWS SES
+    topics: [aws-ses/sending, aws-ses/receiving, aws-ses/project-mail]

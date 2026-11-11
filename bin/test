@@ -4,11 +4,12 @@
 #   bin/test                 # the plugin's tests, then the Redmine tests around email
 #   bin/test --redmine       # also every Redmine test, with the plugin installed
 #   bin/test <files>         # some files of the plugin's tests
+#   REDMINE_AWS_DIR=<dir> bin/test   # redmine_aws from <dir> (default ../redmine_aws)
 # Commands that run inside the container are in single quotes on purpose.
 # shellcheck disable=SC2016
 set -euo pipefail
 cd "$(dirname "$0")/.."
-image=redmine-serverless-ses-test
+image=redmine-aws-ses-test
 # The same tests run against either backend; TEST_AWS_BACKEND names it.
 if [[ -n "${LOCALSTACK_AUTH_TOKEN:-}" ]]; then
   backend=localstack endpoint=http://localstack:4566
@@ -20,9 +21,13 @@ fi
 ses_backend=$backend ses_endpoint=$endpoint
 echo "AWS backend: $backend ($endpoint); SES: $ses_backend ($ses_endpoint)"
 bin/services >/dev/null
-docker buildx build --load -q -t "$image" -f test/Dockerfile . >/dev/null
+# redmine_aws, which the plugin requires: a checkout next to this one, or
+# REDMINE_AWS_DIR.
+aws_dir=${REDMINE_AWS_DIR:-../redmine_aws}
+[[ -f "$aws_dir/init.rb" ]] || { echo "redmine_aws is not in $aws_dir; set REDMINE_AWS_DIR" >&2; exit 1; }
+docker buildx build --load -q -t "$image" --build-context redmine_aws="$aws_dir" -f test/Dockerfile . >/dev/null
 run() {
-  docker run --rm --network redmine-serverless-ses-test_default -e AWS_ENDPOINT_URL="$endpoint" -e TEST_AWS_BACKEND="$backend" \
+  docker run --rm --network redmine-aws-ses-test_default -e AWS_ENDPOINT_URL="$endpoint" -e TEST_AWS_BACKEND="$backend" \
     -e AWS_ENDPOINT_URL_SESV2="$ses_endpoint" -e AWS_ENDPOINT_URL_SES="$ses_endpoint" -e TEST_SES_BACKEND="$ses_backend" \
     -e PARALLEL_WORKERS="${PARALLEL_WORKERS:-4}" "$image" \
     sh -c 'bin/rails db:drop db:create db:migrate redmine:plugins:migrate db:schema:dump >/dev/null && "$@"' test "$@"
@@ -30,9 +35,9 @@ run() {
 # The plugin's tests, with coverage written to coverage/coverage.xml.
 run_plugin() {
   mkdir -p coverage
-  docker run --rm --network redmine-serverless-ses-test_default -e AWS_ENDPOINT_URL="$endpoint" -e TEST_AWS_BACKEND="$backend" \
+  docker run --rm --network redmine-aws-ses-test_default -e AWS_ENDPOINT_URL="$endpoint" -e TEST_AWS_BACKEND="$backend" \
     -e AWS_ENDPOINT_URL_SESV2="$ses_endpoint" -e AWS_ENDPOINT_URL_SES="$ses_endpoint" -e TEST_SES_BACKEND="$ses_backend" \
-    -e PLUGIN_COVERAGE=1 -e PARALLEL_WORKERS=1 -v "$PWD/coverage:/redmine/plugins/redmine_serverless_ses/coverage" "$image" \
+    -e PLUGIN_COVERAGE=1 -e PARALLEL_WORKERS=1 -v "$PWD/coverage:/redmine/plugins/redmine_aws_ses/coverage" "$image" \
     sh -c 'bin/rails db:drop db:create db:migrate redmine:plugins:migrate db:schema:dump >/dev/null && "$@"' test "$@"
 }
 redmine_tests=(test/unit/mail_handler_test.rb test/unit/mailer_test.rb test/functional/projects_controller_test.rb
@@ -40,11 +45,11 @@ redmine_tests=(test/unit/mail_handler_test.rb test/unit/mailer_test.rb test/func
 # Redmine's tests that fail with the current gems for known reasons.
 known=$(grep -v -e '^#' -e '^$' test/redmine_known_failures.txt | sed 's/[.]/\\./g' | paste -sd '|' -)
 if [[ "${1:-}" == "--redmine" ]]; then
-  run_plugin bin/rails test plugins/redmine_serverless_ses/test
+  run_plugin bin/rails test plugins/redmine_aws_ses/test
   run bin/rails test --exclude "/^($known)\$/"
 elif (($#)); then
-  run_plugin bin/rails test "${@/#/plugins/redmine_serverless_ses/}"
+  run_plugin bin/rails test "${@/#/plugins/redmine_aws_ses/}"
 else
-  run_plugin bin/rails test plugins/redmine_serverless_ses/test
+  run_plugin bin/rails test plugins/redmine_aws_ses/test
   run bin/rails test "${redmine_tests[@]}"
 fi

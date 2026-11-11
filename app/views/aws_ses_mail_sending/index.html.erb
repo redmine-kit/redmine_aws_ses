@@ -1,0 +1,71 @@
+<%= render partial: 'aws_admin/tabs', locals: { selected: 'mail_sending' } %>
+
+<h3><%= l(:label_aws_ses_mail_account) %></h3>
+
+<p>
+  <%= link_to sprite_icon('email', l(:label_send_test_email)), test_email_path, method: :post, class: 'icon icon-email' %>
+  <% if respond_to?(:aws_sqs_jobs_path) %>
+  | <%= link_to l(:label_aws_ses_mail_failed), aws_sqs_jobs_path(mail: '1') %>
+  <% end %>
+</p>
+
+<% if @account_error %>
+<div class="flash error"><%= @account_error %></div>
+<% else %>
+<div class="box tabular settings">
+  <p><label><%= l(:label_aws_ses_mail_enforcement_status) %></label><%= aws_ses_mail_value(:enforcement_status, @account[:enforcement_status]) %></p>
+  <p><label><%= l(:label_aws_ses_mail_sending_enabled) %></label><%= l(@account[:sending_enabled] ? :label_aws_ses_mail_sending_status_enabled : :label_aws_ses_mail_sending_status_paused) %></p>
+  <p><label><%= l(:label_aws_ses_mail_production_access) %></label><%= format_object(@account[:production_access]) %></p>
+  <p><label><%= l(:label_aws_ses_mail_quota) %></label><%= number_with_delimiter(@account[:max_24_hour_send].to_i) %></p>
+  <p><label><%= l(:label_aws_ses_mail_sent_last_24_hours) %></label><%= number_with_delimiter(@account[:sent_last_24_hours].to_i) %></p>
+  <p><label><%= l(:label_aws_ses_mail_rate) %></label><%= l(:text_aws_ses_mail_rate_value, count: number_with_delimiter(@account[:max_send_rate].to_f.round(2).to_s.sub(/\.0\z/, ''))) %></p>
+</div>
+<% end %>
+
+<h3><%= l(:label_aws_ses_mail_domain) %></h3>
+
+<% if @domain.nil? %>
+<p class="warning"><%= l(:text_aws_ses_mail_no_domain) %></p>
+<% elsif @identity_error %>
+<div class="flash error"><%= @identity_error %></div>
+<% else %>
+<div class="box tabular settings">
+  <p><label><%= l(:label_aws_ses_mail_domain) %></label><%= @domain %></p>
+  <p><label><%= l(:label_aws_ses_mail_verified) %></label><%= format_object(@identity[:verified]) %></p>
+  <p><label>DKIM</label><%= aws_ses_mail_value(:dkim_status, @identity[:dkim_status]) %></p>
+</div>
+<% end %>
+
+<h3><%= l(:label_aws_ses_mail_suppressed) %></h3>
+
+<% if @suppressed_error %>
+<div class="flash error"><%= @suppressed_error %></div>
+<% elsif @suppressed.any? %>
+<div class="autoscroll">
+<table class="list suppressed"><thead>
+<tr>
+    <th><%= l(:field_mail) %></th>
+    <th><%= l(:label_user) %></th>
+    <th><%= l(:label_aws_ses_mail_reason) %></th>
+    <th><%= l(:field_updated_on) %></th>
+    <th></th>
+</tr></thead>
+<tbody>
+<% @suppressed.each do |destination| %>
+<tr>
+    <td class="name"><%= destination[:address] %></td>
+    <td class="name"><%= destination[:user] %></td>
+    <td><%= aws_ses_mail_value(:suppression_reason, destination[:reason]) %></td>
+    <td><%= destination[:last_update] ? format_time(destination[:last_update]) : '' %></td>
+    <td class="buttons">
+      <%= link_to sprite_icon('del', l(:button_aws_ses_mail_unsuppress)), aws_ses_mail_unsuppress_path(address: destination[:address]),
+                  method: :post, data: { confirm: l(:text_are_you_sure) }, class: 'icon icon-del' %>
+    </td>
+</tr>
+<% end %>
+</tbody>
+</table>
+</div>
+<% else %>
+<p class="nodata"><%= l(:label_no_data) %></p>
+<% end %>

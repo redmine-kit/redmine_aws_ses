@@ -1,6 +1,6 @@
 # Security
 
-Redmine Serverless SES is in early development. The security design of the whole system is in [Serverless](https://github.com/redmine-kit/serverless/blob/main/docs/security.md).
+Redmine AWS SES is in early development. The security design of the whole system is in [Serverless](https://github.com/redmine-kit/serverless/blob/main/docs/security.md).
 
 ## Reporting a vulnerability
 

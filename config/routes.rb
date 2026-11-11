@@ -1,15 +1,11 @@
 # frozen_string_literal: true
 
-# The shared entry of the Serverless administration menu (every Redmine
-# Serverless plugin draws it; the first one matches).
-get 'admin/serverless', to: 'serverless_admin#index'
-
-get 'admin/serverless/mail_sending', to: 'serverless_mail_sending#index', as: 'serverless_mail_sending'
-post 'admin/serverless/mail_sending/unsuppress', to: 'serverless_mail_sending#unsuppress',
-                                                 as: 'serverless_mail_unsuppress'
-get 'admin/serverless/mail_receiving', to: 'serverless_mail_receiving#index', as: 'serverless_mail_receiving'
-post 'admin/serverless/mail_receiving', to: 'serverless_mail_receiving#update'
-post 'admin/serverless/mail_receiving/reimport', to: 'serverless_mail_receiving#reimport',
-                                                 as: 'serverless_mail_reimport'
-patch 'projects/:project_id/serverless_mail_setting', to: 'serverless_project_mail_settings#update',
-                                                      as: 'serverless_project_mail_setting'
+# The email tabs of the AWS administration page (redmine_aws draws admin/aws
+# itself) and the Email tab of project settings.
+get 'admin/aws/mail_sending', to: 'aws_ses_mail_sending#index', as: 'aws_ses_mail_sending'
+post 'admin/aws/mail_sending/unsuppress', to: 'aws_ses_mail_sending#unsuppress', as: 'aws_ses_mail_unsuppress'
+get 'admin/aws/mail_receiving', to: 'aws_ses_mail_receiving#index', as: 'aws_ses_mail_receiving'
+post 'admin/aws/mail_receiving', to: 'aws_ses_mail_receiving#update'
+post 'admin/aws/mail_receiving/reimport', to: 'aws_ses_mail_receiving#reimport', as: 'aws_ses_mail_reimport'
+patch 'projects/:project_id/aws_ses_mail_setting', to: 'aws_ses_project_mail_settings#update',
+                                                   as: 'aws_ses_project_mail_setting'

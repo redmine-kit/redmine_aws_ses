@@ -1,82 +1,81 @@
 en:
-  label_serverless_admin: Serverless
-  label_serverless_mail_sending: Email sending
-  label_serverless_mail_receiving: Email receiving
-  label_serverless_check_ses: SES
-  label_serverless_project_mail: Email
-  permission_manage_serverless_mail_settings: Manage email settings
-  label_serverless_mail_account: SES account
-  label_serverless_mail_production_access: Production access
-  label_serverless_mail_sending_enabled: Sending
-  label_serverless_mail_sending_status_enabled: Enabled
-  label_serverless_mail_sending_status_paused: Paused
-  label_serverless_mail_enforcement_status: Account status
-  label_serverless_mail_enforcement_status_healthy: Healthy
-  label_serverless_mail_enforcement_status_probation: Under review
-  label_serverless_mail_enforcement_status_shutdown: Paused
-  label_serverless_mail_quota: Daily sending quota
-  label_serverless_mail_sent_last_24_hours: Sent in the last 24 hours
-  label_serverless_mail_rate: Maximum send rate
-  text_serverless_mail_rate_value: "%{count} per second"
-  label_serverless_mail_domain: Domain
-  label_serverless_mail_verified: Verified
-  label_serverless_mail_dkim_status_success: Successful
-  label_serverless_mail_dkim_status_pending: Pending
-  label_serverless_mail_dkim_status_failed: Failed
-  label_serverless_mail_dkim_status_temporary_failure: Temporary failure
-  label_serverless_mail_dkim_status_not_started: Not started
-  label_serverless_mail_suppressed: Suppression list
-  label_serverless_mail_reason: Reason
-  label_serverless_mail_suppression_reason_bounce: Bounce
-  label_serverless_mail_suppression_reason_complaint: Complaint
-  label_serverless_mail_failed: Failed jobs
-  label_serverless_mail_addresses: Email addresses
-  label_serverless_mail_global_address: Default address
-  label_serverless_mail_received: Received emails
-  label_serverless_mail_dropped_only: Not fetched
-  label_serverless_mail_received_at: Received
-  label_serverless_mail_result: Result
-  label_serverless_mail_imported: Fetched
-  label_serverless_mail_reason_no_verdict: Not fetched (no verdicts)
-  label_serverless_mail_reason_virus: Not fetched (virus)
-  label_serverless_mail_reason_spam: Not fetched (spam)
-  label_serverless_mail_reason_dmarc: Not fetched (DMARC fail)
-  label_serverless_mail_reason_auto_reply: Not fetched (auto-reply)
-  label_serverless_mail_reason_no_project: Not fetched (no project)
-  label_serverless_mail_reason_import_error: Fetch error
-  label_serverless_mail_settings: Receiving settings
-  label_serverless_mail_global_drop: Do not fetch
-  label_serverless_mail_global_default_project: Fetch into the default project
-  label_serverless_mail_default_project: Default project
-  label_serverless_mail_per_project: Use per-project addresses
-  label_serverless_mail_project_senders: Send notifications from project addresses
-  label_serverless_mail_receive: Receive email
-  label_serverless_mail_unknown_user: Unknown senders
-  label_serverless_mail_unknown_user_ignore: Do not fetch
-  label_serverless_mail_unknown_user_accept: Fetch as the anonymous user
-  label_serverless_mail_unknown_user_create: Create a user
-  button_serverless_mail_unsuppress: Remove
-  button_serverless_mail_reimport: Fetch again
-  notice_serverless_mail_unsuppressed: "%{address} was removed from the suppression list."
-  notice_serverless_mail_reimport: "%{count} message(s) will be fetched again."
-  error_serverless_mail_local_part: The address may contain only lowercase letters, digits, ".", "_" and "-".
-  text_serverless_mail_no_domain: Set the emission email address (Administration › Settings › Email notifications) to an address on the domain verified in SES.
-  text_serverless_mail_no_bucket: REDMINE_MAIL_BUCKET is not set, so received email cannot be fetched.
-  text_serverless_mail_mx_unknown: Unknown
-  label_serverless_mail_import_without_dmarc_pass: Also fetch email failing DMARC
-  label_serverless_mail_import_spam: Also fetch spam
-  label_serverless_mail_verdicts: Verdicts
-  label_serverless_mail_import: Fetched email
-  label_serverless_mail_from: From
-  text_serverless_mail_sending_check: "Sending: %{sending}, production access: %{production}"
-  text_serverless_mail_api_error: "Could not call the SES API (%{error}). See the log for details."
-  label_serverless_mail_verdicts_passed: Passed
-  label_serverless_mail_verdict_virus_fail: Virus
-  label_serverless_mail_verdict_virus_gray: Virus undetermined
-  label_serverless_mail_verdict_virus_processing_failed: Virus scan failed
-  label_serverless_mail_verdict_spam_fail: Spam
-  label_serverless_mail_verdict_spam_gray: Spam undetermined
-  label_serverless_mail_verdict_spam_processing_failed: Spam scan failed
-  label_serverless_mail_verdict_dmarc_fail: DMARC fail
-  label_serverless_mail_verdict_dmarc_gray: DMARC no policy
-  label_serverless_mail_verdict_dmarc_processing_failed: DMARC check failed
+  label_aws_ses_mail_sending: Email sending
+  label_aws_ses_mail_receiving: Email receiving
+  label_aws_ses_check: SES
+  label_aws_ses_project_mail: Email
+  permission_manage_aws_ses_mail_settings: Manage email settings
+  label_aws_ses_mail_account: SES account
+  label_aws_ses_mail_production_access: Production access
+  label_aws_ses_mail_sending_enabled: Sending
+  label_aws_ses_mail_sending_status_enabled: Enabled
+  label_aws_ses_mail_sending_status_paused: Paused
+  label_aws_ses_mail_enforcement_status: Account status
+  label_aws_ses_mail_enforcement_status_healthy: Healthy
+  label_aws_ses_mail_enforcement_status_probation: Under review
+  label_aws_ses_mail_enforcement_status_shutdown: Paused
+  label_aws_ses_mail_quota: Daily sending quota
+  label_aws_ses_mail_sent_last_24_hours: Sent in the last 24 hours
+  label_aws_ses_mail_rate: Maximum send rate
+  text_aws_ses_mail_rate_value: "%{count} per second"
+  label_aws_ses_mail_domain: Domain
+  label_aws_ses_mail_verified: Verified
+  label_aws_ses_mail_dkim_status_success: Successful
+  label_aws_ses_mail_dkim_status_pending: Pending
+  label_aws_ses_mail_dkim_status_failed: Failed
+  label_aws_ses_mail_dkim_status_temporary_failure: Temporary failure
+  label_aws_ses_mail_dkim_status_not_started: Not started
+  label_aws_ses_mail_suppressed: Suppression list
+  label_aws_ses_mail_reason: Reason
+  label_aws_ses_mail_suppression_reason_bounce: Bounce
+  label_aws_ses_mail_suppression_reason_complaint: Complaint
+  label_aws_ses_mail_failed: Failed jobs
+  label_aws_ses_mail_addresses: Email addresses
+  label_aws_ses_mail_global_address: Default address
+  label_aws_ses_mail_received: Received emails
+  label_aws_ses_mail_dropped_only: Not fetched
+  label_aws_ses_mail_received_at: Received
+  label_aws_ses_mail_result: Result
+  label_aws_ses_mail_imported: Fetched
+  label_aws_ses_mail_reason_no_verdict: Not fetched (no verdicts)
+  label_aws_ses_mail_reason_virus: Not fetched (virus)
+  label_aws_ses_mail_reason_spam: Not fetched (spam)
+  label_aws_ses_mail_reason_dmarc: Not fetched (DMARC fail)
+  label_aws_ses_mail_reason_auto_reply: Not fetched (auto-reply)
+  label_aws_ses_mail_reason_no_project: Not fetched (no project)
+  label_aws_ses_mail_reason_import_error: Fetch error
+  label_aws_ses_mail_settings: Receiving settings
+  label_aws_ses_mail_global_drop: Do not fetch
+  label_aws_ses_mail_global_default_project: Fetch into the default project
+  label_aws_ses_mail_default_project: Default project
+  label_aws_ses_mail_per_project: Use per-project addresses
+  label_aws_ses_mail_project_senders: Send notifications from project addresses
+  label_aws_ses_mail_receive: Receive email
+  label_aws_ses_mail_unknown_user: Unknown senders
+  label_aws_ses_mail_unknown_user_ignore: Do not fetch
+  label_aws_ses_mail_unknown_user_accept: Fetch as the anonymous user
+  label_aws_ses_mail_unknown_user_create: Create a user
+  button_aws_ses_mail_unsuppress: Remove
+  button_aws_ses_mail_reimport: Fetch again
+  notice_aws_ses_mail_unsuppressed: "%{address} was removed from the suppression list."
+  notice_aws_ses_mail_reimport: "%{count} message(s) will be fetched again."
+  error_aws_ses_mail_local_part: The address may contain only lowercase letters, digits, ".", "_" and "-".
+  text_aws_ses_mail_no_domain: Set the emission email address (Administration › Settings › Email notifications) to an address on the domain verified in SES.
+  text_aws_ses_mail_no_bucket: REDMINE_MAIL_BUCKET is not set, so received email cannot be fetched.
+  text_aws_ses_mail_mx_unknown: Unknown
+  label_aws_ses_mail_import_without_dmarc_pass: Also fetch email failing DMARC
+  label_aws_ses_mail_import_spam: Also fetch spam
+  label_aws_ses_mail_verdicts: Verdicts
+  label_aws_ses_mail_import: Fetched email
+  label_aws_ses_mail_from: From
+  text_aws_ses_mail_sending_check: "Sending: %{sending}, production access: %{production}"
+  text_aws_ses_mail_api_error: "Could not call the SES API (%{error}). See the log for details."
+  label_aws_ses_mail_verdicts_passed: Passed
+  label_aws_ses_mail_verdict_virus_fail: Virus
+  label_aws_ses_mail_verdict_virus_gray: Virus undetermined
+  label_aws_ses_mail_verdict_virus_processing_failed: Virus scan failed
+  label_aws_ses_mail_verdict_spam_fail: Spam
+  label_aws_ses_mail_verdict_spam_gray: Spam undetermined
+  label_aws_ses_mail_verdict_spam_processing_failed: Spam scan failed
+  label_aws_ses_mail_verdict_dmarc_fail: DMARC fail
+  label_aws_ses_mail_verdict_dmarc_gray: DMARC no policy
+  label_aws_ses_mail_verdict_dmarc_processing_failed: DMARC check failed

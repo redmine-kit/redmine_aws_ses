@@ -1,0 +1,20 @@
+<% setting = AwsSesProjectMailSetting.find_or_initialize_by(project: @project) %>
+<%= labelled_form_for setting, url: aws_ses_project_mail_setting_path(@project), method: :patch,
+                               html: { id: 'aws-ses-project-mail-setting' } do |f| %>
+<div class="box tabular">
+  <% address = setting.address %>
+  <p><label><%= l(:field_mail) %></label><%= address || '-' %></p>
+  <p><%= f.check_box :receive, label: :label_aws_ses_mail_receive, disabled: address.nil? %></p>
+  <p><%= f.select :tracker_id, @project.trackers.map { |t| [t.name, t.id] }, { include_blank: true, label: :field_tracker } %></p>
+  <p><%= f.select :category_id, @project.issue_categories.map { |c| [c.name, c.id] }, { include_blank: true, label: :field_category } %></p>
+  <p><%= f.select :priority_id, IssuePriority.active.map { |p| [p.name, p.id] }, { include_blank: true, label: :field_priority } %></p>
+  <p><%= f.select :assigned_to_id, @project.assignable_users.map { |u| [u.name, u.id] }, { include_blank: true, label: :field_assigned_to } %></p>
+  <p><%= f.check_box :is_private, label: :field_is_private %></p>
+  <p>
+    <%= f.select :unknown_user,
+                 AwsSesProjectMailSetting::UNKNOWN_USER.map { |v| [l(:"label_aws_ses_mail_unknown_user_#{v}"), v] },
+                 { label: :label_aws_ses_mail_unknown_user } %>
+  </p>
+</div>
+<%= submit_tag l(:button_save) %>
+<% end %>

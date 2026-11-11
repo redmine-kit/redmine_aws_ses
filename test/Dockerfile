@@ -1,6 +1,8 @@
 # syntax=docker/dockerfile:1
-# Redmine 7.0.3 with this plugin, for the tests (bin/test). Built from the
-# repository root: docker build -f test/Dockerfile .
+# Redmine 7.0.3 with this plugin and redmine_aws, which it requires, for the
+# tests (bin/test). Built from the repository root, with redmine_aws as the
+# build context of that name:
+#   docker buildx build --build-context redmine_aws=../redmine_aws -f test/Dockerfile .
 FROM ruby:4.0@sha256:a69f361db050bb2c65ec66ef75411bfc4ce2e1d993ba1179fac4e4ba6ecfe91f
 # Ghostscript for Redmine's tests that export PDF and PNG.
 RUN apt-get update && apt-get install -y --no-install-recommends ghostscript && rm -rf /var/lib/apt/lists/*
@@ -13,9 +15,11 @@ RUN curl -fsSLo /tmp/redmine.tar.gz "https://www.redmine.org/releases/redmine-${
   && rm /tmp/redmine.tar.gz
 WORKDIR /redmine
 COPY test/database.yml config/database.yml
-COPY . plugins/redmine_serverless_ses/
-# The plugin as a gem by path, so that Bundler loads boot/ (docs/setup.md).
-RUN printf "gem 'redmine_serverless_ses', path: 'plugins/redmine_serverless_ses'\ngem 'simplecov-cobertura', group: :test\n" > Gemfile.local \
+COPY --from=redmine_aws . plugins/redmine_aws/
+COPY . plugins/redmine_aws_ses/
+# The plugin as a gem by path, so that Bundler loads boot/ (docs/setup.md),
+# and redmine_aws, which its gemspec requires, by path without loading it.
+RUN printf "gem 'redmine_aws', path: 'plugins/redmine_aws', require: false\ngem 'redmine_aws_ses', path: 'plugins/redmine_aws_ses'\ngem 'simplecov-cobertura', group: :test\n" > Gemfile.local \
   && bundle config set --local without development \
   && bundle install --jobs 4
 ENV RAILS_ENV=test

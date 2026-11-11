@@ -1,0 +1,138 @@
+<%= render partial: 'aws_admin/tabs', locals: { selected: 'mail_receiving' } %>
+<% content_for :header_tags do %>
+  <%# Redmine's toggle of the list's checkboxes (the check box in the header row) %>
+  <%= javascript_include_tag 'context_menu' %>
+<% end %>
+
+<h3><%= l(:label_aws_ses_mail_addresses) %></h3>
+
+<% if @domain.nil? %>
+<p class="warning"><%= l(:text_aws_ses_mail_no_domain) %></p>
+<% else %>
+<div class="box tabular settings">
+  <p><label><%= l(:label_aws_ses_mail_domain) %></label><%= @domain %></p>
+  <p><label><%= l(:label_aws_ses_mail_global_address) %></label><%= RedmineAws::SES.global_address %></p>
+  <p><label>MX</label><%= @mx.nil? ? l(:text_aws_ses_mail_mx_unknown) : (@mx.empty? ? l(:label_none) : @mx.join(', ')) %></p>
+</div>
+
+<% if RedmineAws::SES.per_project_addresses? && @project_settings.any? %>
+<div class="autoscroll">
+<table class="list addresses"><thead>
+<tr>
+    <th><%= l(:label_project) %></th>
+    <th><%= l(:field_mail) %></th>
+    <th><%= l(:label_aws_ses_mail_receive) %></th>
+</tr></thead>
+<tbody>
+<% @project_settings.each do |setting| %>
+<tr>
+    <td class="name"><%= link_to_project setting.project %></td>
+    <td class="name"><%= setting.address || '-' %></td>
+    <td class="tick"><%= checked_image setting.receive? %></td>
+</tr>
+<% end %>
+</tbody>
+</table>
+</div>
+<% end %>
+<% end %>
+
+<% unless RedmineAws::SES.mail_bucket %>
+<p class="warning"><%= l(:text_aws_ses_mail_no_bucket) %></p>
+<% end %>
+
+<h3><%= l(:label_aws_ses_mail_received) %></h3>
+
+<p>
+  <%= link_to_unless params[:dropped] != '1', l(:label_all), action: 'index' %> |
+  <%= link_to_unless params[:dropped] == '1', l(:label_aws_ses_mail_dropped_only), action: 'index', dropped: '1' %>
+</p>
+
+<% if @received.any? %>
+<%= form_tag(aws_ses_mail_reimport_path, id: 'aws-ses-received-mails') do %>
+<div class="autoscroll">
+<table class="list mails"><thead>
+<tr>
+    <th class="checkbox hide-when-print">
+      <%= check_box_tag 'check_all', '', false, class: 'toggle-selection', title: "#{l(:button_check_all)}/#{l(:button_uncheck_all)}" %>
+    </th>
+    <th><%= l(:label_aws_ses_mail_received_at) %></th>
+    <th><%= l(:label_aws_ses_mail_from) %></th>
+    <th><%= l(:field_subject) %></th>
+    <th><%= l(:label_project) %></th>
+    <th><%= l(:label_aws_ses_mail_verdicts) %></th>
+    <th><%= l(:label_aws_ses_mail_result) %></th>
+</tr></thead>
+<tbody>
+<% @received.each do |mail| %>
+<tr id="received-mail-<%= mail.id %>" class="<%= mail.status %>">
+    <td class="checkbox hide-when-print"><%= check_box_tag 'ids[]', mail.id, false, id: nil %></td>
+    <td><%= format_time(mail.received_at || mail.created_at) %></td>
+    <td class="name"><%= mail.mail_from %></td>
+    <td class="subject"><%= mail.subject %></td>
+    <td class="name"><%= mail.project ? link_to_project(mail.project) : '' %></td>
+    <td><%= aws_ses_mail_verdicts(mail.verdicts) %></td>
+    <td class="description">
+      <% if mail.status == 'imported' %>
+      <%= mail.issue_id ? link_to("##{mail.issue_id}", issue_path(mail.issue_id)) : l(:label_aws_ses_mail_imported) %>
+      <% else %>
+      <%= l(:"label_aws_ses_mail_reason_#{mail.reason}") %>
+      <% end %>
+    </td>
+</tr>
+<% end %>
+</tbody>
+</table>
+</div>
+<p><%= submit_tag l(:button_aws_ses_mail_reimport), data: { confirm: l(:text_are_you_sure) } %></p>
+<% end %>
+<% else %>
+<p class="nodata"><%= l(:label_no_data) %></p>
+<% end %>
+
+<h3><%= l(:label_aws_ses_mail_settings) %></h3>
+
+<%= form_tag({ action: 'update' }, id: 'aws-ses-mail-settings') do %>
+<div class="box tabular settings">
+  <p>
+    <%= label_tag 'settings_global_local_part', l(:label_aws_ses_mail_global_address) %>
+    <%= text_field_tag 'settings[global_local_part]', @settings['global_local_part'], size: 20 %>@<%= @domain %>
+  </p>
+  <p>
+    <%= label_tag 'settings_global_mail', l(:label_incoming_emails) %>
+    <%= select_tag 'settings[global_mail]',
+                   options_for_select([[l(:label_aws_ses_mail_global_drop), 'drop'],
+                                       [l(:label_aws_ses_mail_global_default_project), 'default_project']],
+                                      @settings['global_mail']) %>
+  </p>
+  <p>
+    <%= label_tag 'settings_default_project', l(:label_aws_ses_mail_default_project) %>
+    <%= select_tag 'settings[default_project]',
+                   options_for_select([['', '']] + Project.active.sorted.map { |p| [p.name, p.identifier] },
+                                      @settings['default_project']) %>
+  </p>
+  <p>
+    <label><%= l(:label_aws_ses_mail_import) %></label>
+    <% %w[import_without_dmarc_pass import_spam].each do |name| %>
+    <label class="block">
+      <%= hidden_field_tag "settings[#{name}]", '0', id: nil %>
+      <%= check_box_tag "settings[#{name}]", '1', @settings[name] == '1' %>
+      <%= l(:"label_aws_ses_mail_#{name}") %>
+    </label>
+    <% end %>
+  </p>
+  <p>
+    <label><%= l(:label_project_plural) %></label>
+    <% { 'per_project_addresses' => :label_aws_ses_mail_per_project,
+         'project_senders' => :label_aws_ses_mail_project_senders }.each do |name, label| %>
+    <label class="block">
+      <%= hidden_field_tag "settings[#{name}]", '0', id: nil %>
+      <%= check_box_tag "settings[#{name}]", '1', @settings[name] == '1' %>
+      <%= l(label) %>
+    </label>
+    <% end %>
+  </p>
+</div>
+
+<%= submit_tag l(:button_save) %>
+<% end %>

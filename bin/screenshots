@@ -4,18 +4,23 @@
 # (test/screenshots/screens.rb, not named *_test.rb so that bin/test leaves
 # it out). Run it after changing a screen.
 #   bin/screenshots
+#   REDMINE_AWS_DIR=<dir> bin/screenshots   # redmine_aws from <dir> (default ../redmine_aws)
 # Commands that run inside the container are in single quotes on purpose.
 # shellcheck disable=SC2016
 set -euo pipefail
 cd "$(dirname "$0")/.."
-plugin=redmine_serverless_ses
-image=redmine-serverless-ses-test
-project=redmine-serverless-ses-screenshots
+plugin=redmine_aws_ses
+image=redmine-aws-ses-test
+project=redmine-aws-ses-screenshots
 compose=(docker compose -f test/compose.yml -p "$project" --profile screenshots)
+# redmine_aws, which the plugin requires: a checkout next to this one, or
+# REDMINE_AWS_DIR.
+aws_dir=${REDMINE_AWS_DIR:-../redmine_aws}
+[[ -f "$aws_dir/init.rb" ]] || { echo "redmine_aws is not in $aws_dir; set REDMINE_AWS_DIR" >&2; exit 1; }
 "${compose[@]}" up -d --wait >/dev/null
 # Its own Compose project, apart from bin/test's, removed afterwards.
 trap '"${compose[@]}" down -v >/dev/null 2>&1' EXIT
-docker buildx build --load -q -t "$image" -f test/Dockerfile . >/dev/null
+docker buildx build --load -q -t "$image" --build-context redmine_aws="$aws_dir" -f test/Dockerfile . >/dev/null
 mkdir -p docs/images docs/ja/images
 # The browser in the chrome container opens the test server of this container
 # by its network alias.

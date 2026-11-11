@@ -3,7 +3,7 @@
 # LOCALSTACK_AUTH_TOKEN is set), or stops them with --down.
 set -euo pipefail
 cd "$(dirname "$0")/.."
-compose=(docker compose -f test/compose.yml -p redmine-serverless-ses-test)
+compose=(docker compose -f test/compose.yml -p redmine-aws-ses-test)
 if [[ -n "${LOCALSTACK_AUTH_TOKEN:-}" ]]; then
   compose+=(--profile localstack)
 fi
