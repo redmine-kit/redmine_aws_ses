@@ -59,6 +59,22 @@ module RedmineAws
         assert_select '#tab-aws_ses_mail', 0
       end
 
+      # The permission alone opens project settings, as Redmine's own
+      # permissions for a settings tab do (projects: :settings).
+      def test_the_permission_alone_opens_the_tab
+        user = User.generate!
+        User.add_to_project(user, Project.find(1), Role.generate!(permissions: [:manage_aws_ses_mail_settings]))
+        @request.session[:user_id] = user.id
+        with_ses_settings('per_project_addresses' => '1') do
+          get :settings, params: { id: 'ecookbook', tab: 'aws_ses_mail' }
+        end
+
+        assert_response :success
+        # The tabs of project settings (the main menu is a .tabs too).
+        assert_select '.tabs a[id^="tab-"]', 1
+        assert_select '#tab-aws_ses_mail.selected'
+      end
+
       def test_an_identifier_longer_than_64_characters_cannot_receive
         @request.session[:user_id] = 1
         project = Project.generate!(identifier: 'a' * 65)

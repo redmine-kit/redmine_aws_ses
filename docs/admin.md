@@ -79,7 +79,7 @@ An "Email" tab is added to project settings when addresses per project are on. I
 
 | Item | Details |
 | --- | --- |
-| Who can change it | Redmine administrators and members with the project permission "Manage email settings" that the plugin adds |
+| Who can change it | Redmine administrators and members with the project permission "Manage email settings" that the plugin adds. The permission also opens project settings, as Redmine's permissions for the other tabs do |
 | When fetching email from unknown senders | Use this to receive email from outside people, such as for a contact desk. Spam increases, so keep the DMARC check ([receiving.md](receiving.md#spoofing-and-spam)) |
 
 ## Permissions

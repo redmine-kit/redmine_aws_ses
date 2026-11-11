@@ -24,7 +24,10 @@ Redmine::Plugin.register :redmine_aws_ses do
   # link.
   settings default: RedmineAws::SES::DEFAULTS.dup
 
-  permission :manage_aws_ses_mail_settings, { aws_ses_project_mail_settings: [:update] }, require: :member
+  # projects: :settings opens project settings, as Redmine's own permissions
+  # for a settings tab do (manage_categories and others).
+  permission :manage_aws_ses_mail_settings, { projects: :settings, aws_ses_project_mail_settings: [:update] },
+             require: :member
 end
 
 RedmineAws::SES.setup
