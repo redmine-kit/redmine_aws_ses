@@ -181,6 +181,8 @@ LocalStack が実際の AWS のとおりに再現しない呼び出しは、そ�
 
 CI は、静的チェックとテストを Ruby 3.2 と 4.0 で実行します。ローカルでは、`TEST_RUBY=3.2 bin/test` (または `bin/lint`) で Ruby 3.2 で実行します。
 
+`bin/test-gem` は gem を確認します。チェックアウトからプラグインと Redmine AWS の gem をビルドし、[gem](#gem) のとおりにインストールして `plugins/` にリンクし、すべてのファイルを読み込んで Redmine を起動します (`zeitwerk:check` と、起動時にすべてを読み込む production 環境)。CI もこれを実行するので、gem にないファイルがあれば、Serverless がインストールする前に失敗します。
+
 テストには Redmine AWS が要ります。このリポジトリの隣の [redmine_aws](https://github.com/redmine-kit/redmine_aws) のチェックアウト (`../redmine_aws`) か、`REDMINE_AWS_DIR` に指定したパスです。CI はチェックアウトします。
 
 プラグインのテストは、プラグイン自身のファイルのカバレッジ (SimpleCov。Cobertura XML の `coverage/coverage.xml`) も書きます。CI は、それを [Codecov](https://codecov.io/gh/redmine-kit/redmine_aws_ses) に送ります。
@@ -189,6 +191,7 @@ CI は、静的チェックとテストを Ruby 3.2 と 4.0 で実行します�
 bin/test            # プラグインのテストと、メールのまわりの Redmine のテスト
 bin/test --redmine  # Redmine のすべてのテストも
 REDMINE_AWS_DIR=<ディレクトリ> bin/test  # redmine_aws を <ディレクトリ> から
+bin/test-gem        # gem をビルド・インストールし、plugins/ にリンクして起動する
 bin/lint            # RuboCop
 bin/services --down # PostgreSQL、moto、LocalStack を止める
 ```
