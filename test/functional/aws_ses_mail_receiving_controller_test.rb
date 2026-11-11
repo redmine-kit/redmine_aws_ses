@@ -22,6 +22,8 @@ module RedmineAws
         with_ses_settings { get :index }
 
         assert_response :success
+        assert_select 'h2', text: 'AWS'
+        assert_select '.tabs a.selected', text: 'Email receiving'
         # The default address is noreply@ while its email is not fetched.
         assert_select 'div.box.tabular p', text: /Default address\s*noreply@#{Regexp.escape(DOMAIN)}/
         assert_select '#aws-ses-received-mails tbody tr', 2

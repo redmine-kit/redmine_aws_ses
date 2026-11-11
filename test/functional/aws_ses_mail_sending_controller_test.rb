@@ -43,6 +43,17 @@ module RedmineAws
         assert_select 'p a.icon.icon-email[data-method=post][href=?]', '/admin/test_email'
       end
 
+      def test_the_tab_is_on_the_aws_page
+        stub_all
+        with_ses_settings { get :index }
+
+        # The tab of the "AWS" page of redmine_aws, with its menu item selected.
+        assert_select 'h2', text: 'AWS'
+        assert_select '.tabs a.selected', text: 'Email sending'
+        assert_select '.tabs a', text: 'Email receiving'
+        assert_select '#admin-menu a.selected', text: /AWS/
+      end
+
       def test_index_opens_when_ses_fails
         stub_ses(get_account: 'AccessDeniedException', get_email_identity: 'NotFoundException',
                  list_suppressed_destinations: 'AccessDeniedException')
