@@ -19,9 +19,11 @@ class AwsSesMailSendingController < ApplicationController
     address = params[:address].to_s
     RedmineAws::SES::Account.new.unsuppress(address)
     logger&.info "[redmine_aws_ses] #{User.current.login} removed #{address} from the suppression list"
-    flash[:notice] = l(:notice_aws_ses_mail_unsuppressed, address: address)
+    # Redmine shows flash messages as HTML (render_flash_messages), so values
+    # in them are escaped, as Redmine's own controllers do.
+    flash[:notice] = l(:notice_aws_ses_mail_unsuppressed, address: ERB::Util.h(address))
   rescue StandardError => e
-    flash[:error] = api_error(e)
+    flash[:error] = ERB::Util.h(api_error(e))
   ensure
     redirect_to action: 'index'
   end

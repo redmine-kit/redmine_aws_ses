@@ -83,6 +83,23 @@ module RedmineAws
         ActionController::Base.logger = saved
       end
 
+      # Redmine shows the flash as HTML, so the address from the request is
+      # escaped in it.
+      def test_the_address_is_escaped_in_the_flash
+        stub_ses
+        post :unsuppress, params: { address: '<b>x</b>@example.net' }
+
+        assert_equal '&lt;b&gt;x&lt;/b&gt;@example.net was removed from the suppression list.', flash[:notice]
+      end
+
+      def test_a_failed_removal_shows_the_error_code
+        stub_ses(delete_suppressed_destination: 'NotFoundException')
+        post :unsuppress, params: { address: 'jsmith@somenet.foo' }
+
+        assert_redirected_to '/admin/aws/mail_sending'
+        assert_equal 'Could not call the SES API (NotFoundException). See the log for details.', flash[:error]
+      end
+
       def test_non_administrators_are_refused
         @request.session[:user_id] = 2
         get :index
