@@ -57,16 +57,24 @@ module RedmineAws
                  'US-EAST-1: redmine@unverified.example'
 
       def test_a_rejected_message_raises_in_the_worker
+        with_rejecting_ses do
+          error = assert_raises(::Aws::SESV2::Errors::MessageRejected) { Mailer.test_email(User.find(1)).deliver_now }
+
+          assert_equal REJECTED, error.message
+        end
+      end
+
+      private
+
+      # The delivery method with a client that rejects the sender, and
+      # delivery errors raised, as in the worker.
+      def with_rejecting_ses(&)
         saved = [ActionMailer::Base.raise_delivery_errors, ActionMailer::Base.ses_v2_settings]
         client = ::Aws::SESV2::Client.new(stub_responses: true)
         client.stub_responses(:send_email, ::Aws::SESV2::Errors::MessageRejected.new(nil, REJECTED))
         ActionMailer::Base.raise_delivery_errors = true
         ActionMailer::Base.ses_v2_settings = { sesv2_client: client }
-        with_settings(mail_from: 'redmine@unverified.example') do
-          error = assert_raises(::Aws::SESV2::Errors::MessageRejected) { Mailer.test_email(User.find(1)).deliver_now }
-
-          assert_equal REJECTED, error.message
-        end
+        with_settings(mail_from: 'redmine@unverified.example', &)
       ensure
         ActionMailer::Base.raise_delivery_errors, ActionMailer::Base.ses_v2_settings = saved
       end

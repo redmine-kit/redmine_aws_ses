@@ -41,6 +41,30 @@ module RedmineAws
         RedmineAws::SES::Clients.ses = stub_aws_client(::Aws::SESV2::Client, **responses)
       end
 
+      # SES as the account of the tests: healthy, the domain verified, one
+      # address on the suppression list.
+      def stub_ses_state
+        quota = { max_24_hour_send: 50_000.0, max_send_rate: 14.0, sent_last_24_hours: 12.0 }
+        stub_ses(get_account: { production_access_enabled: true, sending_enabled: true, enforcement_status: 'HEALTHY',
+                                send_quota: quota },
+                 get_email_identity: { verified_for_sending_status: true, dkim_attributes: { status: 'SUCCESS' } },
+                 list_suppressed_destinations: { suppressed_destination_summaries: [
+                   { email_address: 'jsmith@somenet.foo', reason: 'BOUNCE', last_update_time: Time.current }
+                 ] })
+      end
+
+      # What the block writes to the logger of owner (Rails or
+      # ActionController::Base).
+      def capture_log(owner = Rails)
+        io = StringIO.new
+        saved = owner.logger
+        owner.logger = ActiveSupport::Logger.new(io)
+        yield
+        io.string
+      ensure
+        owner.logger = saved
+      end
+
       PASS = { spam: 'PASS', virus: 'PASS', dmarc: 'PASS', dmarc_policy: 'NONE', spf: 'PASS', dkim: 'PASS' }.freeze
 
       # A received message as the sender sent it. SES's own headers are not

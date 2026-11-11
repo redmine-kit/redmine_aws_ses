@@ -110,9 +110,20 @@ rake タスク `redmine_aws_ses:receive_mail` は、受信メールを 1 通取�
 | --- | --- |
 | `MESSAGE_ID` | `mail.messageId` |
 | `SES_RECIPIENTS` | `receipt.recipients` (カンマ区切り) |
+| `SES_MAIL_FROM` | `mail.source`。エンベロープの送信者 (登録した転送元のため。省略できる) ([receiving.md](receiving.md#forwarded-email)) |
 | `SES_SPAM_VERDICT`<br>`SES_VIRUS_VERDICT`<br>`SES_DMARC_VERDICT`<br>`SES_SPF_VERDICT`<br>`SES_DKIM_VERDICT`<br>`SES_DMARC_POLICY` | 判定の結果 |
 
 取り込むのは、ウイルスの判定が `PASS` で、迷惑メールと DMARC の判定も `PASS` のメールだけです。受信設定で、迷惑メールと DMARC 未通過メールも取得するようにできます。判定と宛先はイベントから取り、メールのヘッダーからは取りません ([receiving.md](receiving.md#spoofing-and-spam))。
+
+<a id="refreshing-the-ses-state"></a>
+
+### SES の状態の更新
+
+「メール送信」と「メール受信」のタブは、SES の状態 (アカウント、ドメインの ID、サプレッションリスト) とドメインの MX レコードを、このタスクが最後に読んだとおりに出し、画面を開くときに SES や DNS は呼びません ([admin.md](admin.md))。スケジュールで動かします (例: 1 時間に 1 回)。タブの「最新の情報に更新」のリンクも、同じ読み込みをします。読めなかったセクションがあると、タスクは失敗します (エラーはログにあります)。
+
+```sh
+bin/rake redmine_aws_ses:refresh
+```
 
 <a id="keeping-records"></a>
 
@@ -188,4 +199,7 @@ bin/services --down # PostgreSQL、moto、LocalStack を止める
 
 - メッセージ全体を渡す SES v2 の `SendEmail` に、`ses:SendRawEmail` が要るか
 - SES API のインターフェイスエンドポイントのサービス名
+- SES の SPF の判定が、どの ID を確認するか (RFC 7208 では MAIL FROM の ID。MAIL FROM が空なら HELO の ID)。SES の資料には書かれていない。登録した転送元は、MAIL FROM であることを前提にしている
+- Google Workspace の受信者アドレス マップと Gmail の転送で、転送したメッセージのエンベロープの送信者がどうなるか (Google の資料には書かれていない)。登録した転送元に当てはまるかどうか
+- Gmail (「転送されたメッセージ」) と Outlook (「差出人:」「送信日時:」「宛先:」「件名:」) の日本語の画面での、転送ブロックの正確な行。資料になく、それらの製品からの転送メールでもまだ確認していない
 - メールの設計の、[Serverless の mail.md](https://redmine-kit.github.io/serverless/ja/mail.html#to-verify) にある項目

@@ -15,6 +15,15 @@ module RedmineAws
         AwsSesProjectMailSetting.create!(project: Project.find(project), receive: true, **attributes)
       end
 
+      # Replies to notifications go to the emission address; when it is not
+      # the default address, it takes email as the default address does.
+      def test_the_emission_address_is_a_default_address
+        with_ses_settings('global_mail' => 'default_project', 'default_project' => 'ecookbook') do
+          assert_equal 'ecookbook', target("noreply@#{DOMAIN}")
+          assert_equal 'ecookbook', target("redmine@#{DOMAIN}")
+        end
+      end
+
       def test_per_project_address
         with_ses_settings('per_project_addresses' => '1') do
           receive(1)
@@ -25,15 +34,16 @@ module RedmineAws
         end
       end
 
-      def test_identifiers_that_cannot_be_an_address_are_not_routed
+      # A role address is a project's address when a project has the
+      # identifier (the tab warns about it); the default address takes the
+      # email sent to it.
+      def test_long_identifiers_role_addresses_and_the_default_address
         with_ses_settings('per_project_addresses' => '1') do
-          long = Project.generate!(identifier: 'a' * 65)
-          AwsSesProjectMailSetting.create!(project: long, receive: true)
-          role = Project.generate!(identifier: 'postmaster')
-          AwsSesProjectMailSetting.create!(project: role, receive: true)
+          { 'a' * 65 => nil, 'postmaster' => 'postmaster', 'support' => 'support', 'noreply' => nil }.each do |id, to|
+            AwsSesProjectMailSetting.create!(project: Project.generate!(identifier: id), receive: true)
 
-          assert_nil target("#{'a' * 65}@#{DOMAIN}")
-          assert_nil target("postmaster@#{DOMAIN}")
+            assert_equal [to], [target("#{id}@#{DOMAIN}")], id
+          end
         end
       end
 

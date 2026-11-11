@@ -40,8 +40,11 @@ ja:
   label_aws_ses_mail_reason_virus: 未取得 (ウイルス)
   label_aws_ses_mail_reason_spam: 未取得 (スパム)
   label_aws_ses_mail_reason_dmarc: 未取得 (DMARC 未通過)
+  label_aws_ses_mail_reason_forwarder_spf: 未取得 (転送元の SPF 未通過)
+  label_aws_ses_mail_reason_forwarded_author: 未取得 (転送メールの作成者なし)
   label_aws_ses_mail_reason_auto_reply: 未取得 (自動返信)
   label_aws_ses_mail_reason_no_project: 未取得 (プロジェクトなし)
+  label_aws_ses_mail_reason_too_large: 未取得 (サイズ超過)
   label_aws_ses_mail_reason_import_error: 取得エラー
   label_aws_ses_mail_settings: 受信設定
   label_aws_ses_mail_global_drop: 取得しない
@@ -79,3 +82,17 @@ ja:
   label_aws_ses_mail_verdict_dmarc_fail: DMARC 失敗
   label_aws_ses_mail_verdict_dmarc_gray: DMARC ポリシーなし
   label_aws_ses_mail_verdict_dmarc_processing_failed: DMARC 判定失敗
+  label_aws_ses_mail_updated: "更新: %{time}"
+  button_aws_ses_mail_refresh: 最新の情報に更新
+  text_aws_ses_mail_role_addresses: "ロールアドレスをプロジェクトのアドレスとして使用しています: %{addresses}。届くメールをチケットにしてよいか確認してください。"
+  text_aws_ses_mail_default_address_taken: "デフォルトアドレスと同じプロジェクトのアドレスがあります: %{addresses}。届くメールはデフォルトアドレスのメールとして処理します。"
+  label_aws_ses_mail_forwarders: 転送元
+  text_aws_ses_mail_forwarders_info: このプロジェクトにメールを転送するアドレスまたはドメイン。SPF に合格すれば、DMARC 未通過のメールも取得します。
+  label_aws_ses_mail_import_forwarded: メンバーが転送したメールを元のメールとして取得
+  text_aws_ses_mail_forwarded: "%{sender} からのメールを転送しました。"
+  label_aws_ses_mail_forwarded: 転送メール
+  label_aws_ses_mail_forwarded_author: 転送メールの作成者
+  label_aws_ses_mail_forwarded_author_external: プロジェクト外の送信者
+  label_aws_ses_mail_forwarded_author_registered: 登録済みのユーザー
+  label_aws_ses_mail_forwarded_author_forwarder: 元の差出人にしない
+  text_aws_ses_mail_emission_address: "送信元メールアドレス (%{address}) がデフォルトアドレスと異なります。そこに届くメール (通知への返信など) は、デフォルトアドレスのメールとして処理します。"

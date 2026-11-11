@@ -12,7 +12,7 @@ module RedmineAws
       def initialize(settings: RedmineAws::SES.settings, domain: RedmineAws::SES.domain)
         @settings = settings
         @domain = domain
-        @global = RedmineAws::SES.global_local_part
+        @globals = RedmineAws::SES.global_local_parts
       end
 
       # The first recipient on Redmine's domain that names a project that
@@ -36,7 +36,7 @@ module RedmineAws
 
       def target_for(local)
         base, sub = local.split('+', 2)
-        if base == @global
+        if @globals.include?(base)
           global_target(sub)
         elsif RedmineAws::SES.per_project_addresses?
           setting = AwsSesProjectMailSetting.receiving_for(base)

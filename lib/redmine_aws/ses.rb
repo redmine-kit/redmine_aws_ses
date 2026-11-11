@@ -45,6 +45,22 @@ module RedmineAws
         domain && "#{global_local_part}@#{domain}"
       end
 
+      # The part before @ of the emission address (Setting.mail_from), to
+      # which replies to notifications are sent.
+      def emission_local_part
+        Mail::Address.new(Setting.mail_from.to_s).local.to_s.downcase.presence
+      rescue Mail::Field::ParseError
+        nil
+      end
+
+      # The addresses that take email for the whole Redmine (Routing): the
+      # default address, and the emission address when it differs, so that
+      # replies to notifications are fetched as email to the default
+      # address.
+      def global_local_parts
+        [global_local_part, emission_local_part].compact.uniq
+      end
+
       # The bucket where SES stores received email (inbound/, processed/).
       def mail_bucket
         ENV.fetch('REDMINE_MAIL_BUCKET', '').presence

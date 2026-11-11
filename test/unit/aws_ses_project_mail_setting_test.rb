@@ -14,18 +14,30 @@ module RedmineAws
         end
       end
 
-      # An identifier that does not fit before @, a role address or the default
-      # address is no project's address.
+      # Only an identifier that does not fit before @ is no project's address.
       def test_identifiers_that_cannot_be_an_address
         with_ses_settings do
           assert_nil AwsSesProjectMailSetting.address_for(Project.generate!(identifier: 'a' * 65))
           assert_equal "#{'a' * 64}@#{DOMAIN}",
                        AwsSesProjectMailSetting.address_for(Project.generate!(identifier: 'a' * 64))
-          assert_nil AwsSesProjectMailSetting.address_for(Project.generate!(identifier: 'postmaster'))
-          assert_nil AwsSesProjectMailSetting.address_for(Project.generate!(identifier: 'noreply'))
         end
+      end
+
+      # Role addresses and the default address are addresses, which the
+      # "Email receiving" tab warns about.
+      # identifier => [role address?, default address?], with the default
+      # address helpdesk@.
+      ADDRESS_KINDS = { 'postmaster' => [true, false], 'support' => [true, false], 'helpdesk' => [false, true],
+                        'noreply' => [true, false], 'kitchen' => [false, false] }.freeze
+
+      def test_role_addresses_and_the_default_address
         with_ses_settings('global_local_part' => 'helpdesk') do
-          assert_nil AwsSesProjectMailSetting.address_for(Project.generate!(identifier: 'helpdesk'))
+          ADDRESS_KINDS.each do |identifier, expected|
+            setting = AwsSesProjectMailSetting.new(project: Project.generate!(identifier: identifier))
+
+            assert_equal "#{identifier}@#{DOMAIN}", setting.address
+            assert_equal expected, [setting.role_address?, setting.default_address?], identifier
+          end
         end
       end
 
@@ -63,26 +75,29 @@ module RedmineAws
 
       # "create" makes Redmine create users, which only administrators do.
       def test_only_administrators_choose_to_create_users
-        admin = User.find(1)
-        manager = User.find(2)
         setting = AwsSesProjectMailSetting.new(project: Project.find(1))
-        setting.send(:safe_attributes=, { 'unknown_user' => 'create' }, manager)
 
-        assert_not setting.valid?
-        assert_equal %w[ignore accept], setting.unknown_user_values(manager)
-        setting.send(:safe_attributes=, { 'unknown_user' => 'create' }, admin)
+        assert_not set_values(setting, User.find(2), 'unknown_user' => 'create').valid?
+        assert_equal %w[ignore accept], setting.unknown_user_values(User.find(2))
+        assert set_values(setting, User.find(1), 'unknown_user' => 'create').save
+      end
 
-        assert setting.save
+      def test_a_value_an_administrator_chose_stays
+        setting = set_values(AwsSesProjectMailSetting.new(project: Project.find(1)), User.find(1),
+                             'unknown_user' => 'create')
+        setting.save!
+        manager = User.find(2)
+
         assert_equal %w[ignore accept create], setting.reload.unknown_user_values(manager)
-        setting.send(:safe_attributes=, { 'receive' => '1' }, manager)
+        assert set_values(setting, manager, 'receive' => '1').save
+      end
 
-        assert setting.save, 'a value an administrator chose stays'
-        setting.send(:safe_attributes=, { 'unknown_user' => 'accept' }, manager)
+      def test_a_member_cannot_choose_create_again
+        setting = AwsSesProjectMailSetting.create!(project: Project.find(1), unknown_user: 'create')
+        manager = User.find(2)
 
-        assert setting.save
-        setting.send(:safe_attributes=, { 'unknown_user' => 'create' }, manager)
-
-        assert_not setting.save
+        assert set_values(setting, manager, 'unknown_user' => 'accept').save
+        assert_not set_values(setting, manager, 'unknown_user' => 'create').save
       end
 
       def test_deleting_the_project_deletes_its_settings
@@ -91,6 +106,13 @@ module RedmineAws
         project.reload.destroy
 
         assert_not AwsSesProjectMailSetting.exists?(project_id: project.id)
+      end
+
+      private
+
+      def set_values(setting, user, values)
+        setting.send(:safe_attributes=, values, user)
+        setting
       end
     end
   end

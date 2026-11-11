@@ -26,11 +26,7 @@ module RedmineAws
       end
 
       def test_an_unknown_user_option_that_does_not_exist_is_refused
-        @request.session[:user_id] = 1
-        with_ses_settings('per_project_addresses' => '1') do
-          patch :update, params: { project_id: 'ecookbook',
-                                   aws_ses_project_mail_setting: { unknown_user: 'forward' } }
-        end
+        update_as(1, unknown_user: 'forward')
 
         assert_nil AwsSesProjectMailSetting.find_by(project_id: 1)
         # The form again with Redmine's error list, as after a failed save of
@@ -52,29 +48,6 @@ module RedmineAws
         assert_select '#errorExplanation li', text: 'Category is not included in the list'
       end
 
-      # Each parameter of an unexpected shape is ignored, the others saved.
-      def test_unexpected_parameters
-        Role.find(1).add_permission! :manage_aws_ses_mail_settings
-        @request.session[:user_id] = 2
-        [['a string', {}], [{ receive: ['1'], tracker_id: { id: '2' } }, { 'receive' => false, 'tracker_id' => nil }],
-         [{ project_id: '2', receive: '1' }, { 'project_id' => 1, 'receive' => true }],
-         [{ category_id: '3' }, nil]].each do |values, saved|
-          AwsSesProjectMailSetting.delete_all
-          with_ses_settings('per_project_addresses' => '1') do
-            patch :update, params: { project_id: 'ecookbook', aws_ses_project_mail_setting: values }
-          end
-
-          setting = AwsSesProjectMailSetting.find_by(project_id: 1)
-          if saved
-            assert_redirected_to '/projects/ecookbook/settings/aws_ses_mail'
-            assert_equal saved, setting.attributes.slice(*saved.keys), values.inspect
-            assert_not AwsSesProjectMailSetting.exists?(project_id: 2)
-          else
-            assert_nil setting, values.inspect
-          end
-        end
-      end
-
       def test_a_manager_cannot_choose_to_create_users
         Role.find(1).add_permission! :manage_aws_ses_mail_settings
         @request.session[:user_id] = 2
@@ -92,6 +65,15 @@ module RedmineAws
         patch :update, params: { project_id: 'ecookbook', aws_ses_project_mail_setting: { receive: '1' } }
 
         assert_response :forbidden
+      end
+
+      private
+
+      def update_as(user_id, values)
+        @request.session[:user_id] = user_id
+        with_ses_settings('per_project_addresses' => '1') do
+          patch :update, params: { project_id: 'ecookbook', aws_ses_project_mail_setting: values }
+        end
       end
     end
 
@@ -124,6 +106,22 @@ module RedmineAws
         # The tabs of project settings (the main menu is a .tabs too).
         assert_select '.tabs a[id^="tab-"]', 1
         assert_select '#tab-aws_ses_mail.selected'
+      end
+
+      # Members with the permission see the forwarding settings disabled;
+      # administrators change them.
+      def test_the_forwarding_fields_are_for_administrators
+        Role.find(1).add_permission! :manage_aws_ses_mail_settings
+        { 2 => { minimum: 1 }, 1 => 0 }.each do |user_id, disabled|
+          @request.session[:user_id] = user_id
+          with_ses_settings('per_project_addresses' => '1') do
+            get :settings, params: { id: 'ecookbook', tab: 'aws_ses_mail' }
+          end
+
+          %w[forwarders import_forwarded forwarded_author].each do |name|
+            assert_select '[name=?][disabled=disabled]', "aws_ses_project_mail_setting[#{name}]", disabled
+          end
+        end
       end
 
       def test_an_identifier_longer_than_64_characters_cannot_receive

@@ -96,9 +96,20 @@ The rake task `redmine_aws_ses:receive_mail` imports one received message, so so
 | --- | --- |
 | `MESSAGE_ID` | `mail.messageId` |
 | `SES_RECIPIENTS` | `receipt.recipients`, comma-separated |
+| `SES_MAIL_FROM` | `mail.source`, the envelope sender (for registered forwarders; optional) ([receiving.md](receiving.md#forwarded-email)) |
 | `SES_SPAM_VERDICT`<br>`SES_VIRUS_VERDICT`<br>`SES_DMARC_VERDICT`<br>`SES_SPF_VERDICT`<br>`SES_DKIM_VERDICT`<br>`SES_DMARC_POLICY` | The verdicts |
 
 A message is imported only if its virus verdict is `PASS`, and its spam and DMARC verdicts are `PASS` unless the receiving settings import them. The verdicts and recipients come from the event, never from the message's headers ([receiving.md](receiving.md#spoofing-and-spam)).
+
+<a id="refreshing-the-ses-state"></a>
+
+### Refreshing the SES state
+
+The "Email sending" and "Email receiving" tabs show the state of SES (the account, the domain's identity, the suppression list) and the domain's MX record as this task last read it, and never call SES or DNS while a page opens ([admin.md](admin.md)). Run it on a schedule, for example once an hour; the tabs' "Refresh" link runs the same reading. It fails when a section could not be read (the log has the error).
+
+```sh
+bin/rake redmine_aws_ses:refresh
+```
 
 ### Keeping records
 
@@ -162,4 +173,7 @@ bin/services --down # stops PostgreSQL, moto and LocalStack
 
 - Whether SES v2 `SendEmail` with the full message needs `ses:SendRawEmail`
 - The service name of the interface endpoint for the SES API
+- Which identity SES's SPF verdict checks (RFC 7208 checks the MAIL FROM identity, and the HELO identity when MAIL FROM is empty); SES's documentation does not say. Registered forwarders rely on it being MAIL FROM
+- Which envelope sender Google Workspace's recipient address maps and Gmail's forwarding give a forwarded message (Google's documentation does not say), and so whether a registered forwarder matches
+- The exact lines of forwarded blocks in the Japanese interfaces of Gmail (「転送されたメッセージ」) and Outlook (「差出人:」「送信日時:」「宛先:」「件名:」): not documented, and not checked against forwards from those products yet
 - The open questions of the mail design in [Serverless mail.md](https://redmine-kit.github.io/serverless/mail.html#to-verify)

@@ -3,19 +3,22 @@
   <%# Redmine's toggle of the list's checkboxes (the check box in the header row) %>
   <%= javascript_include_tag 'context_menu' %>
 <% end %>
+<%= render partial: 'aws_ses_mail_sending/updated', locals: { snapshot: @snapshot, tab: 'mail_receiving' } %>
 
 <h3><%= l(:label_aws_ses_mail_addresses) %></h3>
 
 <% if @domain.nil? %>
 <p class="warning"><%= l(:text_aws_ses_mail_no_domain) %></p>
 <% else %>
-<div class="box tabular settings">
-  <p><label><%= l(:label_aws_ses_mail_domain) %></label><%= @domain %></p>
-  <p><label><%= l(:label_aws_ses_mail_global_address) %></label><%= RedmineAws::SES.global_address %></p>
-  <p><label>MX</label><%= @mx.nil? ? l(:text_aws_ses_mail_mx_unknown) : (@mx.empty? ? l(:label_none) : @mx.join(', ')) %></p>
-</div>
+<%= render partial: 'aws_admin/values', locals: { rows: aws_ses_mail_address_rows(@domain, @snapshot) } %>
+<% if RedmineAws::SES.global_local_parts.size > 1 %>
+<p class="warning"><%= l(:text_aws_ses_mail_emission_address, address: "#{RedmineAws::SES.emission_local_part}@#{@domain}") %></p>
+<% end %>
 
 <% if RedmineAws::SES.per_project_addresses? && @project_settings.any? %>
+<% aws_ses_mail_address_warnings(@project_settings).each do |warning| %>
+<p class="warning"><%= warning %></p>
+<% end %>
 <div class="autoscroll">
 <table class="list addresses"><thead>
 <tr>

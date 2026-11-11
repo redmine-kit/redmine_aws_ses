@@ -1,4 +1,7 @@
 <%= render partial: 'aws_admin/tabs', locals: { selected: 'mail_sending' } %>
+<%= render partial: 'aws_ses_mail_sending/updated', locals: { snapshot: @snapshot, tab: 'mail_sending' } %>
+<% account = @snapshot&.section(:account) %>
+<% identity = @snapshot&.section(:identity) %>
 
 <h3><%= l(:label_aws_ses_mail_account) %></h3>
 
@@ -9,38 +12,32 @@
   <% end %>
 </p>
 
-<% if @account_error %>
-<div class="flash error"><%= @account_error %></div>
+<% if @snapshot&.error(:account) %>
+<div class="flash error"><%= l(:text_aws_ses_mail_api_error, error: @snapshot.error(:account)) %></div>
+<% elsif account.nil? %>
+<p class="nodata"><%= l(:label_no_data) %></p>
 <% else %>
-<div class="box tabular settings">
-  <p><label><%= l(:label_aws_ses_mail_enforcement_status) %></label><%= aws_ses_mail_value(:enforcement_status, @account[:enforcement_status]) %></p>
-  <p><label><%= l(:label_aws_ses_mail_sending_enabled) %></label><%= l(@account[:sending_enabled] ? :label_aws_ses_mail_sending_status_enabled : :label_aws_ses_mail_sending_status_paused) %></p>
-  <p><label><%= l(:label_aws_ses_mail_production_access) %></label><%= format_object(@account[:production_access]) %></p>
-  <p><label><%= l(:label_aws_ses_mail_quota) %></label><%= number_with_delimiter(@account[:max_24_hour_send].to_i) %></p>
-  <p><label><%= l(:label_aws_ses_mail_sent_last_24_hours) %></label><%= number_with_delimiter(@account[:sent_last_24_hours].to_i) %></p>
-  <p><label><%= l(:label_aws_ses_mail_rate) %></label><%= l(:text_aws_ses_mail_rate_value, count: number_with_delimiter(@account[:max_send_rate].to_f.round(2).to_s.sub(/\.0\z/, ''))) %></p>
-</div>
+<%= render partial: 'aws_admin/values', locals: { rows: aws_ses_mail_account_rows(account) } %>
 <% end %>
 
 <h3><%= l(:label_aws_ses_mail_domain) %></h3>
 
 <% if @domain.nil? %>
 <p class="warning"><%= l(:text_aws_ses_mail_no_domain) %></p>
-<% elsif @identity_error %>
-<div class="flash error"><%= @identity_error %></div>
+<% elsif @snapshot&.error(:identity) %>
+<div class="flash error"><%= l(:text_aws_ses_mail_api_error, error: @snapshot.error(:identity)) %></div>
+<% elsif identity.nil? %>
+<p class="nodata"><%= l(:label_no_data) %></p>
 <% else %>
-<div class="box tabular settings">
-  <p><label><%= l(:label_aws_ses_mail_domain) %></label><%= @domain %></p>
-  <p><label><%= l(:label_aws_ses_mail_verified) %></label><%= format_object(@identity[:verified]) %></p>
-  <p><label>DKIM</label><%= aws_ses_mail_value(:dkim_status, @identity[:dkim_status]) %></p>
-</div>
+<%= render partial: 'aws_admin/values', locals: { rows: aws_ses_mail_identity_rows(@domain, identity) } %>
 <% end %>
 
 <h3><%= l(:label_aws_ses_mail_suppressed) %></h3>
 
-<% if @suppressed_error %>
-<div class="flash error"><%= @suppressed_error %></div>
-<% elsif @suppressed.any? %>
+<% suppressed = @snapshot&.suppressed.to_a %>
+<% if @snapshot&.error(:suppressed) %>
+<div class="flash error"><%= l(:text_aws_ses_mail_api_error, error: @snapshot.error(:suppressed)) %></div>
+<% elsif suppressed.any? %>
 <div class="autoscroll">
 <table class="list suppressed"><thead>
 <tr>
@@ -51,7 +48,7 @@
     <th></th>
 </tr></thead>
 <tbody>
-<% @suppressed.each do |destination| %>
+<% suppressed.each do |destination| %>
 <tr>
     <td class="name"><%= destination[:address] %></td>
     <td class="name"><%= destination[:user] %></td>

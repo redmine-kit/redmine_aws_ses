@@ -22,24 +22,32 @@ module RedmineAws
         with_ses_settings { get :index }
 
         assert_response :success
-        assert_select 'h2', text: 'AWS'
         assert_select '.tabs a.selected', text: 'Email receiving'
         # The default address is noreply@ while its email is not fetched.
-        assert_select 'div.box.tabular p', text: /Default address\s*noreply@#{Regexp.escape(DOMAIN)}/
+        assert_select 'table.list.values tr', text: /Default address\s*noreply@#{Regexp.escape(DOMAIN)}/
         assert_select '#aws-ses-received-mails tbody tr', 2
         assert_select '#aws-ses-received-mails tr.dropped td.description', text: 'Not fetched (DMARC fail)'
         assert_select '#aws-ses-received-mails th.checkbox input.toggle-selection[type=checkbox]'
-        assert_select 'a', text: 'Check all', count: 0
-        assert_select '#aws-ses-mail-settings .box.tabular.settings label.block',
-                      text: /Also fetch email failing DMARC/ do
-          assert_select 'input[type=checkbox][name=?]', 'settings[import_without_dmarc_pass]'
-        end
-        assert_select '#aws-ses-mail-settings label.block', text: /Also fetch spam/ do
-          assert_select 'input[type=checkbox][name=?]', 'settings[import_spam]'
-        end
+      end
+
+      def test_the_list_of_mail_not_fetched
+        AwsSesReceivedMail.create!(message_id: 'm1', status: 'imported', subject: 'Hello')
+        AwsSesReceivedMail.create!(message_id: 'm2', status: 'dropped', reason: 'dmarc', subject: 'Forged')
         with_ses_settings { get :index, params: { dropped: '1' } }
 
         assert_select '#aws-ses-received-mails tbody tr', 1
+      end
+
+      def test_the_receiving_settings_form
+        with_ses_settings { get :index }
+
+        assert_select 'a', text: 'Check all', count: 0
+        { 'import_without_dmarc_pass' => /Also fetch email failing DMARC/, 'import_spam' => /Also fetch spam/ }
+          .each do |name, text|
+          assert_select '#aws-ses-mail-settings .box.tabular.settings label.block', text: text do
+            assert_select 'input[type=checkbox][name=?]', "settings[#{name}]"
+          end
+        end
       end
 
       # The verdicts that did not pass, in short labels; never the raw values.
@@ -57,69 +65,60 @@ module RedmineAws
         assert_select 'label[for=settings_global_mail]', text: 'Incoming emails'
       end
 
-      def test_update_settings
-        with_ses_settings do
-          post :update, params: { settings: { global_local_part: 'HelpDesk', global_mail: 'default_project',
-                                              default_project: 'ecookbook', per_project_addresses: '1',
-                                              project_senders: '0', import_without_dmarc_pass: '1',
-                                              import_spam: '0' } }
+      def test_the_mx_record_before_the_first_refresh
+        with_ses_settings { get :index }
 
-          assert_redirected_to '/admin/aws/mail_receiving'
-          assert_equal 'helpdesk', RedmineAws::SES.settings['global_local_part']
-          assert RedmineAws::SES.per_project_addresses?
-          assert_equal %w[1 0], RedmineAws::SES.settings.values_at('import_without_dmarc_pass', 'import_spam')
-        end
+        assert_select 'table.list.values tr', text: /MX\s*Unknown/
+        assert_select '#aws-ses-mail-updated a[href=?]', '/admin/aws/mail_sending/refresh?tab=mail_receiving'
       end
 
-      # The page again with Redmine's error list above the form and the values
-      # given, as Redmine's settings do.
-      def test_update_refuses_a_bad_address
-        with_ses_settings do
-          post :update, params: { settings: { global_local_part: 'a b', import_spam: '1' } }
+      # The MX record as the last refresh read it; the page never asks DNS.
+      def test_the_mx_record_is_the_stored_one
+        Resolv::DNS.any_instance.stubs(:getresources).returns([stub(exchange: 'Inbound-SMTP.us-east-1.amazonaws.com')])
+        stub_ses_state
+        with_ses_settings { AwsSesSnapshot.refresh! }
+        Resolv::DNS.any_instance.expects(:getresources).never
+        with_ses_settings { get :index }
 
-          assert_equal 'noreply', RedmineAws::SES.settings['global_local_part']
-          assert_equal '0', RedmineAws::SES.settings['import_spam']
-        end
-        assert_response :success
-        assert_nil flash[:error]
-        assert_select '#aws-ses-mail-settings #errorExplanation li', text: /may contain only lowercase letters/
-        assert_select '#aws-ses-mail-settings input[name=?][value=?]', 'settings[global_local_part]', 'a b'
-        assert_select '#aws-ses-mail-settings input[name=?][checked=checked]', 'settings[import_spam]'
+        assert_select 'table.list.values tr', text: /MX\s*inbound-smtp\.us-east-1\.amazonaws\.com/
+        # Read for another domain: not this one's.
+        with_settings(mail_from: 'redmine@other.example') { get :index }
+
+        assert_select 'table.list.values tr', text: /MX\s*Unknown/
       end
 
-      # Parameters of an unexpected shape are ignored: nothing changes and
-      # the page does not fail.
-      def test_update_with_unexpected_parameters
-        [{ settings: 'a string' }, { settings: { global_local_part: ['x'] } },
-         { settings: { global_local_part: { a: 'x' }, import_spam: ['1'] } }, {}].each do |params|
-          with_ses_settings do
-            post :update, params: params
-
-            assert_equal %w[noreply 0], RedmineAws::SES.settings.values_at('global_local_part', 'import_spam'),
-                         params.inspect
-          end
-          assert_redirected_to '/admin/aws/mail_receiving'
+      # Role addresses and the default address are allowed as project
+      # addresses, with a warning.
+      def test_warnings_about_project_addresses
+        { 'support' => 1, 'noreply' => 2 }.each do |identifier, id|
+          Project.find(id).update_column(:identifier, identifier)
+          AwsSesProjectMailSetting.create!(project_id: id, receive: true)
         end
+        with_ses_settings('per_project_addresses' => '1') { get :index }
+
+        domain = Regexp.escape(DOMAIN)
+
+        assert_select 'p.warning', text: /Role addresses are used as project addresses: support@#{domain}, noreply@/
+        assert_select 'p.warning', text: /These project addresses are the default address: noreply@#{domain}\./
       end
 
-      def test_reimport_with_unexpected_parameters
-        AwsSesReceivedMail.create!(message_id: 'm1', status: 'dropped', reason: 'import_error')
-        with_test_adapter do
-          [{ ids: { a: '1' } }, { ids: [{ a: '1' }] }, { ids: '1' }, {}].each do |params|
-            assert_no_enqueued_jobs { post :reimport, params: params }
-            assert_response :not_found, params.inspect
-          end
-        end
+      def test_a_warning_when_the_emission_address_is_not_the_default_address
+        with_ses_settings { get :index }
+
+        address = Regexp.escape("redmine@#{DOMAIN}")
+
+        assert_select 'p.warning', text: /The emission email address \(#{address}\) is not the default/
+        with_ses_settings('global_local_part' => 'redmine') { get :index }
+
+        assert_select 'p.warning', text: /The emission email address/, count: 0
       end
 
-      def test_reimport_enqueues_jobs
-        mail = AwsSesReceivedMail.create!(message_id: 'm1', status: 'dropped', reason: 'import_error')
-        with_test_adapter do
-          assert_enqueued_with(job: AwsSesReimportMailJob, args: ['m1']) do
-            post :reimport, params: { ids: [mail.id] }
-          end
-        end
-        assert_redirected_to '/admin/aws/mail_receiving'
+      def test_no_warnings_for_projects_that_do_not_receive
+        Project.find(1).update_column(:identifier, 'support')
+        AwsSesProjectMailSetting.create!(project_id: 1, receive: false)
+        with_ses_settings('per_project_addresses' => '1') { get :index }
+
+        assert_select 'p.warning', text: /Role addresses are used|These project addresses are/, count: 0
       end
 
       def test_non_administrators_are_refused

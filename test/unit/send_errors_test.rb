@@ -77,15 +77,10 @@ module RedmineAws
         rejected = { status_code: 400, headers: { 'x-amzn-ErrorType' => 'MessageRejected' },
                      body: { message: 'Email address is not verified. The following identities failed the check ' \
                                       'in region US-EAST-1: jsmith@somenet.foo' }.to_json }
-        io = StringIO.new
-        saved = Rails.logger
-        Rails.logger = Logger.new(io)
-        deliver(rejected)
+        log = capture_log { deliver(rejected) }
 
-        assert_match(/dropped email \S+ \(Mailer#test_email\): MessageRejected$/, io.string)
-        assert_not_includes io.string, 'somenet.foo'
-      ensure
-        Rails.logger = saved
+        assert_match(/dropped email \S+ \(Mailer#test_email\): MessageRejected$/, log)
+        assert_not_includes log, 'somenet.foo'
       end
 
       def test_waits_fit_in_sqs_delay

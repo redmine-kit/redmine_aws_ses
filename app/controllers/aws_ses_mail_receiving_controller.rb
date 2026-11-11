@@ -1,24 +1,19 @@
 # frozen_string_literal: true
 
-require 'resolv'
-
 # The "Receiving email" tab (docs/admin.md#receiving-email): addresses, the MX
-# record, received email, re-importing and the receiving settings.
+# record (as the last refresh stored it, AwsSesSnapshot), received email,
+# re-importing and the receiving settings.
 class AwsSesMailReceivingController < ApplicationController
   include RedmineAws::AdminTab
 
   helper :aws_ses_mail
 
-  MX_TIMEOUT = 2
-
   def index
     @settings ||= RedmineAws::SES.settings
     @domain = RedmineAws::SES.domain
-    @mx = mx_records if @domain
+    @snapshot = AwsSesSnapshot.latest
     @project_settings = AwsSesProjectMailSetting.includes(:project).order(:id).to_a
-    scope = AwsSesReceivedMail.includes(:project).order(created_at: :desc)
-    scope = scope.where(status: 'dropped') if params[:dropped] == '1'
-    @received = scope.limit(100).to_a
+    @received = received_mails
   end
 
   # On an error, the page again with the values given and the error above
@@ -38,8 +33,7 @@ class AwsSesMailReceivingController < ApplicationController
   end
 
   def reimport
-    ids = params.slice(:ids).permit(ids: [])[:ids]
-    mails = AwsSesReceivedMail.where(id: Array(ids).map(&:to_i)).to_a
+    mails = selected_mails
     return render_404 if mails.empty?
 
     mails.each { |mail| AwsSesReimportMailJob.perform_later(mail.message_id) }
@@ -50,6 +44,20 @@ class AwsSesMailReceivingController < ApplicationController
 
   private
 
+  # The records of the ids[] of the form; anything else in ids finds
+  # nothing.
+  def selected_mails
+    ids = params.slice(:ids).permit(ids: [])[:ids]
+    AwsSesReceivedMail.where(id: Array(ids).map(&:to_i)).to_a
+  end
+
+  # The latest 100, or those not fetched.
+  def received_mails
+    scope = AwsSesReceivedMail.includes(:project).order(created_at: :desc)
+    scope = scope.where(status: 'dropped') if params[:dropped] == '1'
+    AwsSesReceivedMail.preload_issue_ids(scope.limit(100).to_a)
+  end
+
   # The plugin's settings, each a single value; a parameter of another shape
   # is ignored.
   def setting_params
@@ -57,20 +65,6 @@ class AwsSesMailReceivingController < ApplicationController
     values = values.is_a?(ActionController::Parameters) ? values.permit(*RedmineAws::SES::DEFAULTS.keys).to_h : {}
     values['global_local_part'] = values['global_local_part'].to_s.strip.downcase if values.key?('global_local_part')
     values
-  end
-
-  # The MX hosts of Redmine's domain, from DNS; nil when they cannot be read
-  # (Resolv raises several classes: resolver errors, timeouts, socket errors),
-  # which the page shows as "Unknown".
-  def mx_records
-    Rails.cache.fetch(['redmine_aws_ses', 'mx', @domain], expires_in: 60) do
-      Resolv::DNS.open do |dns|
-        dns.timeouts = MX_TIMEOUT
-        dns.getresources(@domain, Resolv::DNS::Resource::IN::MX).map { |mx| mx.exchange.to_s.downcase }.sort
-      end
-    end
-  rescue StandardError
-    nil
   end
 
   def audit(what)

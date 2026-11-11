@@ -3,126 +3,136 @@
 module RedmineAws
   module SES
     # Imports one message that SES stored in the mail bucket
-    # (rake redmine_aws_ses:receive_mail; Serverless docs/mail.md#importing):
-    # checks the verdicts of the SES event, chooses the project from the
-    # event's recipients, reads the message from inbound/ (or processed/ for a
-    # re-import), passes it to Redmine's MailHandler, and moves it to
-    # processed/. Each run leaves a record (AwsSesReceivedMail), which keeps
-    # the event's verdicts and recipients for re-imports.
+    # (rake redmine_aws_ses:receive_mail; docs/receiving.md#importing): reads
+    # the message from inbound/ (or processed/ for a re-import), imports it as
+    # Admission decides (Import), and moves it to processed/. Each run leaves
+    # a record (AwsSesReceivedMail), which keeps the event's verdicts,
+    # recipients and envelope sender for re-imports.
     class Receiver
-      INBOUND = 'inbound/'
-      PROCESSED = 'processed/'
       MESSAGE_ID = /\A[A-Za-z0-9._-]{1,128}\z/
+      # SES's limit for email it delivers to S3: "the default maximum email
+      # size (including headers) is 40 MB" (SES Developer Guide, "Deliver to S3
+      # bucket action", checked 2026-11-12). A larger message is recorded and
+      # not imported.
+      MAX_BYTES = 40 * 1024 * 1024
+      ENVELOPE_FROM = /\A[^@\s]{1,64}@[^@\s]{1,255}\z/
 
-      # recipients and verdicts: from the SES event (Verdicts::FIELDS). Without
-      # them, a re-import uses the ones recorded by the first run.
-      def initialize(message_id, recipients: nil, verdicts: nil, s3_client: Clients.s3,
-                     bucket: RedmineAws::SES.mail_bucket)
+      # event: from the SES event, recipients (receipt.recipients), verdicts
+      # (Verdicts::FIELDS) and envelope_from (mail.source, the MAIL FROM
+      # address). Without them, a re-import uses the ones recorded by the first
+      # run. max_bytes: for the tests.
+      def initialize(message_id, event: {}, s3_client: Clients.s3, bucket: RedmineAws::SES.mail_bucket,
+                     max_bytes: MAX_BYTES)
         raise ArgumentError, "invalid message ID: #{message_id.inspect}" unless MESSAGE_ID.match?(message_id.to_s)
         raise ArgumentError, 'REDMINE_MAIL_BUCKET is not set' unless bucket
 
         @message_id = message_id
-        @recipients = Array(recipients).map { |address| address.to_s.strip.downcase }.compact_blank.presence
-        @verdicts = verdicts.presence
-        @s3 = s3_client
-        @bucket = bucket
+        read_event(event)
+        @bucket = MailBucket.new(client: s3_client, bucket: bucket)
+        @max_bytes = max_bytes
       end
 
       def run
-        key, raw = fetch
-        mail = Mail.new(raw)
-        record = AwsSesReceivedMail.find_or_initialize_by(message_id: @message_id)
-        record.assign_attributes(s3_key: key, mail_from: text(Array(mail.from).first), subject: text(mail.subject),
-                                 received_at: received_at(mail), processed_at: Time.current)
-        record.recipients = @recipients.join(', ') if @recipients
-        record.verdicts = @verdicts if @verdicts
-        import(raw, mail, record, key)
-        record.save!
+        record = import(:full)
+        if record.status == 'imported'
+          key = @bucket.move_to_processed(record.s3_key, @message_id)
+          record.update_column(:s3_key, key) unless key == record.s3_key
+        end
         record
       end
 
       private
 
-      # A header for the record. Anyone can send to the domain, and a header
-      # in raw 8-bit text (Shift_JIS without MIME encoding) is not UTF-8, which
-      # the database refuses; invalid bytes are replaced as Redmine does.
-      def text(value)
-        Redmine::CodesetUtil.replace_invalid_utf8(value.to_s).first(255)
+      # A run in a mode of Import (:full, then :own for a refused forward, then
+      # :refused): each in a transaction of its own, as nothing is rolled back
+      # to a savepoint.
+      def import(mode)
+        serialized { |locked| receive(locked, mode) }
+      rescue Import::Refused => e
+        import(e.forward ? :own : :refused)
       end
 
-      # The Date header when it is a date, otherwise the time of the import.
-      def received_at(mail)
-        date = mail.date
-        date.is_a?(DateTime) ? date : Time.current
+      def read_event(event)
+        @recipients = Array(event[:recipients]).map { |address| address.to_s.strip.downcase }.compact_blank.presence
+        @verdicts = event[:verdicts].presence
+        envelope_from = event[:envelope_from].to_s.strip.downcase
+        @envelope_from = envelope_from if ENVELOPE_FROM.match?(envelope_from)
       end
 
-      # Tries the key recorded by an earlier run first. Without s3:ListBucket,
-      # S3 answers a missing key with AccessDenied instead of NoSuchKey.
-      def fetch
-        error = nil
-        prefixes.each do |prefix|
-          key = prefix + @message_id
-          # As bytes, as MailHandler.receive reads it (raw_mail.b): the body is
-          # tagged UTF-8, and 8-bit text in it is not.
-          return [key, @s3.get_object(bucket: @bucket, key: key).body.read.b]
-        rescue ::Aws::S3::Errors::NoSuchKey, ::Aws::S3::Errors::AccessDenied => e
-          error = e
-        end
-        raise ArgumentError, "no message #{@message_id} in #{@bucket} (#{error.class.name.demodulize})"
-      end
-
-      def prefixes
-        recorded = AwsSesReceivedMail.find_by(message_id: @message_id)&.s3_key.to_s
-        recorded.start_with?(PROCESSED) ? [PROCESSED, INBOUND] : [INBOUND, PROCESSED]
-      end
-
-      def import(raw, mail, record, key)
-        reason = Verdicts.reason(record.verdicts) || (auto_reply?(mail) && 'auto_reply')
-        return drop(record, reason) if reason
-
-        target = Routing.new.target(record.recipient_list)
-        return drop(record, 'no_project') unless target
-
-        record.project = target.project
-        result = MailHandler.safe_receive(raw, options(target))
-        return drop(record, 'import_error') unless result
-
-        record.status = 'imported'
-        record.reason = nil
-        record.target_type = result.class.name
-        record.target_id = result.id
-        move_to_processed(key)
-        record.s3_key = PROCESSED + @message_id
-      end
-
-      def drop(record, reason)
-        record.status = 'dropped'
-        record.reason = reason
-        Rails.logger.info "[redmine_aws_ses] dropped #{@message_id}: #{reason}"
-      end
-
-      def auto_reply?(mail)
-        MailHandler.ignored_emails_headers.any? do |name, ignored|
-          value = mail.header[name]&.to_s&.downcase
-          value && (ignored.is_a?(Regexp) ? ignored.match?(value) : value == ignored)
+      # The record of the message, locked in a transaction (SELECT ... FOR
+      # UPDATE), so that runs for the same message (SES's retry, a re-import)
+      # run one after the other and one mail never creates two issues. Two
+      # first runs meet at the unique index of message_id: the second fails,
+      # which rolls back what it created, and runs again on the first's record.
+      # A conflict with a concurrent transaction (a serialization failure or
+      # a deadlock) is retried once too. The import itself opens no nested
+      # transaction; requires_new matters only when the caller already has
+      # one (the tests' transactions).
+      def serialized(&)
+        attempts = 0
+        begin
+          AwsSesReceivedMail.transaction(requires_new: true) { locked_record.tap(&) }
+        rescue ActiveRecord::RecordNotUnique, ActiveRecord::RecordInvalid, ActiveRecord::SerializationFailure,
+               ActiveRecord::Deadlocked => e
+          attempts += 1
+          retry if attempts == 1 && retryable?(e)
+          raise
         end
       end
 
-      # MailHandler's options, as rake redmine:email:read builds them. The
-      # project is not overridable, so a Project: keyword cannot change it.
-      def options(target)
-        setting = target.setting
-        issue = { project: target.project.identifier }
-        issue.merge!(setting.issue_defaults) if setting
-        { issue: issue, unknown_user: setting&.unknown_user.presence || 'ignore',
-          no_permission_check: '0', allow_override: '' }
+      def locked_record
+        AwsSesReceivedMail.lock.find_by(message_id: @message_id) || AwsSesReceivedMail.new(message_id: @message_id)
       end
 
-      def move_to_processed(key)
-        return if key.start_with?(PROCESSED)
+      # The other run's record came first (at the unique index, or at the
+      # model's uniqueness check when the other run had committed already),
+      # or the database asks to run the transaction again.
+      def retryable?(error)
+        return error.record.errors.of_kind?(:message_id, :taken) if error.is_a?(ActiveRecord::RecordInvalid)
 
-        @s3.copy_object(bucket: @bucket, copy_source: "#{@bucket}/#{key}", key: PROCESSED + @message_id)
-        @s3.delete_object(bucket: @bucket, key: key)
+        true
+      end
+
+      def receive(record, mode)
+        return skip(record) if record.imported_target?
+
+        key, size = @bucket.locate(@message_id, record.s3_key)
+        remember(record, key)
+        size > @max_bytes ? too_large(record, key) : import_message(record, key, mode)
+        record.save!
+      end
+
+      def import_message(record, key, mode)
+        Import.new(record, *read(record, key), mode: mode, max_bytes: @max_bytes).run
+      end
+
+      # Imported already, and the issue or note it created still exists.
+      def skip(record)
+        Rails.logger.info "[redmine_aws_ses] #{@message_id} is imported already " \
+                          "(#{record.target_type} #{record.target_id})"
+      end
+
+      def remember(record, key)
+        record.s3_key = key
+        record.processed_at = Time.current
+        record.recipients = @recipients.join(', ') if @recipients
+        record.verdicts = @verdicts if @verdicts
+        record.envelope_from = @envelope_from if @envelope_from
+      end
+
+      def read(record, key)
+        raw = @bucket.read(key)
+        mail = Mail.new(raw)
+        record.describe(mail)
+        [raw, mail]
+      end
+
+      # Only the headers are read, for the record.
+      def too_large(record, key)
+        headers = @bucket.read(key, bytes: MailBucket::HEADER_BYTES).split(/\r?\n\r?\n/, 2).first
+        record.describe(Mail.new("#{headers}\r\n\r\n"))
+        record.mark_dropped('too_large')
+        Rails.logger.info "[redmine_aws_ses] dropped #{@message_id}: too_large"
       end
     end
   end

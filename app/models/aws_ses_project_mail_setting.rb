@@ -7,10 +7,16 @@ class AwsSesProjectMailSetting < ApplicationRecord
   include Redmine::SafeAttributes
 
   UNKNOWN_USER = %w[ignore accept create].freeze
-  # Role addresses (RFC 2142 and common ones) that never go to a project, even
-  # when a project has such an identifier.
-  RESERVED = %w[postmaster abuse hostmaster webmaster mailer-daemon root admin administrator noreply no-reply
-                security].freeze
+  # Which original sender of forwarded email may be the issue's author
+  # (RedmineAws::SES::Admission#author): external senders only (not an
+  # administrator, not a member of the project), any registered user, or
+  # never.
+  FORWARDED_AUTHORS = %w[external registered forwarder].freeze
+  # Role addresses (RFC 2142 and common ones). A project may use one (support@
+  # forwarded from another mailbox on purpose, for example); the "Email
+  # receiving" tab warns about it.
+  ROLE_ADDRESSES = %w[postmaster abuse hostmaster webmaster mailer-daemon root admin administrator noreply
+                      no-reply security support].freeze
   LOCAL_PART = /\A[a-z0-9](?:[a-z0-9._-]{0,62}[a-z0-9])?\z/
 
   belongs_to :project
@@ -21,9 +27,13 @@ class AwsSesProjectMailSetting < ApplicationRecord
 
   safe_attributes 'receive', 'tracker_id', 'category_id', 'priority_id', 'assigned_to_id', 'is_private',
                   'unknown_user'
+  # Who may vouch for email, and whose name an issue may carry: only
+  # administrators choose, as only they choose "Create a user".
+  safe_attributes 'forwarders', 'import_forwarded', 'forwarded_author', if: ->(_setting, user) { user.admin? }
 
   validates :unknown_user, inclusion: { in: UNKNOWN_USER }
-  validate :validate_choices, :validate_unknown_user
+  validates :forwarded_author, inclusion: { in: FORWARDED_AUTHORS }
+  validate :validate_choices, :validate_unknown_user, :validate_forwarders
 
   # The setting of the project that receives email at this part before @.
   def self.receiving_for(local)
@@ -39,11 +49,9 @@ class AwsSesProjectMailSetting < ApplicationRecord
     domain && addressable?(project.identifier) ? "#{project.identifier}@#{domain}" : nil
   end
 
-  # An identifier can be an address when it fits before @ (64 characters),
-  # is not a role address and is not the default address.
+  # An identifier can be an address when it fits before @ (64 characters).
   def self.addressable?(identifier)
-    identifier.to_s.length.between?(1, 64) && RESERVED.exclude?(identifier) &&
-      identifier != RedmineAws::SES.global_local_part
+    identifier.to_s.length.between?(1, 64)
   end
 
   # Keeps the user for the validation of unknown_user, as Redmine's
@@ -57,29 +65,64 @@ class AwsSesProjectMailSetting < ApplicationRecord
     self.class.address_for(project)
   end
 
+  # The project's address is a role address (ROLE_ADDRESSES).
+  def role_address?
+    ROLE_ADDRESSES.include?(project.identifier)
+  end
+
+  # The project's address is the default address or the emission address,
+  # which take the email sent to them (RedmineAws::SES::Routing).
+  def default_address?
+    RedmineAws::SES.global_local_parts.include?(project.identifier)
+  end
+
   # The choices of the form, which the validation checks too: the values an
   # issue of the project can take.
-  def trackers
-    project.trackers
-  end
+  def trackers = project.trackers
 
-  def categories
-    project.issue_categories
-  end
+  def categories = project.issue_categories
 
-  def priorities
-    IssuePriority.active
-  end
+  def priorities = IssuePriority.active
 
-  def assignees
-    project.assignable_users
-  end
+  def assignees = project.assignable_users
 
   # The unknown_user values the user may choose. With "create", MailHandler
   # creates an active user for every unknown sender, and only administrators
   # create users in Redmine; a value already saved stays as it is.
   def unknown_user_values(user = User.current)
     user.admin? || unknown_user_in_database == 'create' ? UNKNOWN_USER : UNKNOWN_USER - %w[create]
+  end
+
+  # The registered forwarders (RedmineAws::SES::Forwarders).
+  def forwarder_list = forwarder_rule.list
+
+  def forwarder?(envelope_from) = forwarder_rule.include?(envelope_from)
+
+  def forwarder_rule = RedmineAws::SES::Forwarders.new(forwarders)
+
+  LABELS = { 'forwarders' => :label_aws_ses_mail_forwarders,
+             'forwarded_author' => :label_aws_ses_mail_forwarded_author }.freeze
+
+  def self.human_attribute_name(attribute, *)
+    LABELS.key?(attribute.to_s) ? ::I18n.t(LABELS[attribute.to_s]) : super
+  end
+
+  # Whether an original sender's user may be the author of a forwarded
+  # issue (forwarded_author).
+  def forwarded_author?(user)
+    return false unless user&.active?
+
+    case forwarded_author
+    when 'registered' then true
+    when 'external' then !user.admin? && !user.member_of?(project)
+    else false
+    end
+  end
+
+  # The project fetches email from senders Redmine does not know (as the
+  # anonymous user; a forwarded original never creates a user).
+  def unknown_senders?
+    %w[accept create].include?(unknown_user)
   end
 
   # Default values of the issues the project creates from email, as
@@ -103,6 +146,12 @@ class AwsSesProjectMailSetting < ApplicationRecord
 
       errors.add(attribute, :inclusion) unless choices.exists?(id)
     end
+  end
+
+  def validate_forwarders
+    rule = forwarder_rule
+    errors.add(:forwarders, :too_long, count: RedmineAws::SES::Forwarders::MAX) if rule.too_many?
+    errors.add(:forwarders, :invalid) unless rule.valid?
   end
 
   # Checked when a user sets the values (safe_attributes=).

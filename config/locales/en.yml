@@ -40,8 +40,11 @@ en:
   label_aws_ses_mail_reason_virus: Not fetched (virus)
   label_aws_ses_mail_reason_spam: Not fetched (spam)
   label_aws_ses_mail_reason_dmarc: Not fetched (DMARC fail)
+  label_aws_ses_mail_reason_forwarder_spf: Not fetched (forwarder SPF fail)
+  label_aws_ses_mail_reason_forwarded_author: Not fetched (no author for forwarded email)
   label_aws_ses_mail_reason_auto_reply: Not fetched (auto-reply)
   label_aws_ses_mail_reason_no_project: Not fetched (no project)
+  label_aws_ses_mail_reason_too_large: Not fetched (too large)
   label_aws_ses_mail_reason_import_error: Fetch error
   label_aws_ses_mail_settings: Receiving settings
   label_aws_ses_mail_global_drop: Do not fetch
@@ -79,3 +82,17 @@ en:
   label_aws_ses_mail_verdict_dmarc_fail: DMARC fail
   label_aws_ses_mail_verdict_dmarc_gray: DMARC no policy
   label_aws_ses_mail_verdict_dmarc_processing_failed: DMARC check failed
+  label_aws_ses_mail_updated: "Updated: %{time}"
+  button_aws_ses_mail_refresh: Refresh
+  text_aws_ses_mail_role_addresses: "Role addresses are used as project addresses: %{addresses}. Check that the email sent to them should become issues."
+  text_aws_ses_mail_default_address_taken: "These project addresses are the default address: %{addresses}. Email sent to them is handled as email to the default address."
+  label_aws_ses_mail_forwarders: Forwarders
+  text_aws_ses_mail_forwarders_info: Addresses or domains that forward email to this project. Their email is fetched even when it fails DMARC, if SPF passes.
+  label_aws_ses_mail_import_forwarded: Fetch email forwarded by members as the original
+  text_aws_ses_mail_forwarded: "Forwarded the email from %{sender}."
+  label_aws_ses_mail_forwarded: Forwarded email
+  label_aws_ses_mail_forwarded_author: Author of forwarded email
+  label_aws_ses_mail_forwarded_author_external: Senders outside the project
+  label_aws_ses_mail_forwarded_author_registered: Registered users
+  label_aws_ses_mail_forwarded_author_forwarder: Never the original sender
+  text_aws_ses_mail_emission_address: "The emission email address (%{address}) is not the default address. Email sent to it, such as replies to notifications, is handled as email to the default address."

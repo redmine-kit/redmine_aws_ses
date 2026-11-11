@@ -1,13 +1,15 @@
 # frozen_string_literal: true
 
 class CreateAwsSesReceivedMails < ActiveRecord::Migration[8.1]
-  def change
+  def change # rubocop:disable Metrics/MethodLength, Metrics/AbcSize -- one table, one line per column
     create_table :aws_ses_received_mails do |t|
       t.string :message_id, null: false
       t.string :s3_key
       t.string :mail_from
       t.string :subject
       t.text :recipients
+      # SES's mail.source, the envelope MAIL FROM, for registered forwarders.
+      t.string :envelope_from
       t.string :spam_verdict
       t.string :virus_verdict
       t.string :dmarc_verdict

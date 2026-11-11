@@ -18,6 +18,24 @@
                  setting.unknown_user_values.map { |v| [l(:"label_aws_ses_mail_unknown_user_#{v}"), v] },
                  { label: :label_aws_ses_mail_unknown_user } %>
   </p>
+  <%# Forwarded email: only administrators change it; others see the values, as Redmine shows a project's identifier %>
+  <% admin = User.current.admin? %>
+  <p>
+    <%= f.text_area :forwarders, rows: 3, cols: 40, label: :label_aws_ses_mail_forwarders, disabled: !admin %>
+    <em class="info"><%= l(:text_aws_ses_mail_forwarders_info) %> <%= l(:text_line_separated) %></em>
+  </p>
+  <p>
+    <label><%= l(:label_aws_ses_mail_forwarded) %></label>
+    <label class="block">
+      <%= f.check_box :import_forwarded, no_label: true, disabled: !admin %>
+      <%= l(:label_aws_ses_mail_import_forwarded) %>
+    </label>
+  </p>
+  <p>
+    <%= f.select :forwarded_author,
+                 AwsSesProjectMailSetting::FORWARDED_AUTHORS.map { |v| [l(:"label_aws_ses_mail_forwarded_author_#{v}"), v] },
+                 { label: :label_aws_ses_mail_forwarded_author }, disabled: !admin %>
+  </p>
 </div>
 <%= submit_tag l(:button_save) %>
 <% end %>

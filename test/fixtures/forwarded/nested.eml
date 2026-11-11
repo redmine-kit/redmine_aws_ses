@@ -1,0 +1,22 @@
+From: John Smith <jsmith@somenet.foo>
+To: ecookbook@redmine.example.com
+Subject: Fwd: Fwd: Oven does not heat up
+Date: Thu, 12 Nov 2026 10:00:00 +0900
+Message-ID: <fwd-nested@somenet.foo>
+Content-Type: text/plain; charset=utf-8
+
+---------- Forwarded message ---------
+From: Dave Lopper <dlopper@somenet.foo>
+Date: Wed, Nov 11, 2026 at 7:00 PM
+Subject: Fwd: Oven does not heat up
+To: <jsmith@somenet.foo>
+
+See below.
+
+---------- Forwarded message ---------
+From: Customer One <customer@client.example>
+Date: Wed, Nov 11, 2026 at 6:00 PM
+Subject: Oven does not heat up
+To: <support@somenet.foo>
+
+The oven stays cold since yesterday.

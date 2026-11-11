@@ -11,6 +11,10 @@ module RedmineAws
         RedmineAws::SES::Verdicts.reason(PASS.merge(changes), settings)
       end
 
+      def excused(**changes)
+        RedmineAws::SES::Verdicts.reason(PASS.merge(dmarc: 'FAIL', **changes), allowing, dmarc_excused: true)
+      end
+
       def allowing(dmarc: '0', spam: '0')
         RedmineAws::SES::DEFAULTS.merge('import_without_dmarc_pass' => dmarc, 'import_spam' => spam)
       end
@@ -37,6 +41,13 @@ module RedmineAws
           assert_equal expected, actual, settings.inspect
           assert_equal 'virus', reason(settings, virus: 'FAIL'), 'a virus is never imported'
         end
+      end
+
+      # A registered forwarder excuses DMARC only (Admission#via_forwarder?).
+      def test_dmarc_excused_for_a_forwarder
+        assert_nil excused
+        assert_equal 'spam', excused(spam: 'FAIL')
+        assert_equal 'virus', excused(virus: 'FAIL')
       end
 
       def test_missing_spam_or_dmarc_verdicts_count_as_not_passing

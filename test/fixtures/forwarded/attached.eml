@@ -1,0 +1,39 @@
+From: John Smith <jsmith@somenet.foo>
+To: ecookbook@redmine.example.com
+Subject: FW: Oven does not heat up
+Date: Thu, 12 Nov 2026 10:00:00 +0900
+Message-ID: <fwd-attached@somenet.foo>
+MIME-Version: 1.0
+Content-Type: multipart/mixed; boundary="outer"
+
+--outer
+Content-Type: text/plain; charset=utf-8
+
+A customer's report, attached.
+
+--outer
+Content-Type: message/rfc822
+Content-Disposition: attachment; filename="report.eml"
+
+From: Customer One <customer@client.example>
+To: support@somenet.foo
+Subject: Oven does not heat up
+Date: Wed, 11 Nov 2026 18:00:00 +0900
+Message-ID: <original@client.example>
+In-Reply-To: <redmine.issue-1.20261101000000.1@redmine.example.com>
+MIME-Version: 1.0
+Content-Type: multipart/mixed; boundary="inner"
+
+--inner
+Content-Type: text/plain; charset=utf-8
+
+The oven stays cold since yesterday.
+
+--inner
+Content-Type: text/plain; name="photo.txt"
+Content-Disposition: attachment; filename="photo.txt"
+
+a photo of the oven
+--inner--
+
+--outer--

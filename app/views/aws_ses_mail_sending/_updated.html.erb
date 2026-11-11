@@ -1,0 +1,6 @@
+<%# When the state of SES and DNS was read, and the link that reads it again (locals: snapshot, tab) %>
+<div class="contextual" id="aws-ses-mail-updated">
+  <% if snapshot %><%= l(:label_aws_ses_mail_updated, time: format_time(snapshot.fetched_at)) %> |<% end %>
+  <%= link_to sprite_icon('reload', l(:button_aws_ses_mail_refresh)), aws_ses_mail_refresh_path(tab: tab),
+              method: :post, class: 'icon icon-reload' %>
+</div>

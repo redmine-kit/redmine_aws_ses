@@ -26,14 +26,14 @@ module RedmineAws
       # A message with a virus is never imported (its attachments would be
       # served to everyone). Spam and a failed DMARC check are dropped unless
       # the receiving settings import them (import_spam,
-      # import_without_dmarc_pass).
-      def reason(verdicts, settings = RedmineAws::SES.settings)
+      # import_without_dmarc_pass). dmarc_excused: the message came through a
+      # registered forwarder of the project (Admission#via_forwarder?).
+      def reason(verdicts, settings = RedmineAws::SES.settings, dmarc_excused: false)
         return 'no_verdict' if verdicts.blank? || verdicts[:virus].blank?
         return 'virus' unless verdicts[:virus] == 'PASS'
         return 'spam' unless allowed?(verdicts[:spam], settings['import_spam'])
-        return 'dmarc' unless allowed?(verdicts[:dmarc], settings['import_without_dmarc_pass'])
 
-        nil
+        'dmarc' unless dmarc_excused || allowed?(verdicts[:dmarc], settings['import_without_dmarc_pass'])
       end
 
       # PASS, or anything else when the setting imports it.
