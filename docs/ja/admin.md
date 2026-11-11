@@ -7,7 +7,7 @@ Redmine AWS SES の管理画面です。システム管理者だけが開けま�
 | 項目 | 内容 |
 | --- | --- |
 | 秘密の値は出さない | AWS の認証情報と、受信したメールの本文は画面に出しません。エラーは、エラーのクラスだけを出します (例: `Aws::SESV2::Errors::AccessDeniedException`)。メッセージは Redmine のログにあります |
-| 保存した状態 | タブは、SES の状態と MX レコードを、最後の更新で読んだとおりに出し、右上に「更新: <日時>」を出します。画面を開くときに SES や DNS は呼びません。`rake redmine_aws_ses:refresh` がスケジュールで読み ([setup.md](setup.md#refreshing-the-ses-state))、日時の横の「最新の情報に更新」で読み直します。保存するのは最新の状態だけです (プラグインのテーブル `aws_ses_snapshots`) |
+| 保存した状態 | タブは、SES の状態と MX レコードを、最後の更新で読んだとおりに出し、右上に `更新: <日時>` を出します。画面を開くときに SES や DNS は呼びません。`rake redmine_aws_ses:refresh` がスケジュールで読み ([setup.md](setup.md#refreshing-the-ses-state))、日時の横の「最新の情報に更新」で読み直します。保存するのは最新の状態だけです (プラグインのテーブル `aws_ses_snapshots`) |
 | 設定は画面で変える | 受信のオプションは、プラグインの設定 (Redmine の `Setting.plugin_redmine_aws_ses`、データベースに入る) にし、「メール受信」のタブで変えます。プラグインの一覧に「設定」のリンクは出ません |
 | 操作を記録する | 更新、サプレッションリストからの削除、再取得、設定の変更は、誰が何をしたかを Redmine のログに書きます (`[redmine_aws_ses] <ログイン> ...`) |
 | 接続テスト | Redmine AWS の「ステータス」のタブの「接続テスト」で、SES v2 の `GetAccount` も呼びます ([その admin.md](https://redmine-kit.github.io/redmine_aws/ja/admin.html#status))。結果は「送信: 有効、本稼働アクセス: はい」のように出ます |
