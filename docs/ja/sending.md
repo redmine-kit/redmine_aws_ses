@@ -21,7 +21,7 @@ SES v2 の `SendEmail` のエラー (API リファレンスの一覧) を、3 �
 | エラー | 意味 | 扱い |
 | --- | --- | --- |
 | `TooManyRequestsException`<br>`InternalFailure`<br>`ServiceUnavailable`<br>そのほかの 5xx<br>ネットワークエラー | 一時的 | ジョブの中で再試行する。3、18、83、258 秒のあとに、5 回まで動かす |
-| `MessageRejected`<br>`BadRequestException` | そのメッセージの中身や宛先の問題 | ジョブを捨てる。[Redmine AWS SQS](https://redmine-kit.github.io/redmine_aws_sqs/ja/) があれば、失敗の記録を残す |
+| `MessageRejected`<br>`BadRequestException` | そのメッセージの中身や宛先の問題 | ジョブを捨てる。Redmine のログには、ジョブ ID、メーラーのメソッド、エラーコードを書き、宛先を含む SES のメッセージは書かない。[Redmine AWS SQS](https://redmine-kit.github.io/redmine_aws_sqs/ja/) があれば、失敗の記録を残す |
 | そのほか。たとえば<br>`SendingPausedException`<br>`AccountSuspendedException`<br>`MailFromDomainNotVerifiedException`<br>`NotFoundException`<br>`LimitExceededException`<br>`AccessDeniedException` | アカウントか設定の問題。直すまで、何度でも失敗する | ジョブの中では再試行せずに例外を発生させる。メッセージはキューから再び受信され、最後の受信のあとにデッドレターキューへ移り、そこで Redmine AWS SQS が記録する |
 
 - **待ち時間:** ActiveJob の `:polynomially_longer` からジッターを除いたものです (`実行回数⁴ + 2` 秒)。SQS の遅延の上限 (15 分) に収まります。5 回目のあとは例外を発生させ、アカウントのエラーと同じく、キューの再試行とデッドレターキューに任せます。
@@ -58,6 +58,6 @@ Redmine は、すべての通知を送信元メールアドレス (`Setting.mail
 | --- | --- |
 | SES での送信 | 通知が `aws-actionmailer-ses` を通って SES v2 (LocalStack。トークンがなければ moto) に送られる。確認済みの ID でない送信元は、worker で `MessageRejected` の例外を発生させる (モックした応答。下記) |
 | 接続テスト | SES v2 の `GetAccount` (モックした応答。下記) |
-| エラーの種類別 | SDK の応答のスタブで `SendEmail` のエラーを 1 つずつ起こす。一時的なエラーはジョブの中で再試行し、最後の実行のあとは例外を発生させる。メッセージのエラーは捨てる。アカウントのエラーはキューのために例外を発生させる |
+| エラーの種類別 | SDK の応答のスタブで `SendEmail` のエラーを 1 つずつ起こす。一時的なエラーはジョブの中で再試行し、最後の実行のあとは例外を発生させる。メッセージのエラーは捨てる (ログに宛先のアドレスはない)。アカウントのエラーはキューのために例外を発生させる |
 | worker だけ | `raise_delivery_errors` は `REDMINE_ROLE=worker` のときだけ設定する |
 | プロジェクト別の送信元 | インターセプターは、設定が有効なときだけ、送信元と `Reply-To` を替える。引用符、バックスラッシュ、日本語のある表示名はそのまま残す |

@@ -17,7 +17,7 @@ Errors from SES v2 `SendEmail` (the list in the API reference) are split into th
 | Error | Meaning | Handling |
 | --- | --- | --- |
 | `TooManyRequestsException`<br>`InternalFailure`<br>`ServiceUnavailable`<br>Other 5xx<br>Network errors | Temporary | Retried inside the job: up to 5 runs, after 3, 18, 83 and 258 seconds |
-| `MessageRejected`<br>`BadRequestException` | A problem with the content or recipients of that message | The job is dropped. With [Redmine AWS SQS](https://redmine-kit.github.io/redmine_aws_sqs/), a failure record is kept |
+| `MessageRejected`<br>`BadRequestException` | A problem with the content or recipients of that message | The job is dropped. Redmine's log gets the job ID, the mailer method and the error code, not SES's message, which names the recipients. With [Redmine AWS SQS](https://redmine-kit.github.io/redmine_aws_sqs/), a failure record is kept |
 | Anything else, such as:<br>`SendingPausedException`<br>`AccountSuspendedException`<br>`MailFromDomainNotVerifiedException`<br>`NotFoundException`<br>`LimitExceededException`<br>`AccessDeniedException` | A problem with the account or the settings. Every attempt fails until it is fixed | Raised without retries inside the job. The queue receives the message again and, after the last receive, moves it to the dead-letter queue, where Redmine AWS SQS records it |
 
 - **Waits:** The waits are those of ActiveJob's `:polynomially_longer` without jitter (`executions⁴ + 2` seconds). They fit within the longest delay SQS allows (15 minutes). After the 5th run the error is raised, and the queue's retries and dead-letter queue apply as for account errors.
@@ -48,6 +48,6 @@ Redmine sends every notification from the emission address (`Setting.mail_from`)
 | --- | --- |
 | Sending through SES | A notification is sent through `aws-actionmailer-ses` to SES v2 (LocalStack, or moto without its token). A sender that is not a verified identity raises `MessageRejected` in the worker (a mocked answer, below) |
 | Connection test | SES v2 `GetAccount` (a mocked answer, below) |
-| Errors by kind | Each `SendEmail` error raised one by one with SDK response stubs: temporary errors are retried in the job and raised after the last run, message errors are dropped, account errors are raised for the queue |
+| Errors by kind | Each `SendEmail` error raised one by one with SDK response stubs: temporary errors are retried in the job and raised after the last run, message errors are dropped (the log has no recipient address), account errors are raised for the queue |
 | Only in the worker | `raise_delivery_errors` is set only with `REDMINE_ROLE=worker` |
 | Senders per project | The interceptor changes the sender and `Reply-To` only when the settings are on, and keeps display names with quotes, backslashes and Japanese |

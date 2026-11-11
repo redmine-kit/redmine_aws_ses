@@ -57,9 +57,12 @@ module RedmineAws
         end
       end
 
+      # The log names the job, the mailer method and the error code only: SES's
+      # messages name the recipients ("... failed the check in region ...:
+      # <address>").
       def drop(job, error)
-        Rails.logger.error "[redmine_aws_ses] dropped email #{job.arguments.first(2).join('#')}: " \
-                           "#{error.class}: #{error.message}"
+        Rails.logger.error "[redmine_aws_ses] dropped email #{job.job_id} (#{job.arguments.first(2).join('#')}): " \
+                           "#{code(error)}"
         return unless defined?(AwsSqsJobFailure)
 
         AwsSqsJobFailure.record!(ActiveSupport::JSON.dump(job.serialize), error, attempts: job.executions)
