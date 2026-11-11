@@ -37,7 +37,7 @@ Errors from SES v2 `SendEmail` (the list in the API reference) are split into th
 Redmine sends every notification from the emission address (`Setting.mail_from`). With addresses per project and per-project senders on ([receiving.md](receiving.md#addresses-per-project)), the plugin sends project notifications from the project's address.
 
 - **How they are identified:** Redmine adds the project identifier in the `X-Redmine-Project` header to project notifications (issues, news, documents, files, forums, wiki) (`Mailer#redmine_headers`). An ActionMailer interceptor (the standard Rails mechanism that rewrites email before sending; registered by `boot/`) reads it and changes the sender to `<identifier>@<domain>`.
-- **Display name:** Redmine's display name (the author's name, when the emission address has none) is kept.
+- **Display name:** Redmine's display name (the author's name, when the emission address has none) is kept, quoted with `Mail::Address` as Redmine's `Mailer#mail` does, so that quotes and backslashes in a name stay as they are.
 - **Email without the header:** Email that does not belong to a project keeps the emission address, the default address ([receiving.md](receiving.md#address-for-the-whole-redmine)).
 - **Projects that do not receive email:** The sender is the project's address, but replies would not be imported, so `Reply-To` is the emission address.
 - **Optional:** Off by default. "Send notifications from project addresses" in "Receiving settings" on the "Email receiving" tab turns it on.
@@ -50,4 +50,4 @@ Redmine sends every notification from the emission address (`Setting.mail_from`)
 | Connection test | SES v2 `GetAccount` (a mocked answer, below) |
 | Errors by kind | Each `SendEmail` error raised one by one with SDK response stubs: temporary errors are retried in the job and raised after the last run, message errors are dropped, account errors are raised for the queue |
 | Only in the worker | `raise_delivery_errors` is set only with `REDMINE_ROLE=worker` |
-| Senders per project | The interceptor changes the sender and `Reply-To` only when the settings are on |
+| Senders per project | The interceptor changes the sender and `Reply-To` only when the settings are on, and keeps display names with quotes, backslashes and Japanese |

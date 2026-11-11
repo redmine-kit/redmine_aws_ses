@@ -30,9 +30,16 @@ module RedmineAws
         identifier && Project.find_by(identifier: identifier)
       end
 
+      # Keeps the display name that Redmine's Mailer#mail gave (the author's
+      # name, or the application title), quoted by Mail::Address as Redmine
+      # does.
       def with_display_name(message, address)
         name = message[:from]&.display_names&.first
-        name.present? ? %("#{name.delete('"')}" <#{address}>) : address
+        return address if name.blank?
+
+        from = Mail::Address.new(address)
+        from.display_name = name
+        from.format
       end
     end
   end
