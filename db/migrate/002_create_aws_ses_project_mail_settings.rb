@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-class CreateAwsSesProjectMailSettings < ActiveRecord::Migration[7.2]
+class CreateAwsSesProjectMailSettings < ActiveRecord::Migration[8.1]
   def change
     create_table :aws_ses_project_mail_settings do |t|
       t.references :project, null: false, index: { unique: true }, foreign_key: false

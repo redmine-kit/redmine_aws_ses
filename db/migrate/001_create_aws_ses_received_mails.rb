@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-class CreateAwsSesReceivedMails < ActiveRecord::Migration[7.2]
+class CreateAwsSesReceivedMails < ActiveRecord::Migration[8.1]
   def change
     create_table :aws_ses_received_mails do |t|
       t.string :message_id, null: false
