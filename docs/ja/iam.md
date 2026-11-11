@@ -1,6 +1,6 @@
 # IAM 権限
 
-プロセスごとの、プラグインが自分で呼ぶ AWS の操作です。Lambda そのものの権限(ログ、VPC の中での実行)は入れていません。ロールの全体は [Serverless の iam.md](https://redmine-kit.github.io/serverless/ja/iam.html) にあります。
+プロセスごとの、プラグインが自分で呼ぶ AWS の操作です。Lambda そのものの権限 (ログ、VPC の中での実行) は入れていません。ロールの全体は [Serverless の iam.md](https://redmine-kit.github.io/serverless/ja/iam.html) にあります。
 
 <a id="permissions"></a>
 
@@ -8,12 +8,12 @@
 
 | 操作 | 対象 | 理由 |
 | --- | --- | --- |
-| `ses:SendEmail`<br>`ses:SendRawEmail` | サブドメインの SES の ID | メールを送るすべてのプロセス(テストのメールのための画面の要求、ジョブ、rake)。SES v2 の `SendEmail` で、メール全体(raw)を送る |
+| `ses:SendEmail`<br>`ses:SendRawEmail` | サブドメインの SES の ID | メールを送るすべてのプロセス (テストのメールのための画面の要求、ジョブ、rake)。SES v2 の `SendEmail` で、メール全体 (raw) を送る |
 | `ses:GetEmailIdentity` | SES の ID | 画面の要求。管理画面の「メール送信」 |
-| `ses:GetAccount`<br>`ses:ListSuppressedDestinations`<br>`ses:DeleteSuppressedDestination` | `*`(絞れない) | 画面の要求。同じ画面の、SES アカウント、サプレッションリストと、そこからの削除。`GetAccount` は、Redmine AWS の「ステータス」のタブの「接続テスト」の SES にも使う |
-| `s3:GetObject`<br>`s3:DeleteObject` | メールのバケットの `inbound/*` | 取り込み(rake)。受け取ったメールを読み、移したあとに消す |
-| `s3:PutObject` | メールのバケットの `processed/*` | 取り込み(rake)。取り込んだメールを移す(`processed/` への `CopyObject` のあと、`inbound/` で `DeleteObject`) |
-| `s3:GetObject` | メールのバケットの `processed/*` | 取り込み済みのメールの取り込み直し(rake か、下のジョブ) |
+| `ses:GetAccount`<br>`ses:ListSuppressedDestinations`<br>`ses:DeleteSuppressedDestination` | `*` (絞れない) | 画面の要求。同じ画面の、SES アカウント、サプレッションリストと、そこからの削除。`GetAccount` は、Redmine AWS の「ステータス」のタブの「接続テスト」の SES にも使う |
+| `s3:GetObject`<br>`s3:DeleteObject` | メールのバケットの `inbound/*` | 取り込み (rake)。受け取ったメールを読み、移したあとに消す |
+| `s3:PutObject` | メールのバケットの `processed/*` | 取り込み (rake)。取り込んだメールを移す (`processed/` への `CopyObject` のあと、`inbound/` で `DeleteObject`) |
+| `s3:GetObject` | メールのバケットの `processed/*` | 取り込み済みのメールの取り込み直し (rake か、下のジョブ) |
 | `inbound/*` と `processed/*` への `s3:GetObject`、`s3:DeleteObject`、`processed/*` への `s3:PutObject` | メールのバケット | ジョブ。「メール受信」の画面の「再取得」 |
 
 <a id="example-policy"></a>
@@ -52,7 +52,7 @@
 
 ## リソースベースのポリシー
 
-SES が受け取ったメールを置けるようにする、バケットポリシーの文です(ほかのバケットと同じく、TLS でない要求を拒む文も付けます)。
+SES が受け取ったメールを置けるようにする、バケットポリシーの文です (ほかのバケットと同じく、TLS でない要求を拒む文も付けます)。
 
 ```json
 {
@@ -68,7 +68,7 @@ SES が受け取ったメールを置けるようにする、バケットポリ�
 }
 ```
 
-受信のルールが Lambda の関数を呼ぶときは、関数のリソースベースのポリシーで、`ses.amazonaws.com` に `lambda:InvokeFunction` を、同じ `aws:SourceAccount` と `aws:SourceArn` の条件で許します。関数は SES と同じリージョンに置きます([Serverless の iam.md](https://redmine-kit.github.io/serverless/ja/iam.html#resource-based-policies))。
+受信のルールが Lambda の関数を呼ぶときは、関数のリソースベースのポリシーで、`ses.amazonaws.com` に `lambda:InvokeFunction` を、同じ `aws:SourceAccount` と `aws:SourceArn` の条件で許します。関数は SES と同じリージョンに置きます ([Serverless の iam.md](https://redmine-kit.github.io/serverless/ja/iam.html#resource-based-policies))。
 
 <a id="not-checked-yet"></a>
 
