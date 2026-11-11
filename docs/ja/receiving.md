@@ -42,7 +42,7 @@ Redmine AWS SES が、SES の受け取ったメールを取り込むしくみで
 | --- | --- |
 | パスワードの再設定 | `lost_password` |
 | アカウント登録の確認、有効化の依頼、有効化の通知 | `register`<br>`account_activation_request`<br>`account_activated` |
-| アカウント情報 (管理者が作ったアカウント) | `account_information` |
+| アカウント情報 (システム管理者が作ったアカウント) | `account_information` |
 | 期日のリマインダー (複数のプロジェクトのチケットをまとめる) | `reminder` |
 | セキュリティ通知、設定変更の通知 | `security_notification`<br>`settings_updated` |
 | テストメール | `test_email` |

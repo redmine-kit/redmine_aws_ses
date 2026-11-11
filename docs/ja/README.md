@@ -17,7 +17,7 @@ Redmine AWS SES (`redmine_aws_ses`) は、Redmine のメールを Amazon SES で
 | メール送信の再試行 | ジョブを動かすプロセスでの `raise_delivery_errors`、SES のエラーの種類に応じた再試行 (一時的なエラーは再試行し、アカウントの問題は再送信のために残し、メッセージの問題は捨てる) | Lambda では `REDMINE_ROLE=worker`。Lambda 以外のときは、ジョブを動かすプロセス | [sending.md](sending.md) |
 | メール受信 | SES が S3 に置いたメールの取り込み (rake タスク `redmine_aws_ses:receive_mail`。中では Redmine 標準の `MailHandler` を使う)、SES のイベントの判定の確認 (迷惑メールと DMARC は設定で選べ、ウイルスはいつも捨てる)、取り込みの記録 | 受信設定がある | [receiving.md](receiving.md#importing) |
 | プロジェクト別のアドレス | プロジェクト別の受信アドレスと送信元、デフォルトアドレス、プロジェクトの設定の「メール」のタブ | プラグインの設定で有効にする。無効なら Redmine の標準と同じ (送信元は 1 つで、プロジェクトはサブアドレス `noreply+識別子@…` で選ぶ) | [receiving.md](receiving.md#addresses-per-project) |
-| 管理画面 | [Redmine AWS](https://redmine-kit.github.io/redmine_aws/ja/admin.html#the-aws-menu) の「AWS」メニューの「メール送信」(SES アカウント) と「メール受信」(受信履歴) のタブ、プロジェクトの設定の中のプロジェクトのメール設定 | 管理者。使っていない機能の画面は出さない | [admin.md](admin.md) |
+| 管理画面 | [Redmine AWS](https://redmine-kit.github.io/redmine_aws/ja/admin.html#the-aws-menu) の「AWS」メニューの「メール送信」(SES アカウント) と「メール受信」(受信履歴) のタブ、プロジェクトの設定の中のプロジェクトのメール設定 | システム管理者。使っていない機能の画面は出さない | [admin.md](admin.md) |
 
 <a id="outside-lambda"></a>
 
