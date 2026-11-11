@@ -96,7 +96,7 @@ GitHub Packages からインストールするには、公開のパッケージ�
 
 ### 送信エラー
 
-プラグインは、ジョブを動かすプロセス (`REDMINE_ROLE=worker`。Lambda 以外では取り出し役のプロセスに設定する) でだけ、`raise_delivery_errors` を `true` にします。SES のエラーを、Redmine のメールのジョブ (`Mailer::DeliveryJob`) に届けるためです。ほかのプロセスは Redmine の `false` のままなので、1 通の失敗で rake のタスクが止まることはありません ([sending.md](sending.md))。
+プラグインは、ジョブを動かすプロセス (`REDMINE_ROLE=worker`。Lambda 以外ではポーラーのプロセスに設定する) でだけ、`raise_delivery_errors` を `true` にします。SES のエラーを、Redmine のメールのジョブ (`Mailer::DeliveryJob`) に届けるためです。ほかのプロセスは Redmine の `false` のままなので、1 通の失敗で rake のタスクが止まることはありません ([sending.md](sending.md))。
 
 ジョブの中では、エラーの種類で扱いが決まります。一時的なエラーはジョブの中でやり直し、メッセージのエラーはジョブを捨て、アカウントのエラーはキューのやり直しとデッドレターキューに任せます ([sending.md](sending.md#handling-by-kind-of-error))。
 
@@ -148,15 +148,15 @@ bin/rake redmine_aws_ses:prune_records[<日数>]
 
 | どこから | どこへ | インターネットに出られない VPC の中では |
 | --- | --- | --- |
-| Redmine | SES v2 の API (`SendEmail`、管理画面) | SES の API のインターフェースのエンドポイントか、NAT インスタンス。エンドポイントのサービスの名前は、作るときに確認する (未確認) |
-| Redmine | S3 (メールのバケット) | S3 のゲートウェイのエンドポイント (`com.amazonaws.<region>.s3`) |
+| Redmine | SES v2 の API (`SendEmail`、管理画面) | SES の API のインターフェイスエンドポイントか、NAT インスタンス。エンドポイントのサービスの名前は、作るときに確認する (未確認) |
+| Redmine | S3 (メールのバケット) | S3 のゲートウェイエンドポイント (`com.amazonaws.<region>.s3`) |
 | 送信者 | SES の受信 (SMTP) | VPC の外。SES が受け取る |
 
 <a id="tests"></a>
 
 ## テスト
 
-テストは `test/` にあり、Redmine の標準のしくみで、Docker の中の Redmine 7.0.3 と PostgreSQL 16 で動かします。AWS は、`LOCALSTACK_AUTH_TOKEN` があれば LocalStack です (CI は組織のシークレットを使う)。SES v2 も S3 も LocalStack で動かし、LocalStack が起動しなければ失敗にします。トークンがなければ (フォークからのプルリクエスト、手元での実行)、同じテストを moto で動かします。ログに使ったほうを出します。
+テストは `test/` にあり、Redmine の標準のしくみで、Docker の中の Redmine 7.0.3 と PostgreSQL 16 で動かします。AWS は、`LOCALSTACK_AUTH_TOKEN` があれば LocalStack です (CI は組織のシークレットを使う)。SES v2 も S3 も LocalStack で動かし、LocalStack が起動しなければ失敗にします。トークンがなければ (フォークからの Pull Request、手元での実行)、同じテストを moto で動かします。ログに使ったほうを出します。
 
 LocalStack が実際の AWS のとおりに再現しない呼び出しは、その呼び出しだけを SDK の応答のスタブ (`stub_responses`) でモックします。
 
@@ -185,5 +185,5 @@ bin/services --down # PostgreSQL、moto、LocalStack を止める
 ## 未確認の事項
 
 - メッセージ全体を渡す SES v2 の `SendEmail` に、`ses:SendRawEmail` が要るか
-- SES の API のインターフェースのエンドポイントのサービスの名前
+- SES の API のインターフェイスエンドポイントのサービスの名前
 - メールの設計の、[Serverless の mail.md](https://redmine-kit.github.io/serverless/ja/mail.html#to-verify) にある項目
