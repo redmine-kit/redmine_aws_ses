@@ -1,12 +1,12 @@
 # 管理画面
 
-Redmine AWS SES の管理画面です。Redmine の管理者だけが開けます (`require_admin`)。プロジェクトのメール設定だけは、プラグインが追加するプロジェクトの権限を持つ人も変えられます (下記)。画面は、[Redmine AWS](https://redmine-kit.github.io/redmine_aws/ja/admin.html#the-aws-menu) が追加し、すべての Redmine AWS のプラグインが共有する Redmine の管理のメニューの「AWS」の下の、「メール送信」と「メール受信」のタブになります。プロジェクトのメール設定は、代わりにプロジェクトの設定のタブになります。
+Redmine AWS SES の管理画面です。Redmine の管理者だけが開けます (`require_admin`)。プロジェクトのメール設定だけは、プラグインが追加するプロジェクトの権限を持つ人も変えられます (下記)。画面は、[Redmine AWS](https://redmine-kit.github.io/redmine_aws/ja/admin.html#the-aws-menu) が追加し、すべての Redmine AWS のプラグインが共有する Redmine の管理メニューの「AWS」の下の、「メール送信」と「メール受信」のタブになります。プロジェクトのメール設定は、代わりにプロジェクトの設定のタブになります。
 
 この資料の仕様は、2026-11-08 時点の公式の情報と、Redmine 7.0.3 のソースで確認したものです。出典は [sources.md](https://redmine-kit.github.io/serverless/ja/sources.html) にあります。
 
 | 項目 | 内容 |
 | --- | --- |
-| 秘密の値は出さない | AWS の認証情報と、受信したメールの本文は画面に出しません。SES の状態と MX のレコードは 1 分だけキャッシュします |
+| 秘密の値は出さない | AWS の認証情報と、受信したメールの本文は画面に出しません。SES の状態と MX レコードは 1 分だけキャッシュします |
 | 設定は画面で変える | 受信のオプションは、プラグインの設定 (Redmine の `Setting.plugin_redmine_aws_ses`、データベースに入る) にし、「メール受信」のタブで変えます。プラグインの一覧に「設定」のリンクは出ません |
 | 操作を記録する | サプレッションリストからの削除、再取得、設定の変更は、誰が何をしたかを Redmine のログに書きます (`[redmine_aws_ses] <ログイン> ...`) |
 | 接続テスト | Redmine AWS の「ステータス」のタブの「接続テスト」で、SES v2 の `GetAccount` も呼びます ([その admin.md](https://redmine-kit.github.io/redmine_aws/ja/admin.html#status))。結果は「送信: 有効、本稼働アクセス: はい」のように出ます |
@@ -21,29 +21,29 @@ Redmine AWS SES の管理画面です。Redmine の管理者だけが開けま�
 | --- | --- | --- |
 | SES アカウント | 「アカウントステータス」(`HEALTHY`、`PROBATION`、`SHUTDOWN` を、正常、レビュー対象、一時停止で出す)、「送信」(有効か一時停止)、「本稼働アクセス」(はいかいいえ。いいえはサンドボックスの中) | SES v2 の `GetAccount` |
 | 送信の上限 | 「日次送信クォータ」、「直近 24 時間の送信数」、「最大送信レート」(例: 「14 通/秒」) | 同上 |
-| ドメイン | 管理画面の送信元のアドレスのドメイン、「検証済み」か、DKIM の状態 (成功、保留中、失敗、一時的な失敗、未開始) | SES v2 の `GetEmailIdentity` |
+| ドメイン | 管理画面の設定の送信元メールアドレスのドメイン、「検証済み」か、DKIM の状態 (成功、保留中、失敗、一時的な失敗、未開始) | SES v2 の `GetEmailIdentity` |
 | サプレッションリスト | SES が送信を止めているアドレス。列は、メールアドレス、ユーザー (そのアドレスを持つ Redmine のユーザー)、理由 (バウンスか苦情)、更新日。最初の 100 件 | SES v2 の `ListSuppressedDestinations` |
 | 削除 | サプレッションリストのアドレスごとの「削除」のボタン。確認のあとで消す | SES v2 の `DeleteSuppressedDestination` |
-| テストメールを送信 | 上の、Redmine の標準の「テストメールを送信」(管理 › 設定 の「メール通知」) へのリンク。同じ機能は追加しない | — |
-| 失敗したジョブ | Redmine AWS SQS を入れているときは、上の、その「ジョブ」の画面の、失敗したメールに絞った一覧へのリンク | — |
+| テストメールを送信 | 上の、Redmine 標準の「テストメールを送信」(管理 › 設定 › メール通知) へのリンク。同じ機能は追加しない | — |
+| 失敗したジョブ | Redmine AWS SQS をインストールしているときは、上の、その「ジョブ」の画面の、失敗したメールに絞った一覧へのリンク | — |
 
 | 項目 | 内容 |
 | --- | --- |
 | サプレッションリストを出す理由 | バウンスや苦情があったアドレスは、SES がサプレッションリストに入れ、そこへは送らなくなります。Redmine からは送ったように見えるので、「通知が届かない」と言われたときに、この画面で確認できます。原因を直してから、アドレスを削除します |
-| テストのメール | Redmine の標準のテストのメールは、画面の要求の中で送る (`deliver_now`) ので、`redmine-web` にも SES で送る権限を与えます ([mail.md](https://redmine-kit.github.io/serverless/ja/mail.html#ses)) |
+| テストメール | Redmine 標準のテストメールは、画面の要求の中で送る (`deliver_now`) ので、`redmine-web` にも SES で送る権限を与えます ([mail.md](https://redmine-kit.github.io/serverless/ja/mail.html#ses)) |
 
 <a id="receiving-email"></a>
 
 ## メール受信
 
-![「メール受信」のタブ。メールアドレスと MX のレコード、取得済みの 1 通と未取得の 2 通の受信履歴、受信設定](./images/mail-receiving.png)
+![「メール受信」のタブ。メールアドレスと MX レコード、取得済みの 1 通と未取得の 2 通の受信履歴、受信設定](./images/mail-receiving.png)
 
 | 項目 | 中身 | 取得元 |
 | --- | --- | --- |
-| メールアドレス | 「ドメイン」(Redmine のドメイン。送信元のアドレスのドメイン)、「デフォルトアドレス」、「MX」(下記)。プロジェクト別のアドレスを使うときは、プロジェクトの一覧 (プロジェクト、メールアドレス、メール受信) | プラグインの設定と、プロジェクトのメール設定 |
-| MX | Redmine のドメインの MX のホスト。SES の受信のエンドポイントになっているかを確認する。問い合わせに失敗すると「不明」、MX のレコードがなければ「なし」 | DNS の問い合わせ。タイムアウトは 2 秒 |
-| 受信履歴 | 受信日時、差出人、題名、プロジェクト、判定 (SES のウイルス、スパム、DMARC の判定のうち合格しなかったもの。例: 「スパム, DMARC 失敗」。すべて合格なら「合格」。語は下の「用語」)、結果 (下記)。新しい 100 件。一覧の上の「すべて \| 未取得」で絞り込める | プラグインの表 (下記) |
-| 再取得 | 一覧のチェックボックスでメールを選ぶ。Redmine のチケットの一覧と同じく、見出しの行のチェックボックスで全部を選べる。「再取得」で、選んだメールをもう一度取得する | メールごとのジョブ (`AwsSesReimportMailJob`。Serverless では SQS に入り、`redmine-worker` が取り込む) |
+| メールアドレス | 「ドメイン」(Redmine のドメイン。送信元メールアドレスのドメイン)、「デフォルトアドレス」、「MX」(下記)。プロジェクト別のアドレスを使うときは、プロジェクトの一覧 (プロジェクト、メールアドレス、メール受信) | プラグインの設定と、プロジェクトのメール設定 |
+| MX | Redmine のドメインの MX ホスト。SES の受信エンドポイントになっているかを確認する。問い合わせに失敗すると「不明」、MX レコードがなければ「なし」 | DNS の問い合わせ。タイムアウトは 2 秒 |
+| 受信履歴 | 受信日時、差出人、題名、プロジェクト、判定 (SES のウイルス、スパム、DMARC の判定のうち合格しなかったもの。例: 「スパム, DMARC 失敗」。すべて合格なら「合格」。語は下の「用語」)、結果 (下記)。新しい 100 件。一覧の上の「すべて \| 未取得」で絞り込める | プラグインのテーブル (下記) |
+| 再取得 | 一覧のチェックボックスでメールを選ぶ。Redmine のチケットの一覧と同じく、見出し行のチェックボックスで全部を選べる。「再取得」で、選んだメールをもう一度取得する | メールごとのジョブ (`AwsSesReimportMailJob`。Serverless では SQS に入り、`redmine-worker` が取り込む) |
 | 受信設定 | 「デフォルトアドレス」(`@` の前)、「受信メール」(「取得しない」(デフォルト) か「デフォルトのプロジェクトで取得」。Redmine の「受信メール」の語)、「デフォルトのプロジェクト」、「取得対象」(「DMARC 未通過メールも取得」と「迷惑メールも取得」。どちらもデフォルトはオフで、オフを推奨。DMARC 未通過メールを取得すると、差出人のなりすましでチケットを作成できるため。ウイルスと判定されたメールは、設定にかかわらず取得しない)、「プロジェクト」(「プロジェクト別のアドレスを使用」、「プロジェクトのアドレスから通知を送信」) | プラグインの設定 (画面で変える)。[receiving.md](receiving.md#spoofing-and-spam) も参照 |
 
 | 結果 | 意味 |
@@ -59,16 +59,16 @@ Redmine AWS SES の管理画面です。Redmine の管理者だけが開けま�
 
 | 項目 | 内容 |
 | --- | --- |
-| 取得の記録 | `redmine_aws_ses:receive_mail` は、メールごとの結果を、プラグインの表 (`aws_ses_received_mails`) に入れます。送信者、件名、SES のイベントのエンベロープの宛先と判定、プロジェクト、作ったチケットや追加した注記です。本文は入れず、メールのバケットのキー (`inbound/` か `processed/`) を入れます。再取得は、同じ記録を書き換えます。90 日より古い記録は、`rake redmine_aws_ses:prune_records` が消します。Serverless は毎日動かします ([security.md](https://redmine-kit.github.io/serverless/ja/security.html#retention-periods)) |
+| 取り込みの記録 | `redmine_aws_ses:receive_mail` は、メールごとの結果を、プラグインのテーブル (`aws_ses_received_mails`) に入れます。差出人、題名、SES のイベントのエンベロープの宛先と判定、プロジェクト、作ったチケットや追加した注記です。本文は入れず、メールのバケットのキー (`inbound/` か `processed/`) を入れます。再取得は、同じ記録を書き換えます。90 日より古い記録は、`rake redmine_aws_ses:prune_records` が消します。Serverless は毎日動かします ([security.md](https://redmine-kit.github.io/serverless/ja/security.html#retention-periods)) |
 | 未取得のメール | `inbound/` に残り、原因を直してから再取得できます |
-| 再取得 | 画面は `redmine-task` を直接は呼ばず、キューにジョブを入れます。こうすると、`redmine-web` に、メールのバケットを読む権限も、Lambda を呼ぶ権限も要りません。Redmine AWS SQS を入れていれば、このジョブのクラスを、実行を許可するジョブクラスに追加します |
+| 再取得 | 画面は `redmine-task` を直接は呼ばず、キューにジョブを入れます。こうすると、`redmine-web` に、メールのバケットを読む権限も、Lambda を呼ぶ権限も要りません。Redmine AWS SQS をインストールしていれば、このジョブのクラスを、実行を許可するジョブクラスに追加します |
 | 受信設定を画面に置く理由 | デフォルトのプロジェクトを変えるたびにデプロイしなくて済みます。`redmine_aws_ses:receive_mail` は、動くたびにデータベースから設定を読みます |
 
 <a id="project-email-settings"></a>
 
 ## プロジェクトのメール設定
 
-プロジェクトごとのアドレスを使うとき、プロジェクトの設定に「メール」のタブを追加します。プロジェクトごとのアドレスを設定します ([receiving.md](receiving.md#addresses-per-project))。設定は、プラグインの表 (`aws_ses_project_mail_settings`) に入ります。Redmine の設定 (`Setting`。名前と値) は Redmine 全体のものだけで、プロジェクトごとの設定の表がないためです。プロジェクトを削除すると、その行も消えます。
+プロジェクトごとのアドレスを使うとき、プロジェクトの設定に「メール」のタブを追加します。プロジェクトごとのアドレスを設定します ([receiving.md](receiving.md#addresses-per-project))。設定は、プラグインのテーブル (`aws_ses_project_mail_settings`) に入ります。Redmine の設定 (`Setting`。名前と値) は Redmine 全体のものだけで、プロジェクトごとの設定のテーブルがないためです。プロジェクトを削除すると、その行も消えます。
 
 ![プロジェクトの設定の「メール」のタブ](./images/project-mail.png)
 
@@ -76,13 +76,13 @@ Redmine AWS SES の管理画面です。Redmine の管理者だけが開けま�
 | --- | --- |
 | メールアドレス | `<識別子>@<Redmine のドメイン>`。表示のみ。識別子をアドレスにできないプロジェクトは `-` になり、メールを受け取れない ([receiving.md](receiving.md#addresses-per-project)) |
 | メール受信 | チェックボックス。デフォルトはオフ |
-| デフォルト値 | 作るチケットのトラッカー、カテゴリー、優先度、担当者、プライベート |
+| デフォルト値 | 作るチケットのトラッカー、カテゴリ、優先度、担当者、プライベート |
 | 未登録の送信者 | 「取得しない」(デフォルト)、「匿名ユーザーとして取得」、「ユーザーを作成」(Redmine の `unknown_user` の `ignore`、`accept`、`create`) |
 
 | 項目 | 内容 |
 | --- | --- |
 | 変えられる人 | Redmine の管理者と、プラグインが追加するプロジェクトの権限「メール設定の管理」を持つメンバーです |
-| 未登録の送信者のメールを取得するとき | 問い合わせの窓口のように、外の人からのメールを受けるときに使います。迷惑メールが増えるので、DMARC の確認は外しません ([receiving.md](receiving.md#spoofing-and-spam)) |
+| 未登録の送信者のメールを取得するとき | 問い合わせ窓口のように、外部の人からのメールを受けるときに使います。迷惑メールが増えるので、DMARC の確認は外しません ([receiving.md](receiving.md#spoofing-and-spam)) |
 
 <a id="permissions"></a>
 
@@ -94,15 +94,15 @@ Redmine AWS SES の管理画面です。Redmine の管理者だけが開けま�
 
 ## テスト
 
-画面ごとに、Redmine の機能のテストがあります。SES には SDK の応答のスタブを使います ([testing.md](https://redmine-kit.github.io/serverless/ja/testing.html#administration-pages))。
+画面ごとに、Redmine の機能テストがあります。SES には SDK の応答のスタブを使います ([testing.md](https://redmine-kit.github.io/serverless/ja/testing.html#administration-pages))。
 
-このページの画面のスクリーンショットは、`bin/screenshots` で撮ります (Docker の中のヘッドレスの Chromium と、Redmine のテストのデータと、例の SES の応答と受信したメール)。画面を変えたら実行します。
+このページの画面のスクリーンショットは、`bin/screenshots` で撮ります (Docker の中のヘッドレス Chromium と、Redmine のテストデータ、SES の応答と受信メールの例を使います)。画面を変えたら実行します。
 
 <a id="terms"></a>
 
 ## 用語
 
-画面の語は、SES の AWS のコンソールとドキュメントの日本語に合わせています (2026-11-10 に確認)。
+画面の語は、SES のコンソールとドキュメントの日本語に合わせています (2026-11-10 に確認)。
 
 | 画面 (ja / en) | AWS の語 | 出典 | 状態 |
 | --- | --- | --- | --- |

@@ -1,6 +1,6 @@
 # 受信
 
-Redmine AWS SES が、SES の受け取ったメールを取り込むしくみです。アドレス、プロジェクトの決め方、なりすましと迷惑メールの確認、Redmine の `MailHandler` に渡すオプションを書きます。SES は、メッセージをメールのバケット (`inbound/<メッセージ ID>`) に置き、取り込みを起動します。ドメイン、受信のルール、バケットは [Serverless の mail.md](https://redmine-kit.github.io/serverless/ja/mail.html#receiving) にあります。
+Redmine AWS SES が、SES の受け取ったメールを取り込むしくみです。アドレス、プロジェクトの決め方、なりすましと迷惑メールの確認、Redmine の `MailHandler` に渡すオプションを書きます。SES は、メッセージをメールのバケット (`inbound/<メッセージ ID>`) に置き、取り込みを起動します。ドメイン、受信ルール、バケットは [Serverless の mail.md](https://redmine-kit.github.io/serverless/ja/mail.html#receiving) にあります。
 
 2026-11-09 に、Redmine 7.0.3 のソースで確認しました。
 
@@ -13,14 +13,14 @@ Redmine AWS SES が、SES の受け取ったメールを取り込むしくみで
 | `<プロジェクトの識別子>@<ドメイン>` | プロジェクトのアドレス。ここに届いたメールは、そのプロジェクトのチケットになる。プロジェクトの通知を、ここから送ることもできる ([sending.md](sending.md#senders-per-project)) |
 | `noreply@<ドメイン>` (デフォルトアドレス) | プロジェクトに属さないメールの送信元 (下の「デフォルトアドレス」) |
 
-`<ドメイン>` は Redmine のドメインで、送信元のアドレス (`Setting.mail_from`) のドメインです。
+`<ドメイン>` は Redmine のドメインで、送信元メールアドレス (`Setting.mail_from`) のドメインです。
 
 - **識別子とアドレス:** プロジェクトのアドレスは、識別子を `@` の前にしたものだけです。Redmine のプロジェクトの識別子は、英小文字、数字、`-`、`_` でできているので、そのまま使えます。次の識別子のプロジェクトは、メールを受け取れず、通知の送信元も送信元メールアドレスのままです。
   - 64 文字より長い (`@` の前の上限)
-  - プロジェクトに入れない役割のアドレス (`postmaster`、`abuse`、`hostmaster`、`webmaster`、`mailer-daemon`、`root`、`admin`、`administrator`、`noreply`、`no-reply`、`security`。RFC 2142 と一般的なもの)
+  - プロジェクトに割り当てない役割のアドレス (`postmaster`、`abuse`、`hostmaster`、`webmaster`、`mailer-daemon`、`root`、`admin`、`administrator`、`noreply`、`no-reply`、`security`。RFC 2142 と一般的なもの)
   - デフォルトアドレスの `@` の前と同じ (そのアドレスが優先)
 - **受け取るか:** プロジェクトごとに、メールを受け取るかを選びます (「メール受信」。デフォルトはオフ)。受け取らないプロジェクトへのメールは、取り込まずに記録します。
-- **プロジェクトの設定:** プロジェクトの設定の「メール」のタブで、受け取るかとデフォルト値を決めます ([admin.md](admin.md#project-email-settings))。設定は、プラグインの表 (`aws_ses_project_mail_settings`) に入ります。
+- **プロジェクトの設定:** プロジェクトの設定の「メール」のタブで、受け取るかとデフォルト値を決めます ([admin.md](admin.md#project-email-settings))。設定は、プラグインのテーブル (`aws_ses_project_mail_settings`) に入ります。
 
 <a id="without-addresses-per-project"></a>
 
@@ -36,16 +36,16 @@ Redmine AWS SES が、SES の受け取ったメールを取り込むしくみで
 
 ## デフォルトアドレス
 
-プロジェクトに属さないメールは、送信元のアドレス (`Setting.mail_from`)、つまりデフォルトアドレスから送ります。
+プロジェクトに属さないメールは、送信元メールアドレス (`Setting.mail_from`)、つまりデフォルトアドレスから送ります。
 
-| デフォルトアドレスから送るメール | Redmine のメーラーのメソッド |
+| デフォルトアドレスから送るメール | Redmine のメーラーメソッド |
 | --- | --- |
 | パスワードの再設定 | `lost_password` |
-| アカウントの登録の確認、有効化の依頼、有効化の通知 | `register`<br>`account_activation_request`<br>`account_activated` |
-| アカウントの情報 (管理者が作ったアカウント) | `account_information` |
+| アカウント登録の確認、有効化の依頼、有効化の通知 | `register`<br>`account_activation_request`<br>`account_activated` |
+| アカウント情報 (管理者が作ったアカウント) | `account_information` |
 | 期日のリマインダー (複数のプロジェクトのチケットをまとめる) | `reminder` |
-| セキュリティの通知、設定の変更の通知 | `security_notification`<br>`settings_updated` |
-| テストのメール | `test_email` |
+| セキュリティ通知、設定変更の通知 | `security_notification`<br>`settings_updated` |
+| テストメール | `test_email` |
 
 上のメソッドは、Redmine 7.0.3 のメーラーのうち、プロジェクトのヘッダー (`X-Redmine-Project`) を付けないものです (`app/models/mailer.rb`)。
 
@@ -56,11 +56,11 @@ Redmine AWS SES が、SES の受け取ったメールを取り込むしくみで
 
 ## 取り込み
 
-rake のタスク `redmine_aws_ses:receive_mail` が、メッセージを 1 通取り込みます。
+rake タスク `redmine_aws_ses:receive_mail` が、メッセージを 1 通取り込みます。
 
 1. SES のイベントの判定を確認します (下の「なりすましと迷惑メール」)。
 2. イベントの宛先から、プロジェクトを決めます (下記)。
-3. メールのバケットから全文を取ります (`inbound/`。取り込み直しなら `processed/`)。
+3. メールのバケットから全文を取ります (`inbound/`。再取得なら `processed/`)。
 4. Redmine の `MailHandler.safe_receive` に、全文とオプションを渡します。Redmine の `rake redmine:email:read` と同じ処理です。
 5. 成功したら、メッセージを `processed/` に移します (`CopyObject` のあと `DeleteObject`)。実行ごとに記録を残します ([admin.md](admin.md#receiving-email))。
 
@@ -73,14 +73,14 @@ rake のタスク `redmine_aws_ses:receive_mail` が、メッセージを 1 通�
 | `SES_SPAM_VERDICT`<br>`SES_VIRUS_VERDICT`<br>`SES_DMARC_VERDICT`<br>`SES_SPF_VERDICT`<br>`SES_DKIM_VERDICT` | `receipt.spamVerdict.status` など |
 | `SES_DMARC_POLICY` | `receipt.dmarcPolicy` |
 
-Lambda では、SES の受信のルールがタスクの関数を呼び、そのハンドラーがこれらを設定します ([Serverless の tasks.md](https://redmine-kit.github.io/serverless/ja/tasks.html#kinds-of-events))。取り込み直しは `MESSAGE_ID` だけを渡し、最初の実行で記録したものを使います。
+Lambda では、SES の受信ルールがタスクの関数を呼び出し、そのハンドラーがこれらを設定します ([Serverless の tasks.md](https://redmine-kit.github.io/serverless/ja/tasks.html#kinds-of-events))。再取得では `MESSAGE_ID` だけを渡し、最初の実行で記録したものを使います。
 
 **プロジェクトの決め方:**
 
-- **宛先は SES のイベントから取る:** `To` と `Cc` のヘッダーではなく、エンベロープの宛先 (SMTP の `RCPT TO`) を使うので、Bcc で届いたメールも決まります。取り込み直しのために、取り込みの記録に残します。
+- **宛先は SES のイベントから取る:** `To` と `Cc` のヘッダーではなく、エンベロープの宛先 (SMTP の `RCPT TO`) を使うので、Bcc で届いたメールも決まります。再取得のために、取り込みの記録に残します。
 - **当てはめ方:** 宛先のうち Redmine のドメインのアドレスを順に見て、メールを受け取るプロジェクトの識別子に当てはまる最初のものにします。当てはまるものがなければ、取り込まずに記録します。
 - **Redmine に渡す:** プロジェクトの識別子とデフォルト値を、`MailHandler` のオプション (`issue[:project]` など) で渡します。Redmine の決め方では本文の `Project:` のキーワードが勝つので、`allow_override` を空にし、キーワードでプロジェクトを変えられないようにします。
-- **返信:** Redmine は、通知のメールへの返信を、`In-Reply-To` と `References` のヘッダーから、元のチケットの注記にします (`MailHandler#dispatch`)。返信をどのアドレスに送っても、元のチケットに付きます。
+- **返信:** Redmine は、通知メールへの返信を、`In-Reply-To` と `References` のヘッダーから、元のチケットの注記にします (`MailHandler#dispatch`)。返信をどのアドレスに送っても、元のチケットに付きます。
 
 | オプション | 値 | 意味 |
 | --- | --- | --- |
@@ -90,8 +90,8 @@ Lambda では、SES の受信のルールがタスクの関数を呼び、その
 | `issue[:project]` | 宛先から決めたプロジェクト | 上記 |
 | `issue[:tracker]` などのデフォルト値 | プロジェクトのデフォルト値 (名前で渡す) | 作るチケットの値 |
 
-- **自動の返信:** `Auto-Submitted` (`auto-replied`、`auto-generated`) か `X-Autoreply: yes` のあるメール (`MailHandler.ignored_emails_headers`) は、取り込まずに、自動の返信として記録します。通知と取り込みが繰り返されないようにするためです。
-- **Redmine が取り込まないとき:** `MailHandler` が受け付けないメール (たとえば、`ignore` での登録のない送信者や、権限のない送信者) は、取り込まなかったものとして記録し、`inbound/` に残します。理由は Redmine のログにあります。
+- **自動返信:** `Auto-Submitted` (`auto-replied`、`auto-generated`) か `X-Autoreply: yes` のあるメール (`MailHandler.ignored_emails_headers`) は、取り込まずに、自動返信として記録します。通知と取り込みが繰り返されないようにするためです。
+- **Redmine が取り込まないとき:** `MailHandler` が受け付けないメール (たとえば、`ignore` のときの未登録の送信者や、権限のない送信者) は、取り込まなかったものとして記録し、`inbound/` に残します。理由は Redmine のログにあります。
 - **添付ファイル:** 添付ファイルは Redmine の添付ファイルとして保存します ([Redmine AWS S3](https://redmine-kit.github.io/redmine_aws_s3/ja/) があれば S3 に置きます)。
 
 <a id="spoofing-and-spam"></a>
@@ -103,15 +103,15 @@ Redmine は、メールの差出人 (`From`) のアドレスで、どのユー�
 | イベントの判定 (`receipt`) | `PASS` でないとき | 設定 |
 | --- | --- | --- |
 | `virusVerdict.status` | いつも取り込まない。添付ファイルが全員に配られるため | — |
-| `spamVerdict.status` | 取得しない | 「迷惑メールも取得」(`import_spam`。デフォルトはオフ) |
-| `dmarcVerdict.status` | 取得しない | 「DMARC 未通過メールも取得」(`import_without_dmarc_pass`。デフォルトはオフ) |
+| `spamVerdict.status` | 取り込まない | 「迷惑メールも取得」(`import_spam`。デフォルトはオフ) |
+| `dmarcVerdict.status` | 取り込まない | 「DMARC 未通過メールも取得」(`import_without_dmarc_pass`。デフォルトはオフ) |
 
-値は `PASS`、`FAIL`、`GRAY`、`PROCESSING_FAILED` のどれかです。判定がないときは、`PASS` でないものとして扱います。`spfVerdict`、`dkimVerdict`、`dmarcPolicy` も記録しますが、これだけでは決めません。判定は、取り込んだかどうかにかかわらず記録します。
+値は `PASS`、`FAIL`、`GRAY`、`PROCESSING_FAILED` のどれかです。判定がないときは、`PASS` でないものとして扱います。`spfVerdict`、`dkimVerdict`、`dmarcPolicy` も記録しますが、取り込むかどうかの判断には使いません。判定は、取り込んだかどうかにかかわらず記録します。
 
-- **デフォルトで DMARC を求める理由:** DMARC が通っていれば、差出人のドメインが SPF か DKIM で確認されています。Microsoft 365 や Gmail から送ったメールは、ふつうは通ります。設定をオンにすると、誰でも、登録した利用者の名前でメールを送れてしまいます。
+- **デフォルトで DMARC を求める理由:** DMARC が通っていれば、差出人のドメインが SPF か DKIM で確認されています。Microsoft 365 や Gmail から送ったメールは、ふつうは通ります。設定をオンにすると、誰でも、登録済みのユーザーの名前でメールを送れてしまいます。
 - **SES のイベントから取り、ヘッダーからは取らない:** 判定と宛先はイベントから取り、メッセージのヘッダー (`X-SES-*`、`Authentication-Results`) からは取りません。送信者が同じ名前のヘッダーを付けられるからです。
 - **判定がないとき:** 判定のないメッセージ (イベントからも、前の記録からも得られないもの) は取り込みません (`no_verdict`)。
-- **取り込み直し:** 取り込みの記録が判定と宛先を持ち、取り込み直しはそれを使います。設定は、そのときのものを使います。
+- **再取得:** 取り込みの記録が判定と宛先を持ち、再取得ではそれを使います。設定は、そのときのものを使います。
 
 <a id="settings-for-receiving-replies"></a>
 
@@ -120,7 +120,7 @@ Redmine は、メールの差出人 (`From`) のアドレスで、どのユー�
 | 設定 | 値 | 理由 |
 | --- | --- | --- |
 | Redmine の管理画面の「送信元メールアドレス」 | デフォルトアドレス (例: `noreply@redmine.example.com`) | プラグインは、ここから Redmine のドメインも知る |
-| 「この行以降を切り捨てる」 | 引用の前の行 (「--- この行より上に返信を書いてください ---」など) | 返信の引用を注記に入れない |
+| 「メール本文から一致する行以降を切り捨てる」 | 引用の前の行 (「--- この行より上に返信を書いてください ---」など) | 返信の引用を注記に入れない |
 
 <a id="tests"></a>
 
@@ -129,6 +129,6 @@ Redmine は、メールの差出人 (`From`) のアドレスで、どのユー�
 | 対象 | 確認すること |
 | --- | --- |
 | 判定 | 設定のすべての組み合わせ。ウイルスはいつも取り込まない。判定がないとき |
-| 取り込み | S3 のメールのバケット (LocalStack か moto) で、SES のイベントの値 (`test/fixtures/ses_event.json`) といっしょに取り込む。宛先のプロジェクト、Bcc、プロジェクトを変えられない `Project:` のキーワード、取り込まないそれぞれの理由、何も変えない偽の SES のヘッダー、`processed/` への移動、記録からの取り込み直し、rake のタスク |
+| 取り込み | S3 のメールのバケット (LocalStack か moto) で、SES のイベントの値 (`test/fixtures/ses_event.json`) といっしょに取り込む。宛先のプロジェクト、Bcc、プロジェクトを変えられない `Project:` のキーワード、取り込まないそれぞれの理由、何も変えない偽の SES のヘッダー、`processed/` への移動、記録からの再取得、rake タスク |
 | プロジェクトの決め方 | プロジェクト別のアドレス、アドレスにできない識別子 (64 文字より長い、役割のアドレス)、受け取らないプロジェクト、デフォルトアドレス、サブアドレス |
 | プロジェクトの設定 | アドレスにできない識別子のプロジェクトは、アドレスを出さず、「メール受信」をオンにできない。権限のある人だけが変えられる |
