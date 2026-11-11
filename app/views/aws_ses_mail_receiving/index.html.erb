@@ -93,6 +93,8 @@
 <h3><%= l(:label_aws_ses_mail_settings) %></h3>
 
 <%= form_tag({ action: 'update' }, id: 'aws-ses-mail-settings') do %>
+<%= render_error_messages(@setting_errors) %>
+
 <div class="box tabular settings">
   <p>
     <%= label_tag 'settings_global_local_part', l(:label_aws_ses_mail_global_address) %>

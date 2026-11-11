@@ -12,7 +12,7 @@ class AwsSesMailReceivingController < ApplicationController
   MX_TIMEOUT = 2
 
   def index
-    @settings = RedmineAws::SES.settings
+    @settings ||= RedmineAws::SES.settings
     @domain = RedmineAws::SES.domain
     @mx = mx_records if @domain
     @project_settings = AwsSesProjectMailSetting.includes(:project).order(:id).to_a
@@ -21,22 +21,25 @@ class AwsSesMailReceivingController < ApplicationController
     @received = scope.limit(100).to_a
   end
 
+  # On an error, the page again with the values given and the error above
+  # the form, as Redmine's settings do (SettingsController#edit).
   def update
-    values = params.require(:settings).permit(*RedmineAws::SES::DEFAULTS.keys).to_h
-    values['global_local_part'] = values['global_local_part'].to_s.strip.downcase
-    unless values['global_local_part'].match?(AwsSesProjectMailSetting::LOCAL_PART)
-      flash[:error] = l(:error_aws_ses_mail_local_part)
-      return redirect_to(action: 'index')
+    @settings = RedmineAws::SES.settings.merge(setting_params)
+    unless @settings['global_local_part'].to_s.match?(AwsSesProjectMailSetting::LOCAL_PART)
+      @setting_errors = [l(:error_aws_ses_mail_local_part)]
+      index
+      return render(:index)
     end
 
-    Setting.plugin_redmine_aws_ses = RedmineAws::SES.settings.merge(values)
+    Setting.plugin_redmine_aws_ses = @settings
     audit('changed the receiving settings')
     flash[:notice] = l(:notice_successful_update)
     redirect_to action: 'index'
   end
 
   def reimport
-    mails = AwsSesReceivedMail.where(id: Array(params[:ids]).map(&:to_i)).to_a
+    ids = params.slice(:ids).permit(ids: [])[:ids]
+    mails = AwsSesReceivedMail.where(id: Array(ids).map(&:to_i)).to_a
     return render_404 if mails.empty?
 
     mails.each { |mail| AwsSesReimportMailJob.perform_later(mail.message_id) }
@@ -46,6 +49,15 @@ class AwsSesMailReceivingController < ApplicationController
   end
 
   private
+
+  # The plugin's settings, each a single value; a parameter of another shape
+  # is ignored.
+  def setting_params
+    values = params[:settings]
+    values = values.is_a?(ActionController::Parameters) ? values.permit(*RedmineAws::SES::DEFAULTS.keys).to_h : {}
+    values['global_local_part'] = values['global_local_part'].to_s.strip.downcase if values.key?('global_local_part')
+    values
+  end
 
   # The MX hosts of Redmine's domain, from DNS; nil when they cannot be read.
   def mx_records
