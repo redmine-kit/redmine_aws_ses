@@ -43,6 +43,16 @@ module RedmineAws
         assert_select 'p a.icon.icon-email[data-method=post][href=?]', '/admin/test_email'
       end
 
+      # Redmine keeps addresses as they were typed and matches them without
+      # case.
+      def test_the_user_of_an_address_typed_in_another_case
+        EmailAddress.find_by(address: 'jsmith@somenet.foo').update_column(:address, 'JSmith@Somenet.foo')
+        stub_all
+        with_ses_settings { get :index }
+
+        assert_select 'table.list.suppressed tr', text: /jsmith@somenet\.foo\s*John Smith/
+      end
+
       def test_the_tab_is_on_the_aws_page
         stub_all
         with_ses_settings { get :index }

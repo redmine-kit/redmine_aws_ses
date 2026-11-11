@@ -28,11 +28,12 @@ module RedmineAws
       end
 
       # Addresses on the account's suppression list, with the Redmine users
-      # who have them.
+      # who have them, matched without case as Redmine's User.having_mail does.
       def suppressed
         cached(:suppressed) do
           list = @client.list_suppressed_destinations(page_size: SUPPRESSED_LIMIT).suppressed_destination_summaries
-          users = EmailAddress.where(address: list.map { |d| d.email_address.downcase }).includes(:user)
+          addresses = list.map { |d| d.email_address.downcase }
+          users = EmailAddress.where("LOWER(#{EmailAddress.table_name}.address) IN (?)", addresses).includes(:user)
                               .to_h { |e| [e.address.downcase, e.user&.name] }
           list.map do |d|
             { address: d.email_address, reason: d.reason, last_update: d.last_update_time,
