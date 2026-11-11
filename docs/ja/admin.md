@@ -30,7 +30,7 @@ Redmine AWS SES の管理画面です。Redmine の管理者だけが開けま�
 | 項目 | 内容 |
 | --- | --- |
 | サプレッションリストを出す理由 | バウンスや苦情があったアドレスは、SES がサプレッションリストに入れ、そこへは送らなくなります。Redmine からは送ったように見えるので、「通知が届かない」と言われたときに、この画面で確認できます。原因を直してから、アドレスを削除します |
-| テストメール | Redmine 標準のテストメールは、画面の要求の中で送る (`deliver_now`) ので、`redmine-web` にも SES で送る権限を与えます ([mail.md](https://redmine-kit.github.io/serverless/ja/mail.html#ses)) |
+| テストメール | Redmine 標準のテストメールは、画面のリクエストの中で送る (`deliver_now`) ので、`redmine-web` にも SES で送る権限を与えます ([mail.md](https://redmine-kit.github.io/serverless/ja/mail.html#ses)) |
 
 <a id="receiving-email"></a>
 
@@ -88,7 +88,7 @@ Redmine AWS SES の管理画面です。Redmine の管理者だけが開けま�
 
 ## 権限
 
-これらの画面のために、Redmine の web の要求を動かすロールに、SES の状態を読む権限と、サプレッションリストからアドレスを外す権限を与えます。一覧と例のポリシーは [iam.md](iam.md) にあります。
+これらの画面のために、Redmine の Web リクエストを処理するロールに、SES の状態を読む権限と、サプレッションリストからアドレスを外す権限を与えます。一覧と例のポリシーは [iam.md](iam.md) にあります。
 
 <a id="tests"></a>
 

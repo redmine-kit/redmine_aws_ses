@@ -10,7 +10,7 @@ Redmine AWS SES が、Redmine のメールを Amazon SES で送るしくみと�
 
 Redmine の本番環境の設定 (`production.rb`) は `raise_delivery_errors = false` で、Redmine の `Mailer.deliver_mail` は、`ActionMailer::Base.raise_delivery_errors` が true でなければ、配信エラーを握りつぶします。Redmine のメールのジョブ (`Mailer::DeliveryJob`。`ActionMailer::MailDeliveryJob` のサブクラス) は、例外が発生したときだけ失敗します。エラーが握りつぶされると、ジョブは成功し、キューは再試行しません。
 
-そこで、プラグインは、ジョブを動かすプロセス (`REDMINE_ROLE=worker`) でだけ `raise_delivery_errors` を `true` にします。`init.rb` は `production.rb` のあとに動くので、この設定が残ります。ほかのプロセス (web の要求、期日のリマインダーのような rake タスク) は `false` のままにし、1 通の失敗でタスク全体が止まらないようにします。
+そこで、プラグインは、ジョブを動かすプロセス (`REDMINE_ROLE=worker`) でだけ `raise_delivery_errors` を `true` にします。`init.rb` は `production.rb` のあとに動くので、この設定が残ります。ほかのプロセス (Web リクエスト、期日のリマインダーのような rake タスク) は `false` のままにし、1 通の失敗でタスク全体が止まらないようにします。
 
 <a id="handling-by-kind-of-error"></a>
 

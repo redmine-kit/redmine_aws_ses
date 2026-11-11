@@ -10,7 +10,7 @@ Redmine AWS SES を使う Redmine に要るもの (インストール、設定�
 - `plugins/redmine_aws` の [Redmine AWS](https://redmine-kit.github.io/redmine_aws/ja/) (`redmine_aws`) 0.1 以降。これがないと Redmine は起動しません (`init.rb` の `requires_redmine_plugin`)。gem もこれに依存します。「AWS」の管理メニューを追加します。
 - AWS の認証情報で SES と S3 に届くプロセス (Lambda では実行ロール、ほかではインスタンスプロファイルやタスクロール)。Redmine にアクセスキーや SMTP のパスワードは置きません。
 - 送信には、AWS の公式の gem `aws-actionmailer-ses` (配信方法は `:ses_v2`) ([Serverless の mail.md](https://redmine-kit.github.io/serverless/ja/mail.html#gems))。
-- 送信の再試行には、別のプロセスで動くジョブ (Lambda では `REDMINE_ROLE=worker`。最後まで失敗したジョブは [Redmine AWS SQS](https://redmine-kit.github.io/redmine_aws_sqs/ja/) が記録します)。
+- 送信の再試行には、別のプロセスで動くジョブ (Lambda では `REDMINE_ROLE=worker`。最終的に失敗したジョブは [Redmine AWS SQS](https://redmine-kit.github.io/redmine_aws_sqs/ja/) が記録します)。
 
 <a id="installation"></a>
 
@@ -134,7 +134,7 @@ bin/rake redmine_aws_ses:prune_records[<日数>]
 | SES の本稼働アクセス | 前もって申請する (サンドボックスを出る)。リージョンごと |
 | DNS | サブドメインの MX を SES の受信エンドポイント (`inbound-smtp.<region>.amazonaws.com`、優先度 10) に向け、Easy DKIM の CNAME を置く ([Serverless の mail.md](https://redmine-kit.github.io/serverless/ja/mail.html#receiving-domain)) |
 | 受信ルール | リージョンのアクティブなルールセットの中。受信者はサブドメイン。TLS は必須。迷惑メールとウイルスの検査は有効。1 つめのアクションで、メールのバケットの `inbound/` に置く。2 つめのアクションで、取り込みを起動する (Lambda では、タスクの関数を非同期で呼び出す) ([Serverless の mail.md](https://redmine-kit.github.io/serverless/ja/mail.html#receipt-rules)) |
-| メールのバケット | `inbound/` (受け取ったもの) と `processed/` (取り込んだもの)。どちらもライフサイクルで 30 日で消す。バケットポリシーで、`inbound/` には SES だけが書けるようにし、TLS でない要求を拒む |
+| メールのバケット | `inbound/` (受け取ったもの) と `processed/` (取り込んだもの)。どちらもライフサイクルで 30 日で消す。バケットポリシーで、`inbound/` には SES だけが書けるようにし、TLS でないリクエストを拒否する |
 
 <a id="iam-permissions"></a>
 
