@@ -37,7 +37,7 @@ Redmine AWS SES を使う Redmine に要るもの (インストール、設定�
    bin/rake redmine:plugins:migrate
    ```
 
-   受け取ったメールの記録 (`aws_ses_received_mails`) と、プロジェクトのメール設定 (`aws_ses_project_mail_settings`) のテーブルを作ります。
+   受け取ったメールの記録 (`aws_ses_received_mails`)、プロジェクトのメール設定 (`aws_ses_project_mail_settings`)、SES の状態 (`aws_ses_snapshots`) のテーブルを作ります。
 4. `config/configuration.yml` に送信を設定します。
 
    ```yaml
@@ -81,7 +81,7 @@ GitHub Packages からインストールするには、公開のパッケージ�
 
 | 項目 | 説明 | 変える場所 |
 | --- | --- | --- |
-| 送信元メールアドレス (`Setting.mail_from`) | デフォルトアドレス。確認済みのドメインのもの (例: `noreply@redmine.example.com`) ([receiving.md](receiving.md#address-for-the-whole-redmine)) | Redmine の管理画面の設定 |
+| 送信元メールアドレス (`Setting.mail_from`) | デフォルトアドレス。検証済みのドメインのもの (例: `noreply@redmine.example.com`) ([receiving.md](receiving.md#address-for-the-whole-redmine)) | Redmine の管理画面の設定 |
 | 受信設定 | デフォルトアドレスの `@` の前、そこに届いたメールの扱い、デフォルトのプロジェクト、スパムと DMARC に失敗したメールを取得するか ([admin.md](admin.md#receiving-email)) | プラグインの設定。Serverless では `redmine.json` の `pluginSettings` |
 | プロジェクト別のアドレス | 使うか使わないか。デフォルトは使わない (Redmine の標準と同じ)。プロジェクトごとの設定は、各プロジェクトの「メール」のタブ ([admin.md](admin.md#project-email-settings)) | プラグインの設定 |
 | 「メール本文から一致する行以降を切り捨てる」 | 引用の前の行。返信の引用が注記に入らないようにする | Redmine の管理画面の設定 |
@@ -141,7 +141,7 @@ bin/rake redmine_aws_ses:prune_records[<日数>]
 
 | リソース | 設定 |
 | --- | --- |
-| SES のドメイン ID | Redmine のサブドメイン (例: `redmine.example.com`)。使うリージョンで、Easy DKIM で確認する。送信と受信の両方に使う |
+| SES のドメイン ID | Redmine のサブドメイン (例: `redmine.example.com`)。使うリージョンで、Easy DKIM で検証する。送信と受信の両方に使う |
 | SES の本稼働アクセス | 前もって申請する (サンドボックスを出る)。リージョンごと |
 | DNS | サブドメインの MX を SES の受信エンドポイント (`inbound-smtp.<region>.amazonaws.com`、優先度 10) に向け、Easy DKIM の CNAME を置く ([Serverless の mail.md](https://redmine-kit.github.io/serverless/ja/mail.html#receiving-domain)) |
 | 受信ルール | リージョンのアクティブなルールセットの中。受信者はサブドメイン。TLS は必須。スパムとウイルスの検査は有効。1 つめのアクションで、メールのバケットの `inbound/` に置く。2 つめのアクションで、取り込みを起動する (Lambda では、タスクの関数を非同期で呼び出す) ([Serverless の mail.md](https://redmine-kit.github.io/serverless/ja/mail.html#receipt-rules)) |
@@ -174,10 +174,10 @@ LocalStack が実際の AWS のとおりに再現しない呼び出しは、そ�
 | 呼び出し | モックする理由 | モックした応答 |
 | --- | --- | --- |
 | SES v2 の `GetAccount` (接続テスト、「メール送信」のタブ) | LocalStack は対応していないと答え、moto にもない (2026-11-09 に確認) | API リファレンスの項目 (`ProductionAccessEnabled`、`SendingEnabled`、`SendQuota` など) と、そのエラー |
-| 確認済みの ID でない送信元からの SES v2 の `SendEmail` | 実際の SES は `MessageRejected` で拒むが、LocalStack は送ってしまう | SES のメッセージ (「Email address is not verified. ...」) を持つ `MessageRejected` |
+| 検証済みの ID でない送信元からの SES v2 の `SendEmail` | 実際の SES は `MessageRejected` で拒むが、LocalStack は送ってしまう | SES のメッセージ (「Email address is not verified. ...」) を持つ `MessageRejected` |
 | `SendEmail` の種類別のエラー ([sending.md](sending.md#handling-by-kind-of-error)) | エミュレーターに、スロットリングやアカウントのエラーを返させられない | API リファレンスのそれぞれのエラーコード |
 
-それぞれのテストで確認することは、[sending.md](sending.md#tests) と [receiving.md](receiving.md#tests) にあります。SES のエラーは、SDK の応答のスタブで、配信方法を通して 1 つずつ起こします。画面もスタブを使います。取り込みのテストは、メールを moto の S3 に置き、イベントの判定と宛先といっしょに取り込みます。宛先のプロジェクト、Bcc、プロジェクトを変えられない `Project:` のキーワード、取り込まないそれぞれの理由、何も変えない偽の SES のヘッダー、記録からの再取得を確認します。Redmine のコードローダー (Zeitwerk) が、boot のファイルを先に読み込んだ状態で、Redmine AWS の名前空間の下のプラグインのファイルを読み込めることも、新しいプロセスで確認します (`bin/rails zeitwerk:check`)。`bin/test` は、プラグインのテストのあと、メールのまわりの Redmine 本体のテスト (`MailHandler`、`Mailer`、プロジェクト、設定、管理) を動かします。`bin/test --redmine` は、プラグインをインストールした状態で Redmine 本体のすべてのテストを動かします。CI はこちらです。
+それぞれのテストで確認することは、[sending.md](sending.md#tests) と [receiving.md](receiving.md#tests) にあります。SES のエラーは、SDK の応答のスタブで、配信方法を通して 1 つずつ起こします。画面もスタブを使います。取り込みのテストは、メールをテスト用の S3 (LocalStack か moto) に置き、イベントの判定と宛先といっしょに取り込みます。宛先のプロジェクト、Bcc、プロジェクトを変えられない `Project:` のキーワード、取り込まないそれぞれの理由、何も変えない偽の SES のヘッダー、記録からの再取得を確認します。Redmine のコードローダー (Zeitwerk) が、boot のファイルを先に読み込んだ状態で、Redmine AWS の名前空間の下のプラグインのファイルを読み込めることも、新しいプロセスで確認します (`bin/rails zeitwerk:check`)。`bin/test` は、プラグインのテストのあと、メールのまわりの Redmine 本体のテスト (`MailHandler`、`Mailer`、プロジェクト、設定、管理) を動かします。`bin/test --redmine` は、プラグインをインストールした状態で Redmine 本体のすべてのテストを動かします。CI はこちらです。
 
 CI は、静的チェックとテストを Ruby 3.2 と 4.0 で実行します。ローカルでは、`TEST_RUBY=3.2 bin/test` (または `bin/lint`) で Ruby 3.2 で実行します。
 

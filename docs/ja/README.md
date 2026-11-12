@@ -45,7 +45,7 @@ Redmine 標準のしくみでテストを書き、Docker の中で動かしま�
 
 ## データベーステーブル
 
-受信したメールの記録 (`aws_ses_received_mails`) と、プロジェクトのメール設定 (`aws_ses_project_mail_settings`) の 2 つのテーブルを追加します ([admin.md](admin.md))。
+受信したメールの記録 (`aws_ses_received_mails`)、プロジェクトのメール設定 (`aws_ses_project_mail_settings`)、メールのタブが表示する SES の状態 (`aws_ses_snapshots`) の 3 つのテーブルを追加します ([admin.md](admin.md))。
 
 <a id="sponsors"></a>
 

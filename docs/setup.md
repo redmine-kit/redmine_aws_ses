@@ -33,7 +33,7 @@ What a Redmine needs to use Redmine AWS SES: installation, configuration, the SE
    bin/rake redmine:plugins:migrate
    ```
 
-   They create the tables of received mail records (`aws_ses_received_mails`) and project mail settings (`aws_ses_project_mail_settings`).
+   They create the tables of received mail records (`aws_ses_received_mails`), project mail settings (`aws_ses_project_mail_settings`) and the SES state (`aws_ses_snapshots`).
 4. Set sending in `config/configuration.yml`:
 
    ```yaml
@@ -153,7 +153,7 @@ Calls that LocalStack does not emulate as real AWS behaves are mocked with SDK r
 | SES v2 `SendEmail` from a sender that is not a verified identity | Real SES rejects it with `MessageRejected`; LocalStack sends it | `MessageRejected` with SES's message ("Email address is not verified. ...") |
 | Each `SendEmail` error by kind ([sending.md](sending.md#handling-by-kind-of-error)) | The emulators cannot be made to answer throttling or account errors | Each error code of the API reference |
 
-What each test checks is in [sending.md](sending.md#tests) and [receiving.md](receiving.md#tests). SES errors are raised one by one through the delivery method with SDK response stubs; the pages use stubs too. The import tests store messages in moto's S3 and import them with the event's verdicts and recipients: the project of the recipient, Bcc, a `Project:` keyword that cannot change the project, each reason for dropping, forged SES headers that change nothing, and re-imports from the record. A test also checks, in new processes, that Redmine's code loader (Zeitwerk) loads the plugin's files under the namespace of Redmine AWS, with the boot file loaded first (`bin/rails zeitwerk:check`). `bin/test` runs the plugin's tests, then Redmine's tests around email (`MailHandler`, `Mailer`, projects, settings, administration); `bin/test --redmine` runs every Redmine test with the plugin installed, as the CI does.
+What each test checks is in [sending.md](sending.md#tests) and [receiving.md](receiving.md#tests). SES errors are raised one by one through the delivery method with SDK response stubs; the pages use stubs too. The import tests store messages in the test S3 (LocalStack or moto) and import them with the event's verdicts and recipients: the project of the recipient, Bcc, a `Project:` keyword that cannot change the project, each reason for dropping, forged SES headers that change nothing, and re-imports from the record. A test also checks, in new processes, that Redmine's code loader (Zeitwerk) loads the plugin's files under the namespace of Redmine AWS, with the boot file loaded first (`bin/rails zeitwerk:check`). `bin/test` runs the plugin's tests, then Redmine's tests around email (`MailHandler`, `Mailer`, projects, settings, administration); `bin/test --redmine` runs every Redmine test with the plugin installed, as the CI does.
 
 CI runs the lint and the tests on Ruby 3.2 and 4.0; locally, `TEST_RUBY=3.2 bin/test` (or `bin/lint`) runs them on Ruby 3.2.
 

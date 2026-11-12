@@ -14,7 +14,7 @@
 | `s3:GetObject`<br>`s3:DeleteObject` | メールのバケットの `inbound/*` | 取り込み (rake)。受け取ったメールを読み (サイズのための `HeadObject` は `s3:GetObject` で許可される。そのあと `GetObject`)、移したあとに消す |
 | `s3:PutObject` | メールのバケットの `processed/*` | 取り込み (rake)。取り込んだメールを移す (`processed/` への `CopyObject` のあと、`inbound/` で `DeleteObject`) |
 | `s3:GetObject` | メールのバケットの `processed/*` | 取り込み済みのメールの再取得 (rake か、下のジョブ) |
-| `inbound/*` と `processed/*` への `s3:GetObject`、`s3:DeleteObject`、`processed/*` への `s3:PutObject` | メールのバケット | ジョブ。「メール受信」の画面の「再取得」 |
+| `inbound/*` と `processed/*` への `s3:GetObject`、`inbound/*` だけへの `s3:DeleteObject` (メールはそこから移る)、`processed/*` への `s3:PutObject` | メールのバケット | ジョブ。「メール受信」の画面の「再取得」 |
 
 <a id="example-policy"></a>
 

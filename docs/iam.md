@@ -12,7 +12,7 @@ The plugin's own calls to AWS, by the process. Lambda's own permissions (logs, r
 | `s3:GetObject`<br>`s3:DeleteObject` | `inbound/*` in the mail bucket | The import (rake): reading received email (`HeadObject` for its size, which `s3:GetObject` allows, then `GetObject`), removing it after the move |
 | `s3:PutObject` | `processed/*` in the mail bucket | The import (rake): moving imported email (`CopyObject` to `processed/`, then `DeleteObject` in `inbound/`) |
 | `s3:GetObject` | `processed/*` in the mail bucket | Re-importing a message that was already imported (rake, or the job below) |
-| `s3:GetObject`, `s3:DeleteObject` on `inbound/*` and `processed/*`, `s3:PutObject` on `processed/*` | The mail bucket | Jobs: "Fetch again" on the "Email receiving" page |
+| `s3:GetObject` on `inbound/*` and `processed/*`, `s3:DeleteObject` on `inbound/*` only (a message moves from there), `s3:PutObject` on `processed/*` | The mail bucket | Jobs: "Fetch again" on the "Email receiving" page |
 
 ## Example policy
 

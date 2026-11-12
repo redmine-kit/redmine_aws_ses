@@ -35,7 +35,7 @@ The tests use Redmine's standard mechanism and run in Docker ([setup.md](setup.m
 
 ## Database tables
 
-The plugin adds two tables: the records of received mail (`aws_ses_received_mails`) and the projects' mail settings (`aws_ses_project_mail_settings`) ([admin.md](admin.md)).
+The plugin adds three tables: the records of received mail (`aws_ses_received_mails`), the projects' mail settings (`aws_ses_project_mail_settings`) and the state of SES that the email tabs show (`aws_ses_snapshots`) ([admin.md](admin.md)).
 
 ## Sponsors
 
