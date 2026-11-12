@@ -68,10 +68,14 @@ class AwsSesReceivedMail < ApplicationRecord
     self.target_id = result.id
   end
 
-  # Imported, and the issue or the note it created still exists: importing
-  # again would create a second one.
+  # What MailHandler creates: an issue, a note (Journal), a forum reply
+  # (Message) or a news comment (Comment).
+  TARGET_TYPES = %w[Issue Journal Message Comment].freeze
+
+  # Imported, and what it created still exists: importing again would
+  # create a second one.
   def imported_target?
-    status == 'imported' && %w[Issue Journal].include?(target_type) && target_type.constantize.exists?(target_id)
+    status == 'imported' && TARGET_TYPES.include?(target_type) && target_type.constantize.exists?(target_id)
   end
 
   # Reads the issues of the notes in one query, for a list of records.
@@ -79,13 +83,17 @@ class AwsSesReceivedMail < ApplicationRecord
     notes = records.select { |record| record.target_type == 'Journal' }.map(&:target_id)
     issues = Journal.where(id: notes).pluck(:id, :journalized_id).to_h
     records.each do |record|
-      record.preloaded_issue_id = record.target_type == 'Journal' ? issues[record.target_id] : record.target_id
+      record.preloaded_issue_id = case record.target_type
+                                  when 'Issue' then record.target_id
+                                  when 'Journal' then issues[record.target_id]
+                                  end
     end
   end
 
   attr_writer :preloaded_issue_id
 
-  # The issue the message created or added a note to.
+  # The issue the message created or added a note to; nil for a forum reply
+  # or a news comment, which the list shows as fetched.
   def issue_id
     return @preloaded_issue_id if instance_variable_defined?(:@preloaded_issue_id)
 
