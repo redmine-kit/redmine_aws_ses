@@ -56,7 +56,7 @@ Redmine AWS SES の管理画面です。システム管理者だけが開けま�
 | 未取得 (スパム) | スパムの判定が `PASS` でなく、「スパムも取得」がオフ |
 | 未取得 (DMARC 失敗) | DMARC の判定が `PASS` でなく、「DMARC に失敗したメールも取得」がオフ |
 | 未取得 (転送メールの作成者なし) | 登録した転送元からということだけで取得するもので、「転送メールの作成者」が作成者を認めない ([receiving.md](receiving.md#author-of-forwarded-email)) |
-| 未取得 (ほかのプロジェクトへの返信) | 登録した転送元からということだけで取得するもので、宛先とは別のプロジェクトのチケットやメッセージへの返信 ([receiving.md](receiving.md#author-of-forwarded-email)) |
+| 未取得 (別のプロジェクトへの返信) | 登録した転送元からということだけで取得するもので、宛先とは別のプロジェクトのチケットやメッセージへの返信 ([receiving.md](receiving.md#author-of-forwarded-email)) |
 | 未取得 (転送元の SPF 失敗) | DMARC の判定が `PASS` でなく、エンベロープの送信者がプロジェクトの転送元だが、SES の SPF の判定が `PASS` でない ([receiving.md](receiving.md#forwarded-email)) |
 | 未取得 (自動返信) | 自動の返信 ([receiving.md](receiving.md#importing)) |
 | 未取得 (プロジェクトなし) | 受け取るプロジェクトがない。または、「受信メール」が「取得しない」のときの、デフォルトアドレス宛てのメール |
