@@ -62,9 +62,10 @@ jobs:
           repository: redmine-kit/redmine_aws
           path: redmine_aws
           persist-credentials: false
-      # The plugin's tests, then every Redmine test with the plugin installed.
-      # LocalStack when the organization's secret is available (not on pull
-      # requests from forks); moto otherwise. The log names the backend.
+      # The plugin's tests, then every Redmine test with the plugin installed,
+      # with S3 on AWS Emulator; SES sending on LocalStack when the
+      # organization's secret is available (not on pull requests from forks),
+      # moto otherwise (docs/setup.md#tests). The log names the backends.
       - run: bin/test --redmine
         env:
           LOCALSTACK_AUTH_TOKEN: ${{ secrets.LOCALSTACK_AUTH_TOKEN }}

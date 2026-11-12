@@ -4,8 +4,10 @@ require_relative '../test_helper'
 
 module RedmineAws
   module SES
-    # The SES state and the connection check, with SDK response stubs: neither
-    # LocalStack nor moto has SES v2 GetAccount.
+    # The SES state and the connection check, with SDK response stubs: they
+    # set the account states and the errors the tests need (a paused account,
+    # AccessDeniedException), which no test backend can be put into. AWS
+    # Emulator answers GetAccount, but always with the same sandbox account.
     class AccountTest < ActiveSupport::TestCase
       include RedmineAws::SES::TestHelper
 

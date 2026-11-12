@@ -2,8 +2,8 @@
 
 module RedmineAws
   module SES
-    # The import tests on moto's (or LocalStack's) S3: a mail bucket per test,
-    # with messages as SES stores them.
+    # The import tests on AWS Emulator's S3 (bin/test): a mail bucket per
+    # test, with messages as SES stores them.
     module MailBucketHelper
       def self.included(base)
         base.setup { create_mail_bucket }

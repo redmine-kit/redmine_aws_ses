@@ -51,3 +51,5 @@ Redmine sends every notification from the emission address (`Setting.mail_from`)
 | Errors by kind | Each `SendEmail` error raised one by one with SDK response stubs: temporary errors are retried in the job and raised after the last run, message errors are dropped (the log has no recipient address), account errors are raised for the queue |
 | Only in the worker | `raise_delivery_errors` is set only with `REDMINE_ROLE=worker` |
 | Senders per project | The interceptor changes the sender and `Reply-To` only when the settings are on, and keeps display names with quotes, backslashes and Japanese |
+
+The sending test runs on LocalStack (with the organization's token) or moto, not on AWS Emulator, an exception to the organization's rule for AWS in tests: the emulator cannot verify identities, answers `SendEmail` with a raw message, which `aws-actionmailer-ses` sends, with `NotImplemented` (HTTP 501), and has no outbox to check what was sent (checked with AWS Emulator 1.0.322 on 2026-11-12). It moves to the emulator once the emulator supports them.

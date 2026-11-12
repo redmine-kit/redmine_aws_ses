@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
-# The plugin's tests in Redmine 7.0.3 on PostgreSQL 16, with AWS on LocalStack
-# (when LOCALSTACK_AUTH_TOKEN is set) or moto, in Docker.
+# The plugin's tests in Redmine 7.0.3 on PostgreSQL 16, in Docker, with S3 on
+# AWS Emulator and SES on LocalStack (when LOCALSTACK_AUTH_TOKEN is set) or
+# moto (docs/setup.md#tests).
 #   bin/test                 # the plugin's tests, then the Redmine tests around email
 #   bin/test --redmine       # also every Redmine test, with the plugin installed
 #   bin/test <files>         # some files of the plugin's tests
@@ -11,17 +12,24 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 image=redmine-aws-ses-test
-# The same tests run against either backend; TEST_AWS_BACKEND names it.
+# SES sending runs on LocalStack or moto (the emulator cannot run it yet,
+# docs/sending.md#tests); TEST_SES_BACKEND names it.
 if [[ -n "${LOCALSTACK_AUTH_TOKEN:-}" ]]; then
-  backend=localstack endpoint=http://localstack:4566
+  ses_backend=localstack ses_endpoint=http://localstack:4566
 else
-  backend=moto endpoint=http://moto:5000
+  ses_backend=moto ses_endpoint=http://moto:5000
 fi
-# SES has its own variables (the SDK's AWS_ENDPOINT_URL_SESV2 and
-# AWS_ENDPOINT_URL_SES), so that it can be pointed elsewhere; now the same.
-ses_backend=$backend ses_endpoint=$endpoint
-echo "AWS backend: $backend ($endpoint); SES: $ses_backend ($ses_endpoint)"
 bin/services >/dev/null
+# The plugin's tests run in the emulator's network namespace, on the internal
+# network (test/compose.yml), and trust only the certificate it wrote at
+# start-up. Redmine's own tests, which call no AWS API, run on the default
+# network.
+emulator=$(docker compose -f test/compose.yml -p redmine-aws-ses-test ps -q aws-emulator)
+aws=(--network "container:$emulator" --volumes-from "$emulator:ro"
+  -e AWS_ENDPOINT_URL=https://127.0.0.1:9297 -e AWS_CA_BUNDLE=/home/emulator/.aws/emulator/9297/ca.pem
+  -e TEST_AWS_BACKEND=aws-emulator
+  -e AWS_ENDPOINT_URL_SESV2="$ses_endpoint" -e AWS_ENDPOINT_URL_SES="$ses_endpoint" -e TEST_SES_BACKEND="$ses_backend")
+echo "AWS for the tests: AWS Emulator $(docker exec "$emulator" aws-emulator --version | sed -n 's/^Version: //p'); SES sending: $ses_backend"
 # redmine_aws, which the plugin requires: a checkout next to this one, or
 # REDMINE_AWS_DIR.
 aws_dir=${REDMINE_AWS_DIR:-../redmine_aws}
@@ -34,17 +42,14 @@ dockerfile() {
 }
 dockerfile | docker buildx build --load -q -t "$image" --build-context redmine_aws="$aws_dir" -f - . >/dev/null
 run() {
-  docker run --rm --network redmine-aws-ses-test_default -e AWS_ENDPOINT_URL="$endpoint" -e TEST_AWS_BACKEND="$backend" \
-    -e AWS_ENDPOINT_URL_SESV2="$ses_endpoint" -e AWS_ENDPOINT_URL_SES="$ses_endpoint" -e TEST_SES_BACKEND="$ses_backend" \
-    -e PARALLEL_WORKERS="${PARALLEL_WORKERS:-4}" "$image" \
+  docker run --rm --network redmine-aws-ses-test_default -e PARALLEL_WORKERS="${PARALLEL_WORKERS:-4}" "$image" \
     sh -c 'bin/rails db:drop db:create db:migrate redmine:plugins:migrate db:schema:dump >/dev/null && "$@"' test "$@"
 }
 # The plugin's tests, with coverage written to coverage/coverage.xml.
 run_plugin() {
   mkdir -p coverage
-  docker run --rm --network redmine-aws-ses-test_default -e AWS_ENDPOINT_URL="$endpoint" -e TEST_AWS_BACKEND="$backend" \
-    -e AWS_ENDPOINT_URL_SESV2="$ses_endpoint" -e AWS_ENDPOINT_URL_SES="$ses_endpoint" -e TEST_SES_BACKEND="$ses_backend" \
-    -e PLUGIN_COVERAGE=1 -e PARALLEL_WORKERS=1 -v "$PWD/coverage:/redmine/plugins/redmine_aws_ses/coverage" "$image" \
+  docker run --rm "${aws[@]}" -e PLUGIN_COVERAGE=1 -e PARALLEL_WORKERS=1 \
+    -v "$PWD/coverage:/redmine/plugins/redmine_aws_ses/coverage" "$image" \
     sh -c 'bin/rails db:drop db:create db:migrate redmine:plugins:migrate db:schema:dump >/dev/null && "$@"' test "$@"
 }
 redmine_tests=(test/unit/mail_handler_test.rb test/unit/mailer_test.rb test/functional/projects_controller_test.rb

@@ -1,35 +1,64 @@
-# Services for the tests (bin/test). No host ports: the tests run in a
-# container on the same network.
+# Services for the tests (bin/test). No host ports. The plugin's tests run on
+# the internal network, which cannot reach AWS
+# (test/integration/network_test.rb fails if they can); Redmine's own tests,
+# which call no AWS API but resolve names on the internet (webhooks), run on
+# the default network.
+networks:
+  internal:
+    internal: true
+
 services:
   postgres:
     image: postgres:16@sha256:f9a7b9ebf6f56201f949db745e47bc423c0f0f8294bafe991cc10bf74b029657
     environment:
       POSTGRES_HOST_AUTH_METHOD: trust
+    networks: [internal, default]
     healthcheck:
       test: ["CMD", "pg_isready", "-U", "postgres"]
       interval: 2s
       retries: 30
 
-  # S3 for the import tests.
+  # S3 for the import tests: AWS Emulator (test/aws-emulator/Dockerfile). Its
+  # certificate names only 127.0.0.1 and localhost, so the tests run in its
+  # network namespace and reach it on https://127.0.0.1:9297, trusting the
+  # certificate it writes to the volume at each start (bin/test).
+  # Authentication is off: the tests sign with fixed keys.
+  aws-emulator:
+    build: aws-emulator
+    image: redmine-aws-ses-test-aws-emulator
+    pull_policy: build
+    command: ["--auth", "off"]
+    networks: [internal]
+    mem_limit: 2g
+    memswap_limit: 2g
+    volumes:
+      - aws-emulator:/home/emulator/.aws/emulator
+    healthcheck:
+      test: ["CMD", "curl", "-fsk", "https://127.0.0.1:9297/__admin/health"]
+      interval: 1s
+      retries: 30
+
+  # SES v2 for the sending test, which the emulator cannot run yet
+  # (docs/sending.md#tests): moto, or LocalStack when LOCALSTACK_AUTH_TOKEN
+  # is set (bin/services turns on the "localstack" profile).
   moto:
     image: motoserver/moto:5.2.5@sha256:59a1965d845249b04def37a0e2565f9cc6c44543cb89b68e90f28f344b3b0d1a
+    networks: [internal]
     healthcheck:
       test: ["CMD", "python3", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:5000/moto-api/')"]
       interval: 2s
       retries: 30
 
-  # LocalStack, when LOCALSTACK_AUTH_TOKEN is set (bin/services turns on the
-  # "localstack" profile; bin/test then uses it instead of moto). The token is
-  # never written to the repository.
+  # The token is never written to the repository. LocalStack checks it on the
+  # internet, so it is on the default network too; the tests reach it on the
+  # internal one.
   localstack:
     image: localstack/localstack:2026.10.6@sha256:f94401988db4c01a5b2634d37d698a9b11c93f74c1ad0f7a8849f5ebd73dcbdc
     profiles: ["localstack"]
+    networks: [internal, default]
     environment:
       LOCALSTACK_AUTH_TOKEN: ${LOCALSTACK_AUTH_TOKEN:-}
-      # URLs that LocalStack returns (queue URLs) on the host the tests call,
-      # not on localhost.localstack.cloud.
       LOCALSTACK_HOST: localstack:4566
-      SQS_ENDPOINT_STRATEGY: path
     # The image has its own health check.
 
   # Headless Chromium for the screenshots of the docs (bin/screenshots), only
@@ -42,3 +71,6 @@ services:
       test: ["CMD", "/opt/bin/check-grid.sh", "--host", "0.0.0.0", "--port", "4444"]
       interval: 2s
       retries: 60
+
+volumes:
+  aws-emulator:

@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
-# Starts PostgreSQL 16 and moto for the tests (and LocalStack when
-# LOCALSTACK_AUTH_TOKEN is set), or stops them with --down.
+# Starts PostgreSQL 16, AWS Emulator and moto for the tests (and LocalStack
+# when LOCALSTACK_AUTH_TOKEN is set; test/compose.yml), or stops them with
+# --down.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 compose=(docker compose -f test/compose.yml -p redmine-aws-ses-test)

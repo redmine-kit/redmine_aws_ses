@@ -167,13 +167,13 @@ bin/rake redmine_aws_ses:prune_records[<日数>]
 
 ## テスト
 
-テストは `test/` にあり、Redmine 標準のしくみで、Docker の中の Redmine 7.0.3 と PostgreSQL 16 で動かします。AWS は、`LOCALSTACK_AUTH_TOKEN` があれば LocalStack です (CI は組織のシークレットを使う)。SES v2 も S3 も LocalStack で動かし、LocalStack が起動しなければ失敗にします。トークンがなければ (フォークからの Pull Request、手元での実行)、同じテストを moto で動かします。ログに使ったほうを出します。
+テストは `test/` にあり、Redmine 標準のしくみで、Docker の中の Redmine 7.0.3 と PostgreSQL 16 で動かします。S3 (取り込みのテスト) は、バージョンを固定し、テレメトリをオフにした [AWS Emulator](https://docs.aws.amazon.com/emulator/latest/userguide/) です (`test/aws-emulator/Dockerfile`)。送信のテストは、エミュレーターではまだ動かせないので ([sending.md](sending.md#tests))、`LOCALSTACK_AUTH_TOKEN` があれば LocalStack (CI は組織のシークレットを使う)、なければ moto で動かします。ログに使ったものを出します。プラグインのテストは AWS に届かない内部ネットワークで動き、AWS への接続が開くと失敗するテストがあります。AWS の API を呼ばない Redmine 本体のテストは、デフォルトのネットワークで動きます。
 
-LocalStack が実際の AWS のとおりに再現しない呼び出しは、その呼び出しだけを SDK の応答のスタブ (`stub_responses`) でモックします。
+テストに要る応答を、どのバックエンドも実際の AWS のとおりに返さない呼び出しは、その呼び出しだけを SDK の応答のスタブ (`stub_responses`) でモックします。
 
 | 呼び出し | モックする理由 | モックした応答 |
 | --- | --- | --- |
-| SES v2 の `GetAccount` (接続テスト、「メール送信」のタブ) | LocalStack は対応していないと答え、moto にもない (2026-11-09 に確認) | API リファレンスの項目 (`ProductionAccessEnabled`、`SendingEnabled`、`SendQuota` など) と、そのエラー |
+| SES v2 の `GetAccount` (接続テスト、「メール送信」のタブ) | テストにはアカウントの状態とエラー (一時停止のアカウント、`AccessDeniedException`) が要る。AWS Emulator はいつも同じサンドボックスのアカウントを返し、LocalStack は対応していないと答え、moto にもない (2026-11-09 と 2026-11-12 に確認) | API リファレンスの項目 (`ProductionAccessEnabled`、`SendingEnabled`、`SendQuota` など) と、そのエラー |
 | 検証済みの ID でない送信元からの SES v2 の `SendEmail` | 実際の SES は `MessageRejected` で拒むが、LocalStack は送ってしまう | SES のメッセージ (「Email address is not verified. ...」) を持つ `MessageRejected` |
 | `SendEmail` の種類別のエラー ([sending.md](sending.md#handling-by-kind-of-error)) | エミュレーターに、スロットリングやアカウントのエラーを返させられない | API リファレンスのそれぞれのエラーコード |
 

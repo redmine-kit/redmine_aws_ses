@@ -5,9 +5,10 @@ require 'net/http'
 
 module RedmineAws
   module SES
-    # Sending through aws-actionmailer-ses (:ses_v2) to SES v2 (LocalStack or
-    # moto, TEST_SES_BACKEND). The connection check (GetAccount) is in
-    # AccountTest: neither emulator has GetAccount.
+    # Sending through aws-actionmailer-ses (:ses_v2) to SES v2 on LocalStack
+    # or moto (TEST_SES_BACKEND), not AWS Emulator, which cannot run it yet
+    # (docs/sending.md#tests). The connection check (GetAccount) is in
+    # AccountTest, with SDK response stubs.
     class SendMailTest < ActiveSupport::TestCase
       include RedmineAws::SES::TestHelper
 

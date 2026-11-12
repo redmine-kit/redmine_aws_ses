@@ -143,13 +143,13 @@ The permissions the plugin needs, with an example policy, are in [iam.md](iam.md
 
 ## Tests
 
-The tests are in `test/` and run with Redmine's standard mechanism, in Redmine 7.0.3 on PostgreSQL 16 in Docker. AWS is LocalStack when `LOCALSTACK_AUTH_TOKEN` is set (CI uses the organization's secret): SES v2 and S3 both run on it, and if LocalStack does not start, the run fails. Without the token (pull requests from forks, local runs), the same tests run on moto. The log names the backend.
+The tests are in `test/` and run with Redmine's standard mechanism, in Redmine 7.0.3 on PostgreSQL 16 in Docker. S3 (the import tests) is [AWS Emulator](https://docs.aws.amazon.com/emulator/latest/userguide/) at a pinned version, with telemetry off (`test/aws-emulator/Dockerfile`). The sending test runs on LocalStack when `LOCALSTACK_AUTH_TOKEN` is set (CI uses the organization's secret) and on moto otherwise, as the emulator cannot run it yet ([sending.md](sending.md#tests)); the log names the backends. The plugin's tests run on an internal network that cannot reach AWS, and a test fails if a connection to AWS opens; Redmine's own tests, which call no AWS API, run on the default network.
 
-Calls that LocalStack does not emulate as real AWS behaves are mocked with SDK response stubs (`stub_responses`), only for that call:
+Calls whose answers the tests need but no backend gives as real AWS does are mocked with SDK response stubs (`stub_responses`), only for that call:
 
 | Call | Why it is mocked | The mocked answer |
 | --- | --- | --- |
-| SES v2 `GetAccount` (the connection test, the "Email sending" tab) | LocalStack answers that it does not support it; moto does not have it (checked on 2026-11-09) | The fields of the API reference (`ProductionAccessEnabled`, `SendingEnabled`, `SendQuota`, ...), and its errors |
+| SES v2 `GetAccount` (the connection test, the "Email sending" tab) | The tests need account states and errors (a paused account, `AccessDeniedException`); AWS Emulator always answers the same sandbox account, LocalStack answers that it does not support it and moto does not have it (checked on 2026-11-09 and 2026-11-12) | The fields of the API reference (`ProductionAccessEnabled`, `SendingEnabled`, `SendQuota`, ...), and its errors |
 | SES v2 `SendEmail` from a sender that is not a verified identity | Real SES rejects it with `MessageRejected`; LocalStack sends it | `MessageRejected` with SES's message ("Email address is not verified. ...") |
 | Each `SendEmail` error by kind ([sending.md](sending.md#handling-by-kind-of-error)) | The emulators cannot be made to answer throttling or account errors | Each error code of the API reference |
 
