@@ -41,6 +41,19 @@ module RedmineAws
         end
       end
 
+      # Before any section is read: the class on the page, the message in the
+      # log, and no page error.
+      def test_refresh_when_the_client_cannot_be_built
+        RedmineAws::SES::Clients.stubs(:ses).raises(::Aws::Errors::MissingRegionError)
+        log = capture_log(ActionController::Base) { with_ses_settings { post :refresh } }
+
+        assert_redirected_to '/admin/aws/mail_sending'
+        assert_equal 'Could not call the SES API (Aws::Errors::MissingRegionError). See the log for details.',
+                     flash[:error]
+        assert_match(/could not refresh the SES state: Aws::Errors::MissingRegionError/, log)
+        assert_equal 0, AwsSesSnapshot.count
+      end
+
       def test_unsuppress
         stored_state
         client = stub_ses

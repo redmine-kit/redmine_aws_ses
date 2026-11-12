@@ -14,11 +14,17 @@ class AwsSesMailSendingController < ApplicationController
   end
 
   # Reads the state of SES and DNS again, for both email tabs; back to the
-  # tab the link was on.
+  # tab the link was on. Each section's errors are kept in the state; an
+  # error before any section is read (the SES client cannot be built, for
+  # example without a region) is shown by its class, as unsuppress does.
   def refresh
     AwsSesSnapshot.refresh!
     logger&.info "[redmine_aws_ses] #{User.current.login} refreshed the SES state"
-    redirect_to params[:tab] == 'mail_receiving' ? aws_ses_mail_receiving_path : aws_ses_mail_sending_path
+  rescue StandardError => e
+    logger&.error "[redmine_aws_ses] could not refresh the SES state: #{e.class}: #{e.message}"
+    flash[:error] = l(:text_aws_ses_mail_api_error, error: e.class.name)
+  ensure
+    redirect_to tab_path
   end
 
   def unsuppress
@@ -34,6 +40,12 @@ class AwsSesMailSendingController < ApplicationController
   end
 
   private
+
+  # The email tab the request came from; a value from the request never
+  # chooses the path.
+  def tab_path
+    params[:tab] == 'mail_receiving' ? aws_ses_mail_receiving_path : aws_ses_mail_sending_path
+  end
 
   # From SES's list, and from the stored one until the next refresh.
   def remove_suppressed(address)
