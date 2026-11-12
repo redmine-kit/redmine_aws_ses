@@ -1,11 +1,11 @@
 # Redmine AWS SES
 
-Redmine AWS SES (`redmine_aws_ses`) は、Redmine のメールを Amazon SES で送受信するための Redmine のプラグインです。エラーの種類に応じた送信の再試行、SES で受信したメールの取り込み、なりすましと迷惑メールの確認、プロジェクトごとのアドレスを持ちます。[Redmine AWS](https://redmine-kit.github.io/redmine_aws/ja/) (`redmine_aws`) が必要です。Redmine 本体のファイルは書き換えず、Redmine 標準の拡張のしくみだけで作ります。今は開発の初期です。
+Redmine AWS SES (`redmine_aws_ses`) は、Redmine のメールを Amazon SES で送受信するための Redmine のプラグインです。エラーの種類に応じた送信の再試行、SES で受信したメールの取り込み、なりすましとスパムの確認、プロジェクトごとのアドレスを持ちます。[Redmine AWS](https://redmine-kit.github.io/redmine_aws/ja/) (`redmine_aws`) が必要です。Redmine 本体のファイルは書き換えず、Redmine 標準の拡張のしくみだけで作ります。今は開発の初期です。
 
 - [導入](setup.md): 動作環境、インストール、設定、AWS リソース、ネットワーク、テスト
 - [IAM 権限](iam.md): 権限、ポリシーの例、リソースベースのポリシー
 - [送信](sending.md): エラーの種類別の扱いと再試行、再送信、プロジェクト別の送信元
-- [受信](receiving.md): アドレス、取り込み、なりすましと迷惑メール
+- [受信](receiving.md): アドレス、取り込み、なりすましとスパム
 - [管理画面](admin.md): メール送信、メール受信、プロジェクトのメール設定
 
 <a id="features"></a>
@@ -15,7 +15,7 @@ Redmine AWS SES (`redmine_aws_ses`) は、Redmine のメールを Amazon SES で
 | 機能 | 内容 | 有効にする条件 | 資料 |
 | --- | --- | --- | --- |
 | メール送信の再試行 | ジョブを動かすプロセスでの `raise_delivery_errors`、SES のエラーの種類に応じた再試行 (一時的なエラーは再試行し、アカウントの問題は再送信のために残し、メッセージの問題は捨てる) | Lambda では `REDMINE_ROLE=worker`。Lambda 以外のときは、ジョブを動かすプロセス | [sending.md](sending.md) |
-| メール受信 | SES が S3 に置いたメールの取り込み (rake タスク `redmine_aws_ses:receive_mail`。中では Redmine 標準の `MailHandler` を使う)、SES のイベントの判定の確認 (迷惑メールと DMARC は設定で選べ、ウイルスはいつも捨てる)、取り込みの記録 | 受信設定がある | [receiving.md](receiving.md#importing) |
+| メール受信 | SES が S3 に置いたメールの取り込み (rake タスク `redmine_aws_ses:receive_mail`。中では Redmine 標準の `MailHandler` を使う)、SES のイベントの判定の確認 (スパムと DMARC は設定で選べ、ウイルスはいつも捨てる)、取り込みの記録 | 受信設定がある | [receiving.md](receiving.md#importing) |
 | プロジェクト別のアドレス | プロジェクト別の受信アドレスと送信元、デフォルトアドレス、プロジェクトの設定の「メール」のタブ | プラグインの設定で有効にする。無効なら Redmine の標準と同じ (送信元は 1 つで、プロジェクトはサブアドレス `noreply+識別子@…` で選ぶ) | [receiving.md](receiving.md#addresses-per-project) |
 | 管理画面 | [Redmine AWS](https://redmine-kit.github.io/redmine_aws/ja/admin.html#the-aws-menu) の「AWS」メニューの「メール送信」(SES アカウント) と「メール受信」(受信履歴) のタブ、プロジェクトの設定の中のプロジェクトのメール設定 | システム管理者。使っていない機能の画面は出さない | [admin.md](admin.md) |
 

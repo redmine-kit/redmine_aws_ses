@@ -82,7 +82,7 @@ GitHub Packages からインストールするには、公開のパッケージ�
 | 項目 | 説明 | 変える場所 |
 | --- | --- | --- |
 | 送信元メールアドレス (`Setting.mail_from`) | デフォルトアドレス。確認済みのドメインのもの (例: `noreply@redmine.example.com`) ([receiving.md](receiving.md#address-for-the-whole-redmine)) | Redmine の管理画面の設定 |
-| 受信設定 | デフォルトアドレスの `@` の前、そこに届いたメールの扱い、デフォルトのプロジェクト、迷惑メールと DMARC 未通過メールを取得するか ([admin.md](admin.md#receiving-email)) | プラグインの設定。Serverless では `redmine.json` の `pluginSettings` |
+| 受信設定 | デフォルトアドレスの `@` の前、そこに届いたメールの扱い、デフォルトのプロジェクト、スパムと DMARC に失敗したメールを取得するか ([admin.md](admin.md#receiving-email)) | プラグインの設定。Serverless では `redmine.json` の `pluginSettings` |
 | プロジェクト別のアドレス | 使うか使わないか。デフォルトは使わない (Redmine の標準と同じ)。プロジェクトごとの設定は、各プロジェクトの「メール」のタブ ([admin.md](admin.md#project-email-settings)) | プラグインの設定 |
 | 「メール本文から一致する行以降を切り捨てる」 | 引用の前の行。返信の引用が注記に入らないようにする | Redmine の管理画面の設定 |
 
@@ -90,7 +90,7 @@ GitHub Packages からインストールするには、公開のパッケージ�
 
 ### 受信設定のデフォルト値
 
-デフォルトの設定では、デフォルトアドレスの `@` の前は `noreply` で、そこに届いたメールは取得しません (「取得しない」)。取得するときは、「デフォルトのプロジェクトで取得」に切り替えるときに、`@` の前を決めます (例: `redmine`)。受信設定を保存済みの環境では、保存した値のままです。迷惑メール (`import_spam`) と、DMARC 未通過メール (`import_without_dmarc_pass`) の取得は、どちらもデフォルトはオフです。
+デフォルトの設定では、デフォルトアドレスの `@` の前は `noreply` で、そこに届いたメールは取得しません (「取得しない」)。取得するときは、「デフォルトのプロジェクトで取得」に切り替えるときに、`@` の前を決めます (例: `redmine`)。受信設定を保存済みの環境では、保存した値のままです。スパム (`import_spam`) と、DMARC に失敗したメール (`import_without_dmarc_pass`) の取得は、どちらもデフォルトはオフです。
 
 <a id="sending-errors"></a>
 
@@ -113,7 +113,7 @@ rake タスク `redmine_aws_ses:receive_mail` は、受信メールを 1 通取�
 | `SES_MAIL_FROM` | `mail.source`。エンベロープの送信者 (登録した転送元のため。省略できる) ([receiving.md](receiving.md#forwarded-email)) |
 | `SES_SPAM_VERDICT`<br>`SES_VIRUS_VERDICT`<br>`SES_DMARC_VERDICT`<br>`SES_SPF_VERDICT`<br>`SES_DKIM_VERDICT`<br>`SES_DMARC_POLICY` | 判定の結果 |
 
-取り込むのは、ウイルスの判定が `PASS` で、迷惑メールと DMARC の判定も `PASS` のメールだけです。受信設定で、迷惑メールと DMARC 未通過メールも取得するようにできます。判定と宛先はイベントから取り、メールのヘッダーからは取りません ([receiving.md](receiving.md#spoofing-and-spam))。
+取り込むのは、ウイルスの判定が `PASS` で、スパムと DMARC の判定も `PASS` のメールだけです。受信設定で、スパムと DMARC に失敗したメールも取得するようにできます。判定と宛先はイベントから取り、メールのヘッダーからは取りません ([receiving.md](receiving.md#spoofing-and-spam))。
 
 <a id="refreshing-the-ses-state"></a>
 
@@ -144,7 +144,7 @@ bin/rake redmine_aws_ses:prune_records[<日数>]
 | SES のドメイン ID | Redmine のサブドメイン (例: `redmine.example.com`)。使うリージョンで、Easy DKIM で確認する。送信と受信の両方に使う |
 | SES の本稼働アクセス | 前もって申請する (サンドボックスを出る)。リージョンごと |
 | DNS | サブドメインの MX を SES の受信エンドポイント (`inbound-smtp.<region>.amazonaws.com`、優先度 10) に向け、Easy DKIM の CNAME を置く ([Serverless の mail.md](https://redmine-kit.github.io/serverless/ja/mail.html#receiving-domain)) |
-| 受信ルール | リージョンのアクティブなルールセットの中。受信者はサブドメイン。TLS は必須。迷惑メールとウイルスの検査は有効。1 つめのアクションで、メールのバケットの `inbound/` に置く。2 つめのアクションで、取り込みを起動する (Lambda では、タスクの関数を非同期で呼び出す) ([Serverless の mail.md](https://redmine-kit.github.io/serverless/ja/mail.html#receipt-rules)) |
+| 受信ルール | リージョンのアクティブなルールセットの中。受信者はサブドメイン。TLS は必須。スパムとウイルスの検査は有効。1 つめのアクションで、メールのバケットの `inbound/` に置く。2 つめのアクションで、取り込みを起動する (Lambda では、タスクの関数を非同期で呼び出す) ([Serverless の mail.md](https://redmine-kit.github.io/serverless/ja/mail.html#receipt-rules)) |
 | メールのバケット | `inbound/` (受け取ったもの) と `processed/` (取り込んだもの)。どちらもライフサイクルで 30 日で消す。バケットポリシーで、`inbound/` には SES だけが書けるようにし、TLS でないリクエストを拒否する |
 
 <a id="iam-permissions"></a>
