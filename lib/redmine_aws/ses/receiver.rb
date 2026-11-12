@@ -49,7 +49,7 @@ module RedmineAws
       def import(mode)
         serialized { |locked| receive(locked, mode) }
       rescue Import::Refused => e
-        import(e.forward ? :own : :refused)
+        import(e.forward ? :own : e.reason)
       end
 
       def read_event(event)

@@ -4,8 +4,8 @@
 # The body is not stored, only where it is in the mail bucket.
 class AwsSesReceivedMail < ApplicationRecord
   STATUSES = %w[imported dropped].freeze
-  REASONS = %w[no_verdict virus spam dmarc forwarder_spf forwarded_author auto_reply no_project too_large
-               import_error].freeze
+  REASONS = %w[no_verdict virus spam dmarc forwarder_spf forwarded_author forwarded_reply auto_reply no_project
+               too_large import_error].freeze
   KEEP_DAYS = 90
 
   belongs_to :project, optional: true

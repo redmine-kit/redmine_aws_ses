@@ -42,6 +42,7 @@ ja:
   label_aws_ses_mail_reason_dmarc: 未取得 (DMARC 失敗)
   label_aws_ses_mail_reason_forwarder_spf: 未取得 (転送元の SPF 失敗)
   label_aws_ses_mail_reason_forwarded_author: 未取得 (転送メールの作成者なし)
+  label_aws_ses_mail_reason_forwarded_reply: 未取得 (ほかのプロジェクトへの返信)
   label_aws_ses_mail_reason_auto_reply: 未取得 (自動返信)
   label_aws_ses_mail_reason_no_project: 未取得 (プロジェクトなし)
   label_aws_ses_mail_reason_too_large: 未取得 (サイズ超過)

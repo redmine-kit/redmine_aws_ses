@@ -12,16 +12,19 @@ module RedmineAws
     # MailHandler refuses a message, Refused is raised, which rolls back
     # whatever MailHandler wrote, and the Receiver runs again with the next
     # mode: a refused forward as the member's own message (:own), a refused
-    # message as refused (:refused), so nothing is lost.
+    # message as not fetched, the mode being the reason ("import_error", or
+    # "forwarded_reply" for a reply to another project through a registered
+    # forwarder), so nothing is lost.
     class Import
       # MailHandler did not take the message; forward: it was a member's
       # forwarded original.
       class Refused < StandardError
-        attr_reader :forward
+        attr_reader :forward, :reason
 
-        def initialize(forward)
+        def initialize(forward, reason = 'import_error')
           @forward = forward
-          super(forward ? 'forwarded original refused' : 'message refused')
+          @reason = reason
+          super(forward ? 'forwarded original refused' : "message refused (#{reason})")
         end
       end
 
@@ -36,7 +39,7 @@ module RedmineAws
       def run
         admission = Admission.new(@record, @mail, max_bytes: @max_bytes)
         return drop(admission.reason) if admission.reason
-        return drop('import_error') if @mode == :refused
+        return drop(@mode) if @mode.is_a?(String)
 
         @record.project = admission.target.project
         @record.mark_imported(@mode == :full && admission.forward ? forwarded(admission) : own(admission))
@@ -62,7 +65,21 @@ module RedmineAws
       end
 
       def receive(raw, options)
-        (options.key?(:aws_ses_author_id) ? ForwardedMailHandler : MailHandler).safe_receive(raw, options)
+        return MailHandler.safe_receive(raw, options) unless options.key?(:aws_ses_author_id)
+
+        receive_forwarded(raw, options)
+      end
+
+      # As MailHandler.safe_receive, except a reply to another project, which
+      # is refused with a reason of its own (ForwardedMailHandler).
+      def receive_forwarded(raw, options)
+        ForwardedMailHandler.receive(raw, options)
+      rescue ForwardedMailHandler::OtherProjectReply => e
+        Rails.logger.info "[redmine_aws_ses] #{@record.message_id}: #{e.message}"
+        raise Refused.new(false, 'forwarded_reply')
+      rescue StandardError => e
+        Rails.logger.error "MailHandler: an unexpected error occurred when receiving email: #{e.message}"
+        false
       end
 
       def drop(reason)
@@ -83,7 +100,7 @@ module RedmineAws
         return options unless author
 
         options.merge(unknown_user: 'accept', aws_ses_author_id: author.anonymous? ? 0 : author.id,
-                      aws_ses_forwarder_id: forwarder&.id)
+                      aws_ses_forwarder_id: forwarder&.id, aws_ses_project_id: target.project.id)
       end
     end
   end

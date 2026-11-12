@@ -56,6 +56,7 @@ The specifications in this page were checked against official information and th
 | Not fetched (spam) | The spam verdict is not `PASS`, and "Also fetch spam" is off |
 | Not fetched (DMARC fail) | The DMARC verdict is not `PASS`, and "Also fetch email failing DMARC" is off |
 | Not fetched (no author for forwarded email) | Fetched only through a registered forwarder, and "Author of forwarded email" allows no author ([receiving.md](receiving.md#author-of-forwarded-email)) |
+| Not fetched (reply to another project) | Fetched only through a registered forwarder, and a reply to an issue or a message of another project than the recipient's ([receiving.md](receiving.md#author-of-forwarded-email)) |
 | Not fetched (forwarder SPF fail) | The DMARC verdict is not `PASS` and the envelope sender is a registered forwarder of the project, but SES's SPF verdict is not `PASS` ([receiving.md](receiving.md#forwarded-email)) |
 | Not fetched (auto-reply) | An auto-reply ([receiving.md](receiving.md#importing)) |
 | Not fetched (no project) | No project receives it, or it went to the default address with "Do not fetch" |

@@ -42,6 +42,7 @@ en:
   label_aws_ses_mail_reason_dmarc: Not fetched (DMARC fail)
   label_aws_ses_mail_reason_forwarder_spf: Not fetched (forwarder SPF fail)
   label_aws_ses_mail_reason_forwarded_author: Not fetched (no author for forwarded email)
+  label_aws_ses_mail_reason_forwarded_reply: Not fetched (reply to another project)
   label_aws_ses_mail_reason_auto_reply: Not fetched (auto-reply)
   label_aws_ses_mail_reason_no_project: Not fetched (no project)
   label_aws_ses_mail_reason_too_large: Not fetched (too large)
