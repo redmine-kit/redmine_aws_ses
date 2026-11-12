@@ -39,6 +39,12 @@ For the process that imports email:
       "Effect": "Allow",
       "Action": "s3:PutObject",
       "Resource": "arn:aws:s3:::<mail bucket>/processed/*"
+    },
+    {
+      "Sid": "ReadImported",
+      "Effect": "Allow",
+      "Action": "s3:GetObject",
+      "Resource": "arn:aws:s3:::<mail bucket>/processed/*"
     }
   ]
 }
