@@ -19,7 +19,10 @@ COPY --from=redmine_aws . plugins/redmine_aws/
 COPY . plugins/redmine_aws_ses/
 # The plugin as a gem by path, so that Bundler loads boot/ (docs/setup.md),
 # and redmine_aws, which its gemspec requires, by path without loading it.
-RUN printf "gem 'redmine_aws', path: 'plugins/redmine_aws', require: false\ngem 'redmine_aws_ses', path: 'plugins/redmine_aws_ses'\ngem 'simplecov-cobertura', group: :test\n" > Gemfile.local \
+# simplecov-cobertura writes the coverage that Codecov reads (bin/test with
+# COVERAGE). Held at 3.2.0: 4.0 needs simplecov 1.x, and Redmine 7.0.3's
+# Gemfile pins simplecov ~> 0.22.0.
+RUN printf "gem 'redmine_aws', path: 'plugins/redmine_aws', require: false\ngem 'redmine_aws_ses', path: 'plugins/redmine_aws_ses'\ngem 'simplecov-cobertura', '3.2.0', group: :test\n" > Gemfile.local \
   && bundle config set --local without development \
   && bundle install --jobs 4
 ENV RAILS_ENV=test

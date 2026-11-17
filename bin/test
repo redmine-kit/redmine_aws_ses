@@ -7,6 +7,7 @@
 #   bin/test <files>         # some files of the plugin's tests
 #   REDMINE_AWS_DIR=<dir> bin/test   # redmine_aws from <dir> (default ../redmine_aws)
 #   TEST_RUBY=3.2 bin/test   # on Ruby 3.2 (default 4.0), as the CI also does
+#   COVERAGE=1 bin/test      # with the plugin's coverage in coverage/coverage.xml, as the CI does
 # Commands that run inside the container are in single quotes on purpose.
 # shellcheck disable=SC2016
 set -euo pipefail
@@ -45,11 +46,16 @@ run() {
   docker run --rm --network redmine-aws-ses-test_default -e PARALLEL_WORKERS="${PARALLEL_WORKERS:-4}" "$image" \
     sh -c 'bin/rails db:drop db:create db:migrate redmine:plugins:migrate db:schema:dump >/dev/null && "$@"' test "$@"
 }
-# The plugin's tests, with coverage written to coverage/coverage.xml.
+# The plugin's tests; with COVERAGE set, in one process with the coverage
+# written to coverage/coverage.xml (test/test_helper.rb). COVERAGE itself is not
+# passed on: Redmine's test helper would start a SimpleCov of its own.
 run_plugin() {
-  mkdir -p coverage
-  docker run --rm "${aws[@]}" -e PLUGIN_COVERAGE=1 -e PARALLEL_WORKERS=1 \
-    -v "$PWD/coverage:/redmine/plugins/redmine_aws_ses/coverage" "$image" \
+  local cov=(-e PARALLEL_WORKERS="${PARALLEL_WORKERS:-4}")
+  if [[ -n "${COVERAGE:-}" ]]; then
+    rm -f coverage/.resultset.json && mkdir -p coverage
+    cov=(-e PLUGIN_COVERAGE=1 -e PARALLEL_WORKERS=1 -v "$PWD/coverage:/redmine/plugins/redmine_aws_ses/coverage")
+  fi
+  docker run --rm "${cov[@]}" "${aws[@]}" "$image" \
     sh -c 'bin/rails db:drop db:create db:migrate redmine:plugins:migrate db:schema:dump >/dev/null && "$@"' test "$@"
 }
 redmine_tests=(test/unit/mail_handler_test.rb test/unit/mailer_test.rb test/functional/projects_controller_test.rb

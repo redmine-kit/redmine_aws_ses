@@ -51,6 +51,8 @@ jobs:
       id-token: write
     env:
       TEST_RUBY: ${{ matrix.ruby }}
+      # The plugin's coverage (bin/test), on the Ruby whose report is uploaded.
+      COVERAGE: ${{ matrix.ruby == '4.0' && '1' || '' }}
     steps:
       - uses: actions/checkout@v7.0.1
         with:
@@ -77,6 +79,7 @@ jobs:
         with:
           use_oidc: true
           files: coverage/coverage.xml
+          flags: plugin
           fail_ci_if_error: false
       - if: always()
         run: bin/services --down

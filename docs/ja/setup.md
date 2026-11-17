@@ -185,11 +185,12 @@ CI は、静的チェックとテストを Ruby 3.2 と 4.0 で実行します�
 
 テストには Redmine AWS が要ります。このリポジトリの隣の [redmine_aws](https://github.com/redmine-kit/redmine_aws) のチェックアウト (`../redmine_aws`) か、`REDMINE_AWS_DIR` に指定したパスです。CI はチェックアウトします。
 
-プラグインのテストは、プラグイン自身のファイルのカバレッジ (SimpleCov。Cobertura XML の `coverage/coverage.xml`) も書きます。CI は、それを [Codecov](https://codecov.io/gh/redmine-kit/redmine_aws_ses) に送ります。
+`COVERAGE=1` を付けると、プラグインのテストは、プラグイン自身のファイルのカバレッジ (SimpleCov。Cobertura の XML の `coverage/coverage.xml`) も出力し、1 プロセスで実行します。CI は Ruby 4.0 でこれを有効にし、レポートを `plugin` フラグで [Codecov](https://codecov.io/gh/redmine-kit/redmine_aws_ses) に送信します。送信の認証は OIDC (`id-token: write`) なので、トークンをシークレットに保存しません。Codecov のステータスは参考情報で、コミットや Pull Request を失敗にしません (`codecov.yml`)。
 
 ```sh
 bin/test            # プラグインのテストと、メールのまわりの Redmine のテスト
 bin/test --redmine  # Redmine のすべてのテストも
+COVERAGE=1 bin/test # カバレッジを coverage/coverage.xml に出力する
 REDMINE_AWS_DIR=<ディレクトリ> bin/test  # redmine_aws を <ディレクトリ> から
 bin/test-gem        # gem をビルド・インストールし、plugins/ にリンクして起動する
 bin/lint            # RuboCop
