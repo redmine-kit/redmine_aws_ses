@@ -4,7 +4,7 @@
 # --down.
 set -euo pipefail
 cd "$(dirname "$0")/.."
-compose=(docker compose -f test/compose.yml -p redmine-aws-ses-test)
+compose=(docker compose -f test/compose.yml -p redmine-kit-aws-ses-test)
 if [[ -n "${LOCALSTACK_AUTH_TOKEN:-}" ]]; then
   compose+=(--profile localstack)
 fi

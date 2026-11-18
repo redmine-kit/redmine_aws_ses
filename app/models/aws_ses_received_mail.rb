@@ -24,14 +24,14 @@ class AwsSesReceivedMail < ApplicationRecord
     recipients.to_s.split(/,\s*/)
   end
 
-  # The verdicts of the SES event (RedmineAws::SES::Verdicts::FIELDS).
+  # The verdicts of the SES event (RedmineKit::Aws::Ses::Verdicts::FIELDS).
   def verdicts
-    RedmineAws::SES::Verdicts::FIELDS.keys.to_h { |name| [name, self[self.class.verdict_column(name)]] }
-                                     .compact.presence
+    RedmineKit::Aws::Ses::Verdicts::FIELDS.keys.to_h { |name| [name, self[self.class.verdict_column(name)]] }
+                                          .compact.presence
   end
 
   def verdicts=(values)
-    RedmineAws::SES::Verdicts::FIELDS.each_key do |name|
+    RedmineKit::Aws::Ses::Verdicts::FIELDS.each_key do |name|
       self[self.class.verdict_column(name)] = values.to_h[name]
     end
   end

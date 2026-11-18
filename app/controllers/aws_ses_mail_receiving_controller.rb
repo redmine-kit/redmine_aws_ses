@@ -4,13 +4,13 @@
 # record (as the last refresh stored it, AwsSesSnapshot), received email,
 # re-importing and the receiving settings.
 class AwsSesMailReceivingController < ApplicationController
-  include RedmineAws::AdminTab
+  include RedmineKit::Aws::AdminTab
 
   helper :aws_ses_mail
 
   def index
-    @settings ||= RedmineAws::SES.settings
-    @domain = RedmineAws::SES.domain
+    @settings ||= RedmineKit::Aws::Ses.settings
+    @domain = RedmineKit::Aws::Ses.domain
     @snapshot = AwsSesSnapshot.latest
     @project_settings = AwsSesProjectMailSetting.includes(:project).order(:id).to_a
     @received = received_mails
@@ -19,14 +19,14 @@ class AwsSesMailReceivingController < ApplicationController
   # On an error, the page again with the values given and the error above
   # the form, as Redmine's settings do (SettingsController#edit).
   def update
-    @settings = RedmineAws::SES.settings.merge(setting_params)
+    @settings = RedmineKit::Aws::Ses.settings.merge(setting_params)
     unless @settings['global_local_part'].to_s.match?(AwsSesProjectMailSetting::LOCAL_PART)
       @setting_errors = [l(:error_aws_ses_mail_local_part)]
       index
       return render(:index)
     end
 
-    Setting.plugin_redmine_aws_ses = @settings
+    Setting.plugin_redmine_kit_aws_ses = @settings
     audit('changed the receiving settings')
     flash[:notice] = l(:notice_successful_update)
     redirect_to action: 'index'
@@ -62,12 +62,12 @@ class AwsSesMailReceivingController < ApplicationController
   # is ignored.
   def setting_params
     values = params[:settings]
-    values = values.is_a?(ActionController::Parameters) ? values.permit(*RedmineAws::SES::DEFAULTS.keys).to_h : {}
+    values = values.is_a?(ActionController::Parameters) ? values.permit(*RedmineKit::Aws::Ses::DEFAULTS.keys).to_h : {}
     values['global_local_part'] = values['global_local_part'].to_s.strip.downcase if values.key?('global_local_part')
     values
   end
 
   def audit(what)
-    logger&.info "[redmine_aws_ses] #{User.current.login} #{what}"
+    logger&.info "[redmine_kit_aws_ses] #{User.current.login} #{what}"
   end
 end

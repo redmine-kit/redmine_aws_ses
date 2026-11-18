@@ -1,6 +1,6 @@
 # 受信
 
-Redmine AWS SES が、SES の受け取ったメールを取り込むしくみです。アドレス、プロジェクトの決め方、なりすましとスパムの確認、Redmine の `MailHandler` に渡すオプションを書きます。SES は、メッセージをメールのバケット (`inbound/<メッセージ ID>`) に置き、取り込みを起動します。ドメイン、受信ルール、バケットは [Serverless の mail.md](https://redmine-kit.github.io/serverless/ja/mail.html#receiving) にあります。
+Redmine Kit AWS SES が、SES の受け取ったメールを取り込むしくみです。アドレス、プロジェクトの決め方、なりすましとスパムの確認、Redmine の `MailHandler` に渡すオプションを書きます。SES は、メッセージをメールのバケット (`inbound/<メッセージ ID>`) に置き、取り込みを起動します。ドメイン、受信ルール、バケットは [Serverless の mail.md](https://redmine-kit.github.io/serverless/ja/mail.html#receiving) にあります。
 
 2026-11-09 に Redmine 7.0.3 のソースで、2026-11-12 に SES の受信通知の資料 ([Contents of notifications for Amazon SES email receiving](https://docs.aws.amazon.com/ses/latest/dg/receiving-email-notifications-contents.html)、[Deliver to S3 bucket action](https://docs.aws.amazon.com/ses/latest/dg/receiving-email-action-s3.html)) で確認しました。
 
@@ -56,7 +56,7 @@ Redmine AWS SES が、SES の受け取ったメールを取り込むしくみで
 
 ## 取り込み
 
-rake タスク `redmine_aws_ses:receive_mail` が、メッセージを 1 通取り込みます。
+rake タスク `redmine_kit_aws_ses:receive_mail` が、メッセージを 1 通取り込みます。
 
 1. メッセージの記録をロックします (メッセージごとに 1 つずつ。下記)。取り込み済みで、そのチケットや注記が残っていれば、終わります。
 2. メールのバケットでメッセージを探します (`inbound/`。再取得なら `processed/` に `HeadObject`)。40 MB より大きいメッセージは取り込みません。SES が保存するのは、ヘッダーを含めて 40 MB までです ([Deliver to S3 bucket action](https://docs.aws.amazon.com/ses/latest/dg/receiving-email-action-s3.html))。記録の差出人と件名のために最初の 64 KiB だけを読み、「未取得 (サイズ超過)」として記録します。
@@ -98,7 +98,7 @@ Lambda では、SES の受信ルールがタスクの関数を呼び出し、そ
 
 - **自動返信:** `Auto-Submitted` (`auto-replied`、`auto-generated`) か `X-Autoreply: yes` のあるメール (`MailHandler.ignored_emails_headers`) は、取り込まずに、自動返信として記録します。通知と取り込みが繰り返されないようにするためです。
 - **Redmine が取り込まないとき:** `MailHandler` が受け付けないメール (たとえば、`ignore` のときの未登録の送信者や、権限のない送信者) は、取り込まなかったものとして記録し、`inbound/` に残します。理由は Redmine のログにあります。
-- **添付ファイル:** 添付ファイルは Redmine の添付ファイルとして保存します ([Redmine AWS S3](https://redmine-kit.github.io/redmine_aws_s3/ja/) があれば S3 に置きます)。
+- **添付ファイル:** 添付ファイルは Redmine の添付ファイルとして保存します ([Redmine Kit AWS S3](https://redmine-kit.github.io/redmine_aws_s3/ja/) があれば S3 に置きます)。
 
 <a id="spoofing-and-spam"></a>
 
@@ -123,7 +123,7 @@ Redmine は、メールの差出人 (`From`) のアドレスで、どのユー�
 
 ## 転送メール
 
-転送されたメールがプロジェクトに届く経路は 2 つあります。外部のメールボックスが受け取ったメールをすべてプロジェクトのアドレスに転送するもの (自動転送) と、メンバーが顧客のメールをメールソフトから転送するもの (メンバーによる転送) です。判断はコードの 1 か所 (`RedmineAws::SES::Admission`) で、SES のイベントと Redmine だけから行います。メッセージのヘッダーは、送信者が偽れるので、判断に使いません。
+転送されたメールがプロジェクトに届く経路は 2 つあります。外部のメールボックスが受け取ったメールをすべてプロジェクトのアドレスに転送するもの (自動転送) と、メンバーが顧客のメールをメールソフトから転送するもの (メンバーによる転送) です。判断はコードの 1 か所 (`RedmineKit::Aws::Ses::Admission`) で、SES のイベントと Redmine だけから行います。メッセージのヘッダーは、送信者が偽れるので、判断に使いません。
 
 <a id="automatic-forwarding"></a>
 
@@ -169,7 +169,7 @@ Redmine は、メールの差出人 (`From`) のアドレスで、どのユー�
 - **返信:** 登録した転送元から取得したメッセージが、通知への返信のことがあります。件名 (チケットなら `[… #123]`、フォーラムのメッセージなら `[… msg12]`) か、`In-Reply-To` や `References` (チケット、注記、フォーラムのメッセージ、ニュース、ニュースのコメント) で見分けます。Redmine はそうした返信を、作成者の権限だけを確認して、指す先に追加します。`From` は何も認証していないので、プラグインは、エンベロープの宛先が選んだプロジェクトにだけ返信を追加させます。`support@` から転送された顧客の返信は、これまでどおりそのチケットに付きます。別のプロジェクトへの返信と、プラグインが確認しない種類 (Redmine が今後追加するものなど) の返信は取得しません (「未取得 (別のプロジェクトへの返信)」)。メンバーの転送が返信を追加することはありません。元のメールの `In-Reply-To` と `References` は外し、件名がチケットやメッセージを指す元のメールはメンバー自身のメッセージとして取り込みます。
 - **作成者がいないとき:** 登録した転送元から届いたメッセージで、作成者にできる人がいないもの (たとえば、差出人がプロジェクトのメンバーで、プロジェクトが未登録の送信者から取得しない) は取得しません (「未取得 (転送メールの作成者なし)」)。
 - **記録:** 登録した転送元から取得したメッセージでは、受信履歴の差出人は元の差出人です。メンバーの転送では、SES が受け取ったメッセージを送ったメンバーが受信履歴の差出人になり、元の差出人はメンバーの注記に残ります。
-- **実装:** 作成者は `RedmineAws::SES::Admission#author` で決めます。Redmine の `MailHandler` のサブクラス `RedmineAws::SES::ForwardedMailHandler` が、private のメソッドをオーバーライドし、どれも `super` を呼びます。`dispatch` は作成者を差出人の代わりにし、確認しない種類の返信を断ります。`add_watchers` はウォッチャーの権限をメンバーで確認します。`receive_issue_reply`、`receive_message_reply`、`receive_news_reply` (注記とニュースのコメントもここを通る) は、返信先のプロジェクトを確認します。確認する返信の種類が Redmine のものと同じことは、テストで確認します。
+- **実装:** 作成者は `RedmineKit::Aws::Ses::Admission#author` で決めます。Redmine の `MailHandler` のサブクラス `RedmineKit::Aws::Ses::ForwardedMailHandler` が、private のメソッドをオーバーライドし、どれも `super` を呼びます。`dispatch` は作成者を差出人の代わりにし、確認しない種類の返信を断ります。`add_watchers` はウォッチャーの権限をメンバーで確認します。`receive_issue_reply`、`receive_message_reply`、`receive_news_reply` (注記とニュースのコメントもここを通る) は、返信先のプロジェクトを確認します。確認する返信の種類が Redmine のものと同じことは、テストで確認します。
 
 <a id="settings-for-receiving-replies"></a>
 

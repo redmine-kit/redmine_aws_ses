@@ -1,16 +1,16 @@
 # 管理画面
 
-Redmine AWS SES の管理画面です。システム管理者だけが開けます (`require_admin`)。プロジェクトのメール設定だけは、プラグインが追加するプロジェクトの権限を持つ人も変えられます (下記)。画面は、[Redmine AWS](https://redmine-kit.github.io/redmine_aws/ja/admin.html#the-aws-menu) が追加し、すべての Redmine AWS のプラグインが共有する Redmine の管理メニューの「AWS」の下の、「メール送信」と「メール受信」のタブになります。プロジェクトのメール設定は、代わりにプロジェクトの設定のタブになります。
+Redmine Kit AWS SES の管理画面です。システム管理者だけが開けます (`require_admin`)。プロジェクトのメール設定だけは、プラグインが追加するプロジェクトの権限を持つ人も変えられます (下記)。画面は、[Redmine Kit AWS](https://redmine-kit.github.io/redmine_aws/ja/admin.html#the-aws-menu) が追加し、すべての Redmine Kit AWS のプラグインが共有する Redmine の管理メニューの「AWS」の下の、「メール送信」と「メール受信」のタブになります。プロジェクトのメール設定は、代わりにプロジェクトの設定のタブになります。
 
 この資料の仕様は、2026-11-08 時点の公式の情報と、Redmine 7.0.3 のソースで確認したものです。出典は [sources.md](https://redmine-kit.github.io/serverless/ja/sources.html) にあります。
 
 | 項目 | 内容 |
 | --- | --- |
 | 秘密の値は出さない | AWS の認証情報と、受信したメールの本文は画面に出しません。エラーは、エラーのクラスだけを出します (例: `Aws::SESV2::Errors::AccessDeniedException`)。メッセージは Redmine のログにあります |
-| 保存した状態 | タブは、SES の状態と MX レコードを、最後の更新で読んだとおりに出し、右上に `更新: <日時>` を出します。画面を開くときに SES や DNS は呼びません。`rake redmine_aws_ses:refresh` がスケジュールで読み ([setup.md](setup.md#refreshing-the-ses-state))、日時の横の「最新の情報に更新」で読み直します。保存するのは最新の状態だけです (プラグインのテーブル `aws_ses_snapshots`) |
-| 設定は画面で変える | 受信のオプションは、プラグインの設定 (Redmine の `Setting.plugin_redmine_aws_ses`、データベースに入る) にし、「メール受信」のタブで変えます。プラグインの一覧に「設定」のリンクは出ません |
-| 操作を記録する | 更新、サプレッションリストからの削除、再取得、設定の変更は、誰が何をしたかを Redmine のログに書きます (`[redmine_aws_ses] <ログイン> ...`) |
-| 接続テスト | Redmine AWS の「ステータス」のタブの「接続テスト」で、SES v2 の `GetAccount` も呼びます ([その admin.md](https://redmine-kit.github.io/redmine_aws/ja/admin.html#status))。結果は「送信: 有効、本稼働アクセス: はい」のように出ます |
+| 保存した状態 | タブは、SES の状態と MX レコードを、最後の更新で読んだとおりに出し、右上に `更新: <日時>` を出します。画面を開くときに SES や DNS は呼びません。`rake redmine_kit_aws_ses:refresh` がスケジュールで読み ([setup.md](setup.md#refreshing-the-ses-state))、日時の横の「最新の情報に更新」で読み直します。保存するのは最新の状態だけです (プラグインのテーブル `aws_ses_snapshots`) |
+| 設定は画面で変える | 受信のオプションは、プラグインの設定 (Redmine の `Setting.plugin_redmine_kit_aws_ses`、データベースに入る) にし、「メール受信」のタブで変えます。プラグインの一覧に「設定」のリンクは出ません |
+| 操作を記録する | 更新、サプレッションリストからの削除、再取得、設定の変更は、誰が何をしたかを Redmine のログに書きます (`[redmine_kit_aws_ses] <ログイン> ...`) |
+| 接続テスト | Redmine Kit AWS の「ステータス」のタブの「接続テスト」で、SES v2 の `GetAccount` も呼びます ([その admin.md](https://redmine-kit.github.io/redmine_aws/ja/admin.html#status))。結果は「送信: 有効、本稼働アクセス: はい」のように出ます |
 
 <a id="sending-email"></a>
 
@@ -27,7 +27,7 @@ Redmine AWS SES の管理画面です。システム管理者だけが開けま�
 | 削除 | サプレッションリストのアドレスごとの「削除」のボタン。確認のあとで消す。保存した一覧からも、すぐにそのアドレスを外す | SES v2 の `DeleteSuppressedDestination` |
 | 更新、最新の情報に更新 | 状態を読んだ日時と、読み直すリンク。最初の更新の前は、各セクションに「表示するデータがありません」を出す | SES v2 の `GetAccount`、`GetEmailIdentity`、`ListSuppressedDestinations` と MX の問い合わせを、まとめて行う |
 | テストメールを送信 | 上の、Redmine 標準の「テストメールを送信」(管理 › 設定 › メール通知) へのリンク。同じ機能は追加しない | — |
-| 失敗したジョブ | Redmine AWS SQS をインストールしているときは、上の、その「ジョブ」の画面の、失敗したメールに絞った一覧へのリンク | — |
+| 失敗したジョブ | Redmine Kit AWS SQS をインストールしているときは、上の、その「ジョブ」の画面の、失敗したメールに絞った一覧へのリンク | — |
 
 | 項目 | 内容 |
 | --- | --- |
@@ -65,11 +65,11 @@ Redmine AWS SES の管理画面です。システム管理者だけが開けま�
 
 | 項目 | 内容 |
 | --- | --- |
-| 取り込みの記録 | `redmine_aws_ses:receive_mail` は、メールごとの結果を、プラグインのテーブル (`aws_ses_received_mails`) に入れます。差出人、題名、SES のイベントのエンベロープの宛先と判定、プロジェクト、作ったチケットや追加した注記です。本文は入れず、メールのバケットのキー (`inbound/` か `processed/`) を入れます。再取得は、同じ記録を書き換えます。90 日より古い記録は、`rake redmine_aws_ses:prune_records` が消します。Serverless は毎日動かします ([security.md](https://redmine-kit.github.io/serverless/ja/security.html#retention-periods)) |
+| 取り込みの記録 | `redmine_kit_aws_ses:receive_mail` は、メールごとの結果を、プラグインのテーブル (`aws_ses_received_mails`) に入れます。差出人、題名、SES のイベントのエンベロープの宛先と判定、プロジェクト、作ったチケットや追加した注記です。本文は入れず、メールのバケットのキー (`inbound/` か `processed/`) を入れます。再取得は、同じ記録を書き換えます。90 日より古い記録は、`rake redmine_kit_aws_ses:prune_records` が消します。Serverless は毎日動かします ([security.md](https://redmine-kit.github.io/serverless/ja/security.html#retention-periods)) |
 | 未取得のメール | `inbound/` に残り、原因を直してから再取得できます |
 | 取得済みのメールの再取得 | 作ったチケットや注記が残っているあいだは、何もしません。1 通のメールから 2 つのチケットはできません。同じメールの実行 (SES の再試行、「再取得」) は、1 つずつ順に動きます ([receiving.md](receiving.md#importing)) |
-| 再取得 | 画面は `redmine-task` を直接は呼ばず、キューにジョブを入れます。こうすると、`redmine-web` に、メールのバケットを読む権限も、Lambda を呼ぶ権限も要りません。Redmine AWS SQS をインストールしていれば、このジョブのクラスを、実行を許可するジョブクラスに追加します |
-| 受信設定を画面に置く理由 | デフォルトのプロジェクトを変えるたびにデプロイしなくて済みます。`redmine_aws_ses:receive_mail` は、動くたびにデータベースから設定を読みます |
+| 再取得 | 画面は `redmine-task` を直接は呼ばず、キューにジョブを入れます。こうすると、`redmine-web` に、メールのバケットを読む権限も、Lambda を呼ぶ権限も要りません。Redmine Kit AWS SQS をインストールしていれば、このジョブのクラスを、実行を許可するジョブクラスに追加します |
+| 受信設定を画面に置く理由 | デフォルトのプロジェクトを変えるたびにデプロイしなくて済みます。`redmine_kit_aws_ses:receive_mail` は、動くたびにデータベースから設定を読みます |
 
 <a id="project-email-settings"></a>
 

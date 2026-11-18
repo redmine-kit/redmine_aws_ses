@@ -6,4 +6,4 @@
 
 メールボックスが使えるようになったら、システム管理者はこのページでそのアドレスをサプレッションリストから外します。
 
-詳しくは [Redmine AWS SES の管理画面](https://redmine-kit.github.io/redmine_aws_ses/ja/admin.html) を参照してください。
+詳しくは [Redmine Kit AWS SES の管理画面](https://redmine-kit.github.io/redmine_aws_ses/ja/admin.html) を参照してください。

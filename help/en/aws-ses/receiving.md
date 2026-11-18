@@ -6,4 +6,4 @@ Messages SES finds a virus in are never fetched. The MX record is shown as it wa
 
 Forwarded email: each project can register **Forwarders** whose email is fetched even when it fails DMARC, fetch a member's forward as its original, and choose the **Author of forwarded email**; only administrators change these (see the project's **Email** tab).
 
-More: [Redmine AWS SES: administration pages](https://redmine-kit.github.io/redmine_aws_ses/admin.html) and [receiving email](https://redmine-kit.github.io/redmine_aws_ses/receiving.html).
+More: [Redmine Kit AWS SES: administration pages](https://redmine-kit.github.io/redmine_aws_ses/admin.html) and [receiving email](https://redmine-kit.github.io/redmine_aws_ses/receiving.html).

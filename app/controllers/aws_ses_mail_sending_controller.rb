@@ -4,12 +4,12 @@
 # sender domain and the suppression list, as the last refresh stored them
 # (AwsSesSnapshot). The page itself never calls SES.
 class AwsSesMailSendingController < ApplicationController
-  include RedmineAws::AdminTab
+  include RedmineKit::Aws::AdminTab
 
   helper :aws_ses_mail
 
   def index
-    @domain = RedmineAws::SES.domain
+    @domain = RedmineKit::Aws::Ses.domain
     @snapshot = AwsSesSnapshot.latest
   end
 
@@ -19,9 +19,9 @@ class AwsSesMailSendingController < ApplicationController
   # example without a region) is shown by its class, as unsuppress does.
   def refresh
     AwsSesSnapshot.refresh!
-    logger&.info "[redmine_aws_ses] #{User.current.login} refreshed the SES state"
+    logger&.info "[redmine_kit_aws_ses] #{User.current.login} refreshed the SES state"
   rescue StandardError => e
-    logger&.error "[redmine_aws_ses] could not refresh the SES state: #{e.class}: #{e.message}"
+    logger&.error "[redmine_kit_aws_ses] could not refresh the SES state: #{e.class}: #{e.message}"
     flash[:error] = l(:text_aws_ses_mail_api_error, error: e.class.name)
   ensure
     redirect_to tab_path
@@ -33,7 +33,8 @@ class AwsSesMailSendingController < ApplicationController
   rescue StandardError => e
     # Any StandardError, as in Account#state. The class only on the page; the
     # message in the log.
-    logger&.error "[redmine_aws_ses] could not remove #{address} from the suppression list: #{e.class}: #{e.message}"
+    logger&.error "[redmine_kit_aws_ses] could not remove #{address} from the suppression list: " \
+                  "#{e.class}: #{e.message}"
     flash[:error] = l(:text_aws_ses_mail_api_error, error: e.class.name)
   ensure
     redirect_to action: 'index'
@@ -49,9 +50,9 @@ class AwsSesMailSendingController < ApplicationController
 
   # From SES's list, and from the stored one until the next refresh.
   def remove_suppressed(address)
-    RedmineAws::SES::Account.new.unsuppress(address)
+    RedmineKit::Aws::Ses::Account.new.unsuppress(address)
     AwsSesSnapshot.latest&.remove_suppressed!(address)
-    logger&.info "[redmine_aws_ses] #{User.current.login} removed #{address} from the suppression list"
+    logger&.info "[redmine_kit_aws_ses] #{User.current.login} removed #{address} from the suppression list"
     # Redmine shows flash messages as HTML (render_flash_messages), so values
     # in them are escaped, as Redmine's own controllers do.
     flash[:notice] = l(:notice_aws_ses_mail_unsuppressed, address: ERB::Util.h(address))

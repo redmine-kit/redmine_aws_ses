@@ -1,34 +1,34 @@
 # 導入
 
-Redmine AWS SES を使う Redmine に要るもの (インストール、設定、SES と S3 のリソース、IAM 権限、ネットワーク) です。AWS Lambda でも、ふつうのサーバーでも同じです。[Serverless](https://redmine-kit.github.io/serverless/ja/) は、これを CloudFormation でまとめて作ります。このページは、手で用意するときや、Serverless が作るものを確認するときのためのものです。
+Redmine Kit AWS SES を使う Redmine に要るもの (インストール、設定、SES と S3 のリソース、IAM 権限、ネットワーク) です。AWS Lambda でも、ふつうのサーバーでも同じです。[Serverless](https://redmine-kit.github.io/serverless/ja/) は、これを CloudFormation でまとめて作ります。このページは、手で用意するときや、Serverless が作るものを確認するときのためのものです。
 
 <a id="requirements"></a>
 
 ## 動作環境
 
 - Redmine 7.0 以降。
-- `plugins/redmine_aws` の [Redmine AWS](https://redmine-kit.github.io/redmine_aws/ja/) (`redmine_aws`) 0.1 以降。これがないと Redmine は起動しません (`init.rb` の `requires_redmine_plugin`)。gem もこれに依存します。「AWS」の管理メニューを追加します。
+- `plugins/redmine_kit_aws` の [Redmine Kit AWS](https://redmine-kit.github.io/redmine_aws/ja/) (`redmine_kit_aws`) 0.1 以降。これがないと Redmine は起動しません (`init.rb` の `requires_redmine_plugin`)。gem もこれに依存します。「AWS」の管理メニューを追加します。
 - AWS の認証情報で SES と S3 に届くプロセス (Lambda では実行ロール、ほかではインスタンスプロファイルやタスクロール)。Redmine にアクセスキーや SMTP のパスワードは置きません。
 - 送信には、AWS の公式の gem `aws-actionmailer-ses` (配信方法は `:ses_v2`) ([Serverless の mail.md](https://redmine-kit.github.io/serverless/ja/mail.html#gems))。
-- 送信の再試行には、別のプロセスで動くジョブ (Lambda では `REDMINE_ROLE=worker`。最終的に失敗したジョブは [Redmine AWS SQS](https://redmine-kit.github.io/redmine_aws_sqs/ja/) が記録します)。
+- 送信の再試行には、別のプロセスで動くジョブ (Lambda では `REDMINE_ROLE=worker`。最終的に失敗したジョブは [Redmine Kit AWS SQS](https://redmine-kit.github.io/redmine_aws_sqs/ja/) が記録します)。
 
 <a id="installation"></a>
 
 ## インストール
 
-1. プラグインを Redmine 7.0 の `plugins/redmine_aws_ses` に、Redmine AWS を `plugins/redmine_aws` に置きます。下の gem か、リポジトリのチェックアウトです。
+1. プラグインを Redmine 7.0 の `plugins/redmine_kit_aws_ses` に、Redmine Kit AWS を `plugins/redmine_kit_aws` に置きます。下の gem か、リポジトリのチェックアウトです。チェックアウトのディレクトリ名は、リポジトリ名ではなく、プラグインの ID にします (`git clone https://github.com/redmine-kit/redmine_aws_ses.git plugins/redmine_kit_aws_ses`、`git clone https://github.com/redmine-kit/redmine_aws.git plugins/redmine_kit_aws`)。
 2. プラグインを gem として `Gemfile.local` に追加し、インストールします。
 
    ```sh
    bundle install
    ```
 
-   こうすると、Bundler が、Rails の初期化より前に `boot/redmine_aws_ses.rb` を読み込みます。配信方法 `:ses_v2` を登録する `aws-actionmailer-ses` と、プロジェクトごとの送信元のためのインターセプターを読み込みます。チェックアウトなら、両方をパスで追加します。Redmine AWS も書きます。プラグインの gemspec が必要とし、rubygems.org にはないためです。Bundler は読み込みません (読み込むのは Redmine です)。Redmine AWS のプラグインを複数追加するときも、`redmine_aws` は 1 回だけ書きます。Bundler は、同じ gem を 2 つのソースから取ることを拒み、重複には警告を出します。
+   こうすると、Bundler が、Rails の初期化より前に `boot/redmine_kit_aws_ses.rb` を読み込みます。配信方法 `:ses_v2` を登録する `aws-actionmailer-ses` と、プロジェクトごとの送信元のためのインターセプターを読み込みます。チェックアウトなら、両方をパスで追加します。Redmine Kit AWS も書きます。プラグインの gemspec が必要とし、rubygems.org にはないためです。Bundler は読み込みません (読み込むのは Redmine です)。Redmine Kit AWS のプラグインを複数追加するときも、`redmine_kit_aws` は 1 回だけ書きます。Bundler は、同じ gem を 2 つのソースから取ることを拒み、重複には警告を出します。
 
    ```ruby
    # Redmine の Gemfile.local
-   gem 'redmine_aws', path: 'plugins/redmine_aws', require: false
-   gem 'redmine_aws_ses', path: 'plugins/redmine_aws_ses'
+   gem 'redmine_kit_aws', path: 'plugins/redmine_kit_aws', require: false
+   gem 'redmine_kit_aws_ses', path: 'plugins/redmine_kit_aws_ses'
    ```
 
 3. プラグインの migration を実行します。
@@ -52,23 +52,31 @@ Redmine AWS SES を使う Redmine に要るもの (インストール、設定�
 
 ### gem
 
-バージョンのタグ (`v*`) ごとに、プラグインを gem として GitHub Packages (`https://rubygems.pkg.github.com/redmine-kit`) に公開します (`.github/workflows/gem.yml`)。gem は、動かすためのファイル (`init.rb`、`boot/`、`lib/`、`app/`、`config/`、`db/`、`help/`、`LICENSE`) を持ち、`redmine_aws`、`aws-actionmailer-ses`、`aws-sdk-sesv2`、`aws-sdk-s3` に依存します。プラグインの `Gemfile` は入れません。Redmine AWS の gem は、Bundler が同じソースからいっしょにインストールするので、`Gemfile.local` にはプラグインだけを書きます。Redmine は `plugins/` のプラグインだけを読み込むので、インストールした gem をそこにリンクします。
+バージョンのタグ (`v*`) ごとに、プラグインを gem として GitHub Packages (`https://rubygems.pkg.github.com/redmine-kit`) に公開します (`.github/workflows/gem.yml`)。gem は、動かすためのファイル (`init.rb`、`boot/`、`lib/`、`app/`、`config/`、`db/`、`help/`、`LICENSE`) を持ち、`redmine_kit_aws`、`aws-actionmailer-ses`、`aws-sdk-sesv2`、`aws-sdk-s3` に依存します。プラグインの `Gemfile` は入れません。Redmine Kit AWS の gem は、Bundler が同じソースからいっしょにインストールするので、`Gemfile.local` にはプラグインだけを書きます。Redmine は `plugins/` のプラグインだけを読み込むので、インストールした gem をそこにリンクします。
 
 ```ruby
 # Redmine の Gemfile.local
 source 'https://rubygems.pkg.github.com/redmine-kit' do
-  gem 'redmine_aws_ses'
+  gem 'redmine_kit_aws_ses'
 end
 ```
 
 ```sh
 bundle config set --global rubygems.pkg.github.com <ユーザー>:<トークン>   # か、変数 BUNDLE_RUBYGEMS__PKG__GITHUB__COM
 bundle install
-ln -s "$(bundle info --path redmine_aws)" plugins/redmine_aws
-ln -s "$(bundle info --path redmine_aws_ses)" plugins/redmine_aws_ses
+ln -s "$(bundle info --path redmine_kit_aws)" plugins/redmine_kit_aws
+ln -s "$(bundle info --path redmine_kit_aws_ses)" plugins/redmine_kit_aws_ses
 ```
 
 GitHub Packages からインストールするには、公開のパッケージでも、`read:packages` の権限を持つ GitHub のトークンが要ります。ほかのリポジトリのワークフローは、パッケージの設定 (「Manage Actions access」) でそのリポジトリに Read を与えると、自分の `GITHUB_TOKEN` (`packages: read`) で読めます。
+
+Bundler は、それぞれのリポジトリからもプラグインをインストールできます。この場合、トークンは不要です。`plugins/` へのリンクは上と同じです。
+
+```ruby
+# Redmine の Gemfile.local
+gem 'redmine_kit_aws', git: 'https://github.com/redmine-kit/redmine_aws.git', tag: 'v0.1.0', require: false
+gem 'redmine_kit_aws_ses', git: 'https://github.com/redmine-kit/redmine_aws_ses.git', tag: 'v0.1.0'
+```
 
 <a id="configuration"></a>
 
@@ -104,7 +112,7 @@ GitHub Packages からインストールするには、公開のパッケージ�
 
 ### 受信メールの取り込み
 
-rake タスク `redmine_aws_ses:receive_mail` は、受信メールを 1 通取り込みます。そのため、メールごとに何かがこのタスクを起動する必要があります。Lambda では、SES の受信ルールがタスクの関数を非同期で呼び出し、そのハンドラーが SES のイベントの値を変数で渡します ([Serverless の tasks.md](https://redmine-kit.github.io/serverless/ja/tasks.html#kinds-of-events))。
+rake タスク `redmine_kit_aws_ses:receive_mail` は、受信メールを 1 通取り込みます。そのため、メールごとに何かがこのタスクを起動する必要があります。Lambda では、SES の受信ルールがタスクの関数を非同期で呼び出し、そのハンドラーが SES のイベントの値を変数で渡します ([Serverless の tasks.md](https://redmine-kit.github.io/serverless/ja/tasks.html#kinds-of-events))。
 
 | 変数 | SES のイベントの値 |
 | --- | --- |
@@ -122,7 +130,7 @@ rake タスク `redmine_aws_ses:receive_mail` は、受信メールを 1 通取�
 「メール送信」と「メール受信」のタブは、SES の状態 (アカウント、ドメインの ID、サプレッションリスト) とドメインの MX レコードを、このタスクが最後に読んだとおりに出し、画面を開くときに SES や DNS は呼びません ([admin.md](admin.md))。スケジュールで動かします (例: 1 時間に 1 回)。タブの「最新の情報に更新」のリンクも、同じ読み込みをします。読めなかったセクションがあると、タスクは失敗します (エラーはログにあります)。
 
 ```sh
-bin/rake redmine_aws_ses:refresh
+bin/rake redmine_kit_aws_ses:refresh
 ```
 
 <a id="keeping-records"></a>
@@ -132,7 +140,7 @@ bin/rake redmine_aws_ses:refresh
 次のタスクが、指定した日数より古い取り込みの記録を消します (デフォルトは 90 日)。Serverless は毎日動かします ([Serverless の security.md](https://redmine-kit.github.io/serverless/ja/security.html#retention-periods))。
 
 ```sh
-bin/rake redmine_aws_ses:prune_records[<日数>]
+bin/rake redmine_kit_aws_ses:prune_records[<日数>]
 ```
 
 <a id="aws-resources"></a>
@@ -177,13 +185,13 @@ bin/rake redmine_aws_ses:prune_records[<日数>]
 | 検証済みの ID でない送信元からの SES v2 の `SendEmail` | 実際の SES は `MessageRejected` で拒むが、LocalStack は送ってしまう | SES のメッセージ (「Email address is not verified. ...」) を持つ `MessageRejected` |
 | `SendEmail` の種類別のエラー ([sending.md](sending.md#handling-by-kind-of-error)) | エミュレーターに、スロットリングやアカウントのエラーを返させられない | API リファレンスのそれぞれのエラーコード |
 
-それぞれのテストで確認することは、[sending.md](sending.md#tests) と [receiving.md](receiving.md#tests) にあります。SES のエラーは、SDK の応答のスタブで、配信方法を通して 1 つずつ起こします。画面もスタブを使います。取り込みのテストは、メールをテスト用の S3 (LocalStack か moto) に置き、イベントの判定と宛先といっしょに取り込みます。宛先のプロジェクト、Bcc、プロジェクトを変えられない `Project:` のキーワード、取り込まないそれぞれの理由、何も変えない偽の SES のヘッダー、記録からの再取得を確認します。Redmine のコードローダー (Zeitwerk) が、boot のファイルを先に読み込んだ状態で、Redmine AWS の名前空間の下のプラグインのファイルを読み込めることも、新しいプロセスで確認します (`bin/rails zeitwerk:check`)。`bin/test` は、プラグインのテストのあと、メールのまわりの Redmine 本体のテスト (`MailHandler`、`Mailer`、プロジェクト、設定、管理) を動かします。`bin/test --redmine` は、プラグインをインストールした状態で Redmine 本体のすべてのテストを動かします。CI はこちらです。
+それぞれのテストで確認することは、[sending.md](sending.md#tests) と [receiving.md](receiving.md#tests) にあります。SES のエラーは、SDK の応答のスタブで、配信方法を通して 1 つずつ起こします。画面もスタブを使います。取り込みのテストは、メールをテスト用の S3 (LocalStack か moto) に置き、イベントの判定と宛先といっしょに取り込みます。宛先のプロジェクト、Bcc、プロジェクトを変えられない `Project:` のキーワード、取り込まないそれぞれの理由、何も変えない偽の SES のヘッダー、記録からの再取得を確認します。Redmine のコードローダー (Zeitwerk) が、boot のファイルを先に読み込んだ状態で、Redmine Kit AWS の名前空間の下のプラグインのファイルを読み込めることも、新しいプロセスで確認します (`bin/rails zeitwerk:check`)。`bin/test` は、プラグインのテストのあと、メールのまわりの Redmine 本体のテスト (`MailHandler`、`Mailer`、プロジェクト、設定、管理) を動かします。`bin/test --redmine` は、プラグインをインストールした状態で Redmine 本体のすべてのテストを動かします。CI はこちらです。
 
 CI は、静的チェックとテストを Ruby 3.2 と 4.0 で実行します。ローカルでは、`TEST_RUBY=3.2 bin/test` (または `bin/lint`) で Ruby 3.2 で実行します。
 
-`bin/test-gem` は gem を確認します。チェックアウトからプラグインと Redmine AWS の gem をビルドし、[gem](#gem) のとおりにインストールして `plugins/` にリンクし、すべてのファイルを読み込んで Redmine を起動します (`zeitwerk:check` と、起動時にすべてを読み込む production 環境)。CI もこれを実行するので、gem にないファイルがあれば、Serverless がインストールする前に失敗します。
+`bin/test-gem` は gem を確認します。チェックアウトからプラグインと Redmine Kit AWS の gem をビルドし、[gem](#gem) のとおりにインストールして `plugins/` にリンクし、すべてのファイルを読み込んで Redmine を起動します (`zeitwerk:check` と、起動時にすべてを読み込む production 環境)。CI もこれを実行するので、gem にないファイルがあれば、Serverless がインストールする前に失敗します。
 
-テストには Redmine AWS が要ります。このリポジトリの隣の [redmine_aws](https://github.com/redmine-kit/redmine_aws) のチェックアウト (`../redmine_aws`) か、`REDMINE_AWS_DIR` に指定したパスです。CI はチェックアウトします。
+テストには Redmine Kit AWS が要ります。このリポジトリの隣の [redmine_kit_aws](https://github.com/redmine-kit/redmine_aws) のチェックアウト (`../redmine_kit_aws`) か、`REDMINE_KIT_AWS_DIR` に指定したパスです。CI はチェックアウトします。
 
 `COVERAGE=1` を付けると、プラグインのテストは、プラグイン自身のファイルのカバレッジ (SimpleCov。Cobertura の XML の `coverage/coverage.xml`) も出力し、1 プロセスで実行します。CI は Ruby 4.0 でこれを有効にし、レポートを `plugin` フラグで [Codecov](https://codecov.io/gh/redmine-kit/redmine_aws_ses) に送信します。送信の認証は OIDC (`id-token: write`) なので、トークンをシークレットに保存しません。Codecov のステータスは参考情報で、コミットや Pull Request を失敗にしません (`codecov.yml`)。
 
@@ -191,7 +199,7 @@ CI は、静的チェックとテストを Ruby 3.2 と 4.0 で実行します�
 bin/test            # プラグインのテストと、メールのまわりの Redmine のテスト
 bin/test --redmine  # Redmine のすべてのテストも
 COVERAGE=1 bin/test # カバレッジを coverage/coverage.xml に出力する
-REDMINE_AWS_DIR=<ディレクトリ> bin/test  # redmine_aws を <ディレクトリ> から
+REDMINE_KIT_AWS_DIR=<ディレクトリ> bin/test  # redmine_kit_aws を <ディレクトリ> から
 bin/test-gem        # gem をビルド・インストールし、plugins/ にリンクして起動する
 bin/lint            # RuboCop
 bin/services --down # PostgreSQL、moto、LocalStack を止める

@@ -6,4 +6,4 @@ The page shows the state as it was last read (**Updated** at the top right): it 
 
 When a mailbox works again, an administrator removes its address from the suppression list on this page.
 
-More: [Redmine AWS SES: administration pages](https://redmine-kit.github.io/redmine_aws_ses/admin.html).
+More: [Redmine Kit AWS SES: administration pages](https://redmine-kit.github.io/redmine_aws_ses/admin.html).

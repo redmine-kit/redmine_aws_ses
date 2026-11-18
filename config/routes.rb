@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-# The email tabs of the AWS administration page (redmine_aws draws admin/aws
+# The email tabs of the AWS administration page (redmine_kit_aws draws admin/aws
 # itself) and the Email tab of project settings.
 get 'admin/aws/mail_sending', to: 'aws_ses_mail_sending#index', as: 'aws_ses_mail_sending'
 post 'admin/aws/mail_sending/refresh', to: 'aws_ses_mail_sending#refresh', as: 'aws_ses_mail_refresh'

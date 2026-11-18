@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
-# The state of SES and DNS that the email tabs show (RedmineAws::SES::Account),
-# as read by the last refresh: the rake task redmine_aws_ses:refresh, on a
+# The state of SES and DNS that the email tabs show (RedmineKit::Aws::Ses::Account),
+# as read by the last refresh: the rake task redmine_kit_aws_ses:refresh, on a
 # schedule, or the tabs' Refresh link. Only the latest is kept.
 class AwsSesSnapshot < ApplicationRecord
   DOMAIN_SECTIONS = %w[identity mx].freeze
@@ -13,7 +13,7 @@ class AwsSesSnapshot < ApplicationRecord
   end
 
   # Reads the state and keeps it in place of the older snapshots.
-  def self.refresh!(account = RedmineAws::SES::Account.new)
+  def self.refresh!(account = RedmineKit::Aws::Ses::Account.new)
     snapshot = create!(data: account.state, fetched_at: Time.current)
     where(fetched_at: ..snapshot.fetched_at).where.not(id: snapshot.id).delete_all
     snapshot
@@ -22,12 +22,12 @@ class AwsSesSnapshot < ApplicationRecord
   # A section (account, identity, suppressed, mx) for the domain of Redmine
   # now; nil when it failed, or when it was read for another domain
   # (Setting.mail_from changed since).
-  def section(name, domain = RedmineAws::SES.domain)
+  def section(name, domain = RedmineKit::Aws::Ses.domain)
     data[name.to_s] if current?(name, domain)
   end
 
   # The class of the error a section failed with, on the same terms.
-  def error(name, domain = RedmineAws::SES.domain)
+  def error(name, domain = RedmineKit::Aws::Ses.domain)
     data.dig('errors', name.to_s) if current?(name, domain)
   end
 

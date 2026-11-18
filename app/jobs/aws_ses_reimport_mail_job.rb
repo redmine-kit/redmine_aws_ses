@@ -5,6 +5,6 @@
 # the task function (docs/admin.md#receiving-email).
 class AwsSesReimportMailJob < ApplicationJob
   def perform(message_id)
-    RedmineAws::SES::Receiver.new(message_id).run
+    RedmineKit::Aws::Ses::Receiver.new(message_id).run
   end
 end

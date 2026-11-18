@@ -5,8 +5,8 @@
 # linked into Redmine's plugins/ (docs/setup.md#installation). The plugin's
 # Gemfile is not in it: Redmine's Gemfile would load it again.
 Gem::Specification.new do |spec|
-  spec.name = 'redmine_aws_ses'
-  spec.version = File.read(File.join(__dir__, 'lib/redmine_aws/ses.rb'))[/VERSION = '([^']+)'/, 1]
+  spec.name = 'redmine_kit_aws_ses'
+  spec.version = File.read(File.join(__dir__, 'lib/redmine_kit/aws/ses.rb'))[/VERSION = '([^']+)'/, 1]
   spec.summary = 'Sends and receives Redmine email with Amazon SES'
   spec.authors = ['Redmine Kit']
   spec.license = 'GPL-2.0-or-later'
@@ -20,7 +20,7 @@ Gem::Specification.new do |spec|
   spec.add_dependency 'aws-actionmailer-ses', '~> 1.2'
   spec.add_dependency 'aws-sdk-s3', '~> 1.0'
   spec.add_dependency 'aws-sdk-sesv2', '~> 1.0'
-  spec.add_dependency 'redmine_aws', '~> 0.1'
+  spec.add_dependency 'redmine_kit_aws', '~> 0.1'
   spec.metadata['github_repo'] = 'ssh://github.com/redmine-kit/redmine_aws_ses'
   spec.metadata['rubygems_mfa_required'] = 'true'
 end

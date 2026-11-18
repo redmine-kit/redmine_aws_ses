@@ -25,7 +25,7 @@ services:
   # Authentication is off: the tests sign with fixed keys.
   aws-emulator:
     build: aws-emulator
-    image: redmine-aws-ses-test-aws-emulator
+    image: redmine-kit-aws-ses-test-aws-emulator
     pull_policy: build
     command: ["--auth", "off"]
     networks: [internal]

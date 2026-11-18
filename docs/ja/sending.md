@@ -1,6 +1,6 @@
 # 送信
 
-Redmine AWS SES が、Redmine のメールを Amazon SES で送るしくみと、送信に失敗したときの扱いです。送信には Rails 標準のしくみを使います。AWS の gem `aws-actionmailer-ses` の ActionMailer の配信方法 `:ses_v2` が、SES v2 の `SendEmail` に、メッセージ全体 (`content.raw`) と、宛先 (To、Cc、Bcc) を別に渡します。Bcc の宛先は、メッセージには出ません。どの関数が送るかと SES のリソースは、[Serverless の mail.md](https://redmine-kit.github.io/serverless/ja/mail.html#sending) にあります。
+Redmine Kit AWS SES が、Redmine のメールを Amazon SES で送るしくみと、送信に失敗したときの扱いです。送信には Rails 標準のしくみを使います。AWS の gem `aws-actionmailer-ses` の ActionMailer の配信方法 `:ses_v2` が、SES v2 の `SendEmail` に、メッセージ全体 (`content.raw`) と、宛先 (To、Cc、Bcc) を別に渡します。Bcc の宛先は、メッセージには出ません。どの関数が送るかと SES のリソースは、[Serverless の mail.md](https://redmine-kit.github.io/serverless/ja/mail.html#sending) にあります。
 
 2026-11-09 に、Redmine 7.0.3 と `aws-actionmailer-ses` 1.2.0 のソースで確認しました。
 
@@ -21,8 +21,8 @@ SES v2 の `SendEmail` のエラー (API リファレンスの一覧) を、3 �
 | エラー | 意味 | 扱い |
 | --- | --- | --- |
 | `TooManyRequestsException`<br>`InternalFailure`<br>`ServiceUnavailable`<br>そのほかの 5xx<br>ネットワークエラー | 一時的 | ジョブの中で再試行する。3、18、83、258 秒のあとに、5 回まで動かす |
-| `MessageRejected`<br>`BadRequestException` | そのメッセージの中身や宛先の問題 | ジョブを捨てる。Redmine のログには、ジョブ ID、メーラーのメソッド、エラーコードを書き、宛先を含む SES のメッセージは書かない。[Redmine AWS SQS](https://redmine-kit.github.io/redmine_aws_sqs/ja/) があれば、失敗の記録を残す。SES は、検証済みの ID でない送信元にも `MessageRejected` を返すので、送信元メールアドレスを確認していないドメインに変えると、メールはデッドレターキューに残らずにこの扱いで捨てられる (残るのは失敗の記録だけ) |
-| そのほか。たとえば<br>`SendingPausedException`<br>`AccountSuspendedException`<br>`MailFromDomainNotVerifiedException`<br>`NotFoundException`<br>`LimitExceededException`<br>`AccessDeniedException` | アカウントか設定の問題。直すまで、何度でも失敗する | ジョブの中では再試行せずに例外を発生させる。メッセージはキューから再び受信され、最後の受信のあとにデッドレターキューへ移り、そこで Redmine AWS SQS が記録する |
+| `MessageRejected`<br>`BadRequestException` | そのメッセージの中身や宛先の問題 | ジョブを捨てる。Redmine のログには、ジョブ ID、メーラーのメソッド、エラーコードを書き、宛先を含む SES のメッセージは書かない。[Redmine Kit AWS SQS](https://redmine-kit.github.io/redmine_aws_sqs/ja/) があれば、失敗の記録を残す。SES は、検証済みの ID でない送信元にも `MessageRejected` を返すので、送信元メールアドレスを確認していないドメインに変えると、メールはデッドレターキューに残らずにこの扱いで捨てられる (残るのは失敗の記録だけ) |
+| そのほか。たとえば<br>`SendingPausedException`<br>`AccountSuspendedException`<br>`MailFromDomainNotVerifiedException`<br>`NotFoundException`<br>`LimitExceededException`<br>`AccessDeniedException` | アカウントか設定の問題。直すまで、何度でも失敗する | ジョブの中では再試行せずに例外を発生させる。メッセージはキューから再び受信され、最後の受信のあとにデッドレターキューへ移り、そこで Redmine Kit AWS SQS が記録する |
 
 - **待ち時間:** ActiveJob の `:polynomially_longer` からジッターを除いたものです (`実行回数⁴ + 2` 秒)。SQS の遅延の上限 (15 分) に収まります。5 回目のあとは例外を発生させ、アカウントのエラーと同じく、キューの再試行とデッドレターキューに任せます。
 - **SDK の再試行:** AWS SDK も、ジョブより前に、429 と 5xx を自分で再試行します (デフォルトの再試行設定)。
@@ -34,7 +34,7 @@ SES v2 の `SendEmail` のエラー (API リファレンスの一覧) を、3 �
 
 1. **通知を受ける:** デッドレターキューか失敗の記録のアラームで、メールの失敗を知ります (Serverless では CloudWatch アラーム)。
 2. **原因を直す:** 管理画面の「メール送信」のタブで、SES アカウント、ドメイン、サプレッションリストを確認します ([admin.md](admin.md#sending-email))。
-3. **再送信する:** 「失敗したジョブ」のリンクから Redmine AWS SQS の「ジョブ」の画面を開き、失敗したメールを選んで再送信するか、デッドレターキューを再処理します ([その admin.md](https://redmine-kit.github.io/redmine_aws_sqs/ja/admin.html#jobs))。
+3. **再送信する:** 「失敗したジョブ」のリンクから Redmine Kit AWS SQS の「ジョブ」の画面を開き、失敗したメールを選んで再送信するか、デッドレターキューを再処理します ([その admin.md](https://redmine-kit.github.io/redmine_aws_sqs/ja/admin.html#jobs))。
 
 - **SES が受け付けたあとの失敗:** SES が受け付けたあとで、相手のメールサーバーが拒んだメール (バウンス) は、API のエラーではありません。SES はアドレスをサプレッションリストに入れ、そこへは送らなくなります。「メール送信」のタブでリストを見られます。
 

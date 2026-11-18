@@ -9,8 +9,8 @@
 | 操作 | 対象 | 理由 |
 | --- | --- | --- |
 | `ses:SendEmail`<br>`ses:SendRawEmail` | サブドメインの SES の ID | メールを送るすべてのプロセス (テストメールを送る画面のリクエスト、ジョブ、rake)。SES v2 の `SendEmail` で、メール全体 (raw) を送る |
-| `ses:GetEmailIdentity` | SES の ID | `rake redmine_aws_ses:refresh` を (スケジュールで) 動かすプロセスと、画面のリクエスト (メールのタブの「最新の情報に更新」)。タブのための、ドメインの状態の読み込み ([setup.md](setup.md#refreshing-the-ses-state)) |
-| `ses:GetAccount`<br>`ses:ListSuppressedDestinations`<br>`ses:DeleteSuppressedDestination` | `*` (絞れない) | 同じプロセス。SES アカウントとサプレッションリスト。そこからの削除 (`DeleteSuppressedDestination`) は画面のリクエストだけ。`GetAccount` は、Redmine AWS の「ステータス」のタブの「接続テスト」の SES にも使う |
+| `ses:GetEmailIdentity` | SES の ID | `rake redmine_kit_aws_ses:refresh` を (スケジュールで) 動かすプロセスと、画面のリクエスト (メールのタブの「最新の情報に更新」)。タブのための、ドメインの状態の読み込み ([setup.md](setup.md#refreshing-the-ses-state)) |
+| `ses:GetAccount`<br>`ses:ListSuppressedDestinations`<br>`ses:DeleteSuppressedDestination` | `*` (絞れない) | 同じプロセス。SES アカウントとサプレッションリスト。そこからの削除 (`DeleteSuppressedDestination`) は画面のリクエストだけ。`GetAccount` は、Redmine Kit AWS の「ステータス」のタブの「接続テスト」の SES にも使う |
 | `s3:GetObject`<br>`s3:DeleteObject` | メールのバケットの `inbound/*` | 取り込み (rake)。受け取ったメールを読み (サイズのための `HeadObject` は `s3:GetObject` で許可される。そのあと `GetObject`)、移したあとに消す |
 | `s3:PutObject` | メールのバケットの `processed/*` | 取り込み (rake)。取り込んだメールを移す (`processed/` への `CopyObject` のあと、`inbound/` で `DeleteObject`) |
 | `s3:GetObject` | メールのバケットの `processed/*` | 取り込み済みのメールの再取得 (rake か、下のジョブ) |

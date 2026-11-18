@@ -1,6 +1,6 @@
 # Receiving
 
-How Redmine AWS SES imports email that SES received: the addresses, how the project is chosen, the checks against spoofing and spam, and the options passed to Redmine's `MailHandler`. SES stores each message in the mail bucket (`inbound/<message ID>`) and starts the import; [Serverless mail.md](https://redmine-kit.github.io/serverless/mail.html#receiving) has the domain, the receipt rule and the bucket.
+How Redmine Kit AWS SES imports email that SES received: the addresses, how the project is chosen, the checks against spoofing and spam, and the options passed to Redmine's `MailHandler`. SES stores each message in the mail bucket (`inbound/<message ID>`) and starts the import; [Serverless mail.md](https://redmine-kit.github.io/serverless/mail.html#receiving) has the domain, the receipt rule and the bucket.
 
 Checked against the Redmine 7.0.3 source on 2026-11-09, and against SES's documentation of the receipt notification on 2026-11-12 ([Contents of notifications for Amazon SES email receiving](https://docs.aws.amazon.com/ses/latest/dg/receiving-email-notifications-contents.html), [Deliver to S3 bucket action](https://docs.aws.amazon.com/ses/latest/dg/receiving-email-action-s3.html)).
 
@@ -50,7 +50,7 @@ The methods above are the Redmine 7.0.3 mailer methods that do not add the proje
 
 ## Importing
 
-The rake task `redmine_aws_ses:receive_mail` imports one message:
+The rake task `redmine_kit_aws_ses:receive_mail` imports one message:
 
 1. Lock the message's record (one run at a time per message, below). If the message was imported and its issue or note still exists, stop.
 2. Find the message in the mail bucket (`HeadObject` on `inbound/`, or `processed/` for a re-import). A message larger than 40 MB is not imported: SES stores at most 40 MB, headers included ([Deliver to S3 bucket action](https://docs.aws.amazon.com/ses/latest/dg/receiving-email-action-s3.html)); only its first 64 KiB are read, for the record's sender and subject, and it is recorded as "Not fetched (too large)".
@@ -92,7 +92,7 @@ On Lambda, the SES receipt rule invokes the task function, whose handler sets th
 
 - **Auto-replies:** Email with `Auto-Submitted` (`auto-replied`, `auto-generated`) or `X-Autoreply: yes` (`MailHandler.ignored_emails_headers`) is dropped and recorded as an auto-reply. This prevents loops of notifications and imports.
 - **Not imported by Redmine:** When `MailHandler` refuses a message (for example, an unregistered sender with `ignore`, or a sender without permission), it is recorded as not imported and stays in `inbound/`; Redmine's log has the reason.
-- **Attachments:** Attachments are saved as Redmine attachments (with [Redmine AWS S3](https://redmine-kit.github.io/redmine_aws_s3/), in S3).
+- **Attachments:** Attachments are saved as Redmine attachments (with [Redmine Kit AWS S3](https://redmine-kit.github.io/redmine_aws_s3/), in S3).
 
 ## Spoofing and spam
 
@@ -115,7 +115,7 @@ The values are `PASS`, `FAIL`, `GRAY` or `PROCESSING_FAILED`; a verdict that is 
 
 ## Forwarded email
 
-Email reaches a project in two forwarded ways: an external mailbox forwards everything it receives to the project's address (automatic forwarding), or a member forwards a customer's email from their mail client (forwarding by members). The decisions are made in one place in the code (`RedmineAws::SES::Admission`), from the SES event and Redmine only; the headers of the message decide nothing, as a sender can forge them.
+Email reaches a project in two forwarded ways: an external mailbox forwards everything it receives to the project's address (automatic forwarding), or a member forwards a customer's email from their mail client (forwarding by members). The decisions are made in one place in the code (`RedmineKit::Aws::Ses::Admission`), from the SES event and Redmine only; the headers of the message decide nothing, as a sender can forge them.
 
 ### Automatic forwarding
 
@@ -157,7 +157,7 @@ The project's "Author of forwarded email" decides whose name a forwarded issue c
 - **Replies:** A message fetched through a registered forwarder may be a reply to a notification: by its subject (`[… #123]` for an issue, `[… msg12]` for a forum message) or by `In-Reply-To` or `References` (issues, notes, forum messages, news and news comments). Redmine adds such a reply where it points, checking only the author's permissions; as nothing authenticated the `From`, the plugin lets it reach only the project the envelope recipient chose, so customer replies forwarded from `support@` still reach their issues. A reply to another project, or of a kind the plugin does not check (one Redmine may add later), is not fetched ("Not fetched (reply to another project)"). A member's forward never adds a reply: the original's `In-Reply-To` and `References` are dropped, and an original whose subject names an issue or a message is imported as the member's own message.
 - **No author:** A message fetched through a registered forwarder that no one may be the author of (for example, its sender is a member of the project, and the project does not fetch from unknown senders) is not fetched ("Not fetched (no author for forwarded email)").
 - **Recorded:** For a message fetched through a registered forwarder, the list of received email shows the original sender (From). For a member's forward, it shows the member, who sent the message SES received; the member's note names the original sender.
-- **Implementation:** The author is chosen in `RedmineAws::SES::Admission#author`; `RedmineAws::SES::ForwardedMailHandler`, a subclass of Redmine's `MailHandler`, overrides its private methods, each calling `super`: `dispatch` puts the author in place of the sender and refuses a reply of a kind it does not check, `add_watchers` checks the member's permission for watchers, and `receive_issue_reply`, `receive_message_reply` and `receive_news_reply` (which notes and news comments go through) check the reply's project. A test compares the kinds of reply it checks with Redmine's.
+- **Implementation:** The author is chosen in `RedmineKit::Aws::Ses::Admission#author`; `RedmineKit::Aws::Ses::ForwardedMailHandler`, a subclass of Redmine's `MailHandler`, overrides its private methods, each calling `super`: `dispatch` puts the author in place of the sender and refuses a reply of a kind it does not check, `add_watchers` checks the member's permission for watchers, and `receive_issue_reply`, `receive_message_reply` and `receive_news_reply` (which notes and news comments go through) check the reply's project. A test compares the kinds of reply it checks with Redmine's.
 
 ## Settings for receiving replies
 

@@ -2,5 +2,5 @@
 # (https://github.com/redmine-kit/redmine_help, docs/extending.md).
 sections:
   - id: aws-ses
-    title: Redmine AWS SES
+    title: Redmine Kit AWS SES
     topics: [aws-ses/sending, aws-ses/receiving, aws-ses/project-mail]

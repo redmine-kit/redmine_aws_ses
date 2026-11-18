@@ -6,4 +6,4 @@ SES がウイルスを見つけたメールは、いつも取得しません。M
 
 転送メール: プロジェクトごとに、DMARC に失敗しても取得する「転送元」の登録、メンバーが転送したメールを元のメールとして取得すること、「転送メールの作成者」を設定できます。変えられるのはシステム管理者だけです (プロジェクトの「メール」のタブ)。
 
-詳しくは [Redmine AWS SES の管理画面](https://redmine-kit.github.io/redmine_aws_ses/ja/admin.html) と [メールの受信](https://redmine-kit.github.io/redmine_aws_ses/ja/receiving.html) を参照してください。
+詳しくは [Redmine Kit AWS SES の管理画面](https://redmine-kit.github.io/redmine_aws_ses/ja/admin.html) と [メールの受信](https://redmine-kit.github.io/redmine_aws_ses/ja/receiving.html) を参照してください。

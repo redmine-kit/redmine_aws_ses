@@ -8,7 +8,7 @@ class AwsSesProjectMailSetting < ApplicationRecord
 
   UNKNOWN_USER = %w[ignore accept create].freeze
   # Which original sender of forwarded email may be the issue's author
-  # (RedmineAws::SES::Admission#author): external senders only (not an
+  # (RedmineKit::Aws::Ses::Admission#author): external senders only (not an
   # administrator, not a member of the project), any registered user, or
   # never.
   FORWARDED_AUTHORS = %w[external registered forwarder].freeze
@@ -45,7 +45,7 @@ class AwsSesProjectMailSetting < ApplicationRecord
 
   # The project's address, or nil when its identifier cannot be one.
   def self.address_for(project)
-    domain = RedmineAws::SES.domain
+    domain = RedmineKit::Aws::Ses.domain
     domain && addressable?(project.identifier) ? "#{project.identifier}@#{domain}" : nil
   end
 
@@ -71,9 +71,9 @@ class AwsSesProjectMailSetting < ApplicationRecord
   end
 
   # The project's address is the default address or the emission address,
-  # which take the email sent to them (RedmineAws::SES::Routing).
+  # which take the email sent to them (RedmineKit::Aws::Ses::Routing).
   def default_address?
-    RedmineAws::SES.global_local_parts.include?(project.identifier)
+    RedmineKit::Aws::Ses.global_local_parts.include?(project.identifier)
   end
 
   # The choices of the form, which the validation checks too: the values an
@@ -93,12 +93,12 @@ class AwsSesProjectMailSetting < ApplicationRecord
     user.admin? || unknown_user_in_database == 'create' ? UNKNOWN_USER : UNKNOWN_USER - %w[create]
   end
 
-  # The registered forwarders (RedmineAws::SES::Forwarders).
+  # The registered forwarders (RedmineKit::Aws::Ses::Forwarders).
   def forwarder_list = forwarder_rule.list
 
   def forwarder?(envelope_from) = forwarder_rule.include?(envelope_from)
 
-  def forwarder_rule = RedmineAws::SES::Forwarders.new(forwarders)
+  def forwarder_rule = RedmineKit::Aws::Ses::Forwarders.new(forwarders)
 
   LABELS = { 'forwarders' => :label_aws_ses_mail_forwarders,
              'forwarded_author' => :label_aws_ses_mail_forwarded_author }.freeze
@@ -150,7 +150,7 @@ class AwsSesProjectMailSetting < ApplicationRecord
 
   def validate_forwarders
     rule = forwarder_rule
-    errors.add(:forwarders, :too_long, count: RedmineAws::SES::Forwarders::MAX) if rule.too_many?
+    errors.add(:forwarders, :too_long, count: RedmineKit::Aws::Ses::Forwarders::MAX) if rule.too_many?
     errors.add(:forwarders, :invalid) unless rule.valid?
   end
 

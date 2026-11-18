@@ -19,85 +19,87 @@ if ENV['PLUGIN_COVERAGE'] && !(defined?(SimpleCov) && SimpleCov.running)
 end
 
 require File.expand_path('../../../test/test_helper', __dir__)
-require File.join(Redmine::Plugin.find(:redmine_aws).directory, 'test/support/redmine_aws/test_helper')
+require File.join(Redmine::Plugin.find(:redmine_kit_aws).directory, 'test/support/redmine_kit/aws/test_helper')
 
-module RedmineAws
-  module SES
-    # with_env, stub_aws_client and the others come from redmine_aws.
-    module TestHelper
-      include RedmineAws::TestHelper
+module RedmineKit
+  module Aws
+    module Ses
+      # with_env, stub_aws_client and the others come from redmine_kit_aws.
+      module TestHelper
+        include RedmineKit::Aws::TestHelper
 
-      DOMAIN = 'redmine.example.com'
+        DOMAIN = 'redmine.example.com'
 
-      def self.included(base)
-        base.teardown { RedmineAws::SES::Clients.reset }
-      end
+        def self.included(base)
+          base.teardown { RedmineKit::Aws::Ses::Clients.reset }
+        end
 
-      def with_ses_settings(values = {}, &)
-        saved = Setting.plugin_redmine_aws_ses
-        Setting.plugin_redmine_aws_ses = RedmineAws::SES::DEFAULTS.merge(values)
-        with_settings(mail_from: "Redmine <redmine@#{DOMAIN}>", &)
-      ensure
-        Setting.plugin_redmine_aws_ses = saved
-      end
+        def with_ses_settings(values = {}, &)
+          saved = Setting.plugin_redmine_kit_aws_ses
+          Setting.plugin_redmine_kit_aws_ses = RedmineKit::Aws::Ses::DEFAULTS.merge(values)
+          with_settings(mail_from: "Redmine <redmine@#{DOMAIN}>", &)
+        ensure
+          Setting.plugin_redmine_kit_aws_ses = saved
+        end
 
-      def stub_ses(**responses)
-        RedmineAws::SES::Clients.ses = stub_aws_client(::Aws::SESV2::Client, **responses)
-      end
+        def stub_ses(**responses)
+          RedmineKit::Aws::Ses::Clients.ses = stub_aws_client(::Aws::SESV2::Client, **responses)
+        end
 
-      # SES as the account of the tests: healthy, the domain verified, one
-      # address on the suppression list.
-      def stub_ses_state
-        quota = { max_24_hour_send: 50_000.0, max_send_rate: 14.0, sent_last_24_hours: 12.0 }
-        stub_ses(get_account: { production_access_enabled: true, sending_enabled: true, enforcement_status: 'HEALTHY',
-                                send_quota: quota },
-                 get_email_identity: { verified_for_sending_status: true, dkim_attributes: { status: 'SUCCESS' } },
-                 list_suppressed_destinations: { suppressed_destination_summaries: [
-                   { email_address: 'jsmith@somenet.foo', reason: 'BOUNCE', last_update_time: Time.current }
-                 ] })
-      end
+        # SES as the account of the tests: healthy, the domain verified, one
+        # address on the suppression list.
+        def stub_ses_state
+          quota = { max_24_hour_send: 50_000.0, max_send_rate: 14.0, sent_last_24_hours: 12.0 }
+          stub_ses(get_account: { production_access_enabled: true, sending_enabled: true, enforcement_status: 'HEALTHY',
+                                  send_quota: quota },
+                   get_email_identity: { verified_for_sending_status: true, dkim_attributes: { status: 'SUCCESS' } },
+                   list_suppressed_destinations: { suppressed_destination_summaries: [
+                     { email_address: 'jsmith@somenet.foo', reason: 'BOUNCE', last_update_time: Time.current }
+                   ] })
+        end
 
-      # What the block writes to the logger of owner (Rails or
-      # ActionController::Base).
-      def capture_log(owner = Rails)
-        io = StringIO.new
-        saved = owner.logger
-        owner.logger = ActiveSupport::Logger.new(io)
-        yield
-        io.string
-      ensure
-        owner.logger = saved
-      end
+        # What the block writes to the logger of owner (Rails or
+        # ActionController::Base).
+        def capture_log(owner = Rails)
+          io = StringIO.new
+          saved = owner.logger
+          owner.logger = ActiveSupport::Logger.new(io)
+          yield
+          io.string
+        ensure
+          owner.logger = saved
+        end
 
-      PASS = { spam: 'PASS', virus: 'PASS', dmarc: 'PASS', dmarc_policy: 'NONE', spf: 'PASS', dkim: 'PASS' }.freeze
+        PASS = { spam: 'PASS', virus: 'PASS', dmarc: 'PASS', dmarc_policy: 'NONE', spf: 'PASS', dkim: 'PASS' }.freeze
 
-      # A received message as the sender sent it. SES's own headers are not
-      # added: the plugin reads SES's verdicts from the event, never from
-      # headers, and headers: can add forged ones.
-      def ses_message(to: "ecookbook@#{DOMAIN}", from: 'John Smith <jsmith@somenet.foo>', subject: 'Received by SES',
-                      body: 'A new issue from email.', headers: {})
-        sender = headers.map { |k, v| "#{k}: #{v}\n" }.join
-        <<~MAIL
-          Received: from client by mail.somenet.foo
-          #{sender}From: #{from}
-          To: #{to}
-          Subject: #{subject}
-          Message-ID: <#{SecureRandom.hex(8)}@somenet.foo>
-          Date: #{Time.now.rfc2822}
-          Content-Type: text/plain; charset=utf-8
+        # A received message as the sender sent it. SES's own headers are not
+        # added: the plugin reads SES's verdicts from the event, never from
+        # headers, and headers: can add forged ones.
+        def ses_message(to: "ecookbook@#{DOMAIN}", from: 'John Smith <jsmith@somenet.foo>', subject: 'Received by SES',
+                        body: 'A new issue from email.', headers: {})
+          sender = headers.map { |k, v| "#{k}: #{v}\n" }.join
+          <<~MAIL
+            Received: from client by mail.somenet.foo
+            #{sender}From: #{from}
+            To: #{to}
+            Subject: #{subject}
+            Message-ID: <#{SecureRandom.hex(8)}@somenet.foo>
+            Date: #{Time.now.rfc2822}
+            Content-Type: text/plain; charset=utf-8
 
-          #{body}
-        MAIL
-      end
+            #{body}
+          MAIL
+        end
 
-      # Runs the block with ActiveJob's test adapter (Redmine's tests run jobs
-      # inline).
-      def with_test_adapter
-        saved = ActiveJob::Base.queue_adapter
-        ActiveJob::Base.queue_adapter = :test
-        yield
-      ensure
-        ActiveJob::Base.queue_adapter = saved
+        # Runs the block with ActiveJob's test adapter (Redmine's tests run jobs
+        # inline).
+        def with_test_adapter
+          saved = ActiveJob::Base.queue_adapter
+          ActiveJob::Base.queue_adapter = :test
+          yield
+        ensure
+          ActiveJob::Base.queue_adapter = saved
+        end
       end
     end
   end

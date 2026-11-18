@@ -10,7 +10,7 @@ class AwsSesProjectMailSettingsController < ApplicationController
     @setting = AwsSesProjectMailSetting.find_or_initialize_by(project: @project)
     @setting.safe_attributes = setting_params(@setting)
     if @setting.save
-      logger&.info "[redmine_aws_ses] #{User.current.login} changed the email settings of #{@project.identifier}"
+      logger&.info "[redmine_kit_aws_ses] #{User.current.login} changed the email settings of #{@project.identifier}"
       flash[:notice] = l(:notice_successful_update)
       redirect_to settings_project_path(@project, tab: 'aws_ses_mail')
     else

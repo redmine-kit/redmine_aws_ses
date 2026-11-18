@@ -1,30 +1,30 @@
 # Setup
 
-What a Redmine needs to use Redmine AWS SES: installation, configuration, the SES and S3 resources, IAM permissions and network access. It works on AWS Lambda and on an ordinary server alike. [Serverless](https://redmine-kit.github.io/serverless/) sets all of this up with CloudFormation; this page is for setting it up by hand, or for checking what Serverless creates.
+What a Redmine needs to use Redmine Kit AWS SES: installation, configuration, the SES and S3 resources, IAM permissions and network access. It works on AWS Lambda and on an ordinary server alike. [Serverless](https://redmine-kit.github.io/serverless/) sets all of this up with CloudFormation; this page is for setting it up by hand, or for checking what Serverless creates.
 
 ## Requirements
 
 - Redmine 7.0 or later.
-- [Redmine AWS](https://redmine-kit.github.io/redmine_aws/) (`redmine_aws`) 0.1 or later, in `plugins/redmine_aws`. Redmine refuses to start without it (`requires_redmine_plugin` in `init.rb`), and the gem depends on it. It adds the "AWS" administration menu.
+- [Redmine Kit AWS](https://redmine-kit.github.io/redmine_aws/) (`redmine_kit_aws`) 0.1 or later, in `plugins/redmine_kit_aws`. Redmine refuses to start without it (`requires_redmine_plugin` in `init.rb`), and the gem depends on it. It adds the "AWS" administration menu.
 - A process that can reach SES and S3 with AWS credentials (an execution role on Lambda, an instance profile or a task role elsewhere). No access keys or SMTP passwords are stored in Redmine.
 - For sending: the official AWS gem `aws-actionmailer-ses` (delivery method `:ses_v2`) ([Serverless mail.md](https://redmine-kit.github.io/serverless/mail.html#gems)).
-- For retries of sending: jobs that run in a process of their own (on Lambda, `REDMINE_ROLE=worker`; [Redmine AWS SQS](https://redmine-kit.github.io/redmine_aws_sqs/) records the jobs that fail for the last time).
+- For retries of sending: jobs that run in a process of their own (on Lambda, `REDMINE_ROLE=worker`; [Redmine Kit AWS SQS](https://redmine-kit.github.io/redmine_aws_sqs/) records the jobs that fail for the last time).
 
 ## Installation
 
-1. Get the plugin into `plugins/redmine_aws_ses` of Redmine 7.0, and Redmine AWS into `plugins/redmine_aws`: the gems below, or checkouts of the repositories.
+1. Get the plugin into `plugins/redmine_kit_aws_ses` of Redmine 7.0, and Redmine Kit AWS into `plugins/redmine_kit_aws`: the gems below, or checkouts of the repositories. A checkout goes into a folder named after the plugin id, which differs from the repository's name: `git clone https://github.com/redmine-kit/redmine_aws_ses.git plugins/redmine_kit_aws_ses` and `git clone https://github.com/redmine-kit/redmine_aws.git plugins/redmine_kit_aws`.
 2. Add the plugin to `Gemfile.local` as a gem, and install it:
 
    ```sh
    bundle install
    ```
 
-   Bundler then loads `boot/redmine_aws_ses.rb` before Rails initializes: it loads `aws-actionmailer-ses`, which registers the delivery method `:ses_v2`, and the interceptor for per-project senders. With checkouts, add both by path. Redmine AWS must be listed too, because the plugin's gemspec requires it and it is not on rubygems.org; Bundler does not load it (Redmine does). List it once, even when you add several Redmine AWS plugins this way: Bundler refuses the same gem from two sources and warns about duplicates.
+   Bundler then loads `boot/redmine_kit_aws_ses.rb` before Rails initializes: it loads `aws-actionmailer-ses`, which registers the delivery method `:ses_v2`, and the interceptor for per-project senders. With checkouts, add both by path. Redmine Kit AWS must be listed too, because the plugin's gemspec requires it and it is not on rubygems.org; Bundler does not load it (Redmine does). List it once, even when you add several Redmine Kit AWS plugins this way: Bundler refuses the same gem from two sources and warns about duplicates.
 
    ```ruby
    # Redmine's Gemfile.local
-   gem 'redmine_aws', path: 'plugins/redmine_aws', require: false
-   gem 'redmine_aws_ses', path: 'plugins/redmine_aws_ses'
+   gem 'redmine_kit_aws', path: 'plugins/redmine_kit_aws', require: false
+   gem 'redmine_kit_aws_ses', path: 'plugins/redmine_kit_aws_ses'
    ```
 
 3. Run the plugin's migrations:
@@ -46,23 +46,31 @@ What a Redmine needs to use Redmine AWS SES: installation, configuration, the SE
 
 ### Gem
 
-Each version tag (`v*`) publishes the plugin as a gem to GitHub Packages (`https://rubygems.pkg.github.com/redmine-kit`; `.github/workflows/gem.yml`). The gem holds the run-time files (`init.rb`, `boot/`, `lib/`, `app/`, `config/`, `db/`, `help/`, `LICENSE`) and depends on `redmine_aws`, `aws-actionmailer-ses`, `aws-sdk-sesv2` and `aws-sdk-s3`; the plugin's `Gemfile` is not in it. Bundler installs the gem of Redmine AWS with it, from the same source, so `Gemfile.local` names only the plugin. Redmine loads plugins only from `plugins/`, so the installed gems are linked there:
+Each version tag (`v*`) publishes the plugin as a gem to GitHub Packages (`https://rubygems.pkg.github.com/redmine-kit`; `.github/workflows/gem.yml`). The gem holds the run-time files (`init.rb`, `boot/`, `lib/`, `app/`, `config/`, `db/`, `help/`, `LICENSE`) and depends on `redmine_kit_aws`, `aws-actionmailer-ses`, `aws-sdk-sesv2` and `aws-sdk-s3`; the plugin's `Gemfile` is not in it. Bundler installs the gem of Redmine Kit AWS with it, from the same source, so `Gemfile.local` names only the plugin. Redmine loads plugins only from `plugins/`, so the installed gems are linked there:
 
 ```ruby
 # Redmine's Gemfile.local
 source 'https://rubygems.pkg.github.com/redmine-kit' do
-  gem 'redmine_aws_ses'
+  gem 'redmine_kit_aws_ses'
 end
 ```
 
 ```sh
 bundle config set --global rubygems.pkg.github.com <user>:<token>   # or BUNDLE_RUBYGEMS__PKG__GITHUB__COM
 bundle install
-ln -s "$(bundle info --path redmine_aws)" plugins/redmine_aws
-ln -s "$(bundle info --path redmine_aws_ses)" plugins/redmine_aws_ses
+ln -s "$(bundle info --path redmine_kit_aws)" plugins/redmine_kit_aws
+ln -s "$(bundle info --path redmine_kit_aws_ses)" plugins/redmine_kit_aws_ses
 ```
 
 Installing from GitHub Packages needs a GitHub token with `read:packages`, even for a public package. A workflow of another repository reads it with its `GITHUB_TOKEN` (`packages: read`) once the package's settings ("Manage Actions access") give that repository Read.
+
+Bundler can also install the plugins from their repositories, which needs no token; link them into `plugins/` as above:
+
+```ruby
+# Redmine's Gemfile.local
+gem 'redmine_kit_aws', git: 'https://github.com/redmine-kit/redmine_aws.git', tag: 'v0.1.0', require: false
+gem 'redmine_kit_aws_ses', git: 'https://github.com/redmine-kit/redmine_aws_ses.git', tag: 'v0.1.0'
+```
 
 ## Configuration
 
@@ -90,7 +98,7 @@ In the job, the kind of error decides what happens: temporary errors are retried
 
 ### Importing received mail
 
-The rake task `redmine_aws_ses:receive_mail` imports one received message, so something must start it for each message. On Lambda, the SES receipt rule invokes the task function asynchronously, and its handler passes the values of the SES event as variables ([Serverless tasks.md](https://redmine-kit.github.io/serverless/tasks.html#kinds-of-events)):
+The rake task `redmine_kit_aws_ses:receive_mail` imports one received message, so something must start it for each message. On Lambda, the SES receipt rule invokes the task function asynchronously, and its handler passes the values of the SES event as variables ([Serverless tasks.md](https://redmine-kit.github.io/serverless/tasks.html#kinds-of-events)):
 
 | Variable | From the SES event |
 | --- | --- |
@@ -108,7 +116,7 @@ A message is imported only if its virus verdict is `PASS`, and its spam and DMAR
 The "Email sending" and "Email receiving" tabs show the state of SES (the account, the domain's identity, the suppression list) and the domain's MX record as this task last read it, and never call SES or DNS while a page opens ([admin.md](admin.md)). Run it on a schedule, for example once an hour; the tabs' "Refresh" link runs the same reading. It fails when a section could not be read (the log has the error).
 
 ```sh
-bin/rake redmine_aws_ses:refresh
+bin/rake redmine_kit_aws_ses:refresh
 ```
 
 ### Keeping records
@@ -116,7 +124,7 @@ bin/rake redmine_aws_ses:refresh
 This task deletes the import records older than the given number of days (default 90). Serverless runs it daily ([Serverless security.md](https://redmine-kit.github.io/serverless/security.html#retention-periods)).
 
 ```sh
-bin/rake redmine_aws_ses:prune_records[<days>]
+bin/rake redmine_kit_aws_ses:prune_records[<days>]
 ```
 
 ## AWS resources
@@ -153,13 +161,13 @@ Calls whose answers the tests need but no backend gives as real AWS does are moc
 | SES v2 `SendEmail` from a sender that is not a verified identity | Real SES rejects it with `MessageRejected`; LocalStack sends it | `MessageRejected` with SES's message ("Email address is not verified. ...") |
 | Each `SendEmail` error by kind ([sending.md](sending.md#handling-by-kind-of-error)) | The emulators cannot be made to answer throttling or account errors | Each error code of the API reference |
 
-What each test checks is in [sending.md](sending.md#tests) and [receiving.md](receiving.md#tests). SES errors are raised one by one through the delivery method with SDK response stubs; the pages use stubs too. The import tests store messages in the test S3 (LocalStack or moto) and import them with the event's verdicts and recipients: the project of the recipient, Bcc, a `Project:` keyword that cannot change the project, each reason for dropping, forged SES headers that change nothing, and re-imports from the record. A test also checks, in new processes, that Redmine's code loader (Zeitwerk) loads the plugin's files under the namespace of Redmine AWS, with the boot file loaded first (`bin/rails zeitwerk:check`). `bin/test` runs the plugin's tests, then Redmine's tests around email (`MailHandler`, `Mailer`, projects, settings, administration); `bin/test --redmine` runs every Redmine test with the plugin installed, as the CI does.
+What each test checks is in [sending.md](sending.md#tests) and [receiving.md](receiving.md#tests). SES errors are raised one by one through the delivery method with SDK response stubs; the pages use stubs too. The import tests store messages in the test S3 (LocalStack or moto) and import them with the event's verdicts and recipients: the project of the recipient, Bcc, a `Project:` keyword that cannot change the project, each reason for dropping, forged SES headers that change nothing, and re-imports from the record. A test also checks, in new processes, that Redmine's code loader (Zeitwerk) loads the plugin's files under the namespace of Redmine Kit AWS, with the boot file loaded first (`bin/rails zeitwerk:check`). `bin/test` runs the plugin's tests, then Redmine's tests around email (`MailHandler`, `Mailer`, projects, settings, administration); `bin/test --redmine` runs every Redmine test with the plugin installed, as the CI does.
 
 CI runs the lint and the tests on Ruby 3.2 and 4.0; locally, `TEST_RUBY=3.2 bin/test` (or `bin/lint`) runs them on Ruby 3.2.
 
-`bin/test-gem` checks the gem: it builds the gems of the plugin and of Redmine AWS from the checkouts, installs them as [Gem](#gem) says, links them into `plugins/` and starts Redmine with every file loaded (`zeitwerk:check`, and the production environment, which loads them at start-up). CI runs it too, so a file missing from the gem fails before Serverless installs it.
+`bin/test-gem` checks the gem: it builds the gems of the plugin and of Redmine Kit AWS from the checkouts, installs them as [Gem](#gem) says, links them into `plugins/` and starts Redmine with every file loaded (`zeitwerk:check`, and the production environment, which loads them at start-up). CI runs it too, so a file missing from the gem fails before Serverless installs it.
 
-The tests need Redmine AWS: a checkout of [redmine_aws](https://github.com/redmine-kit/redmine_aws) next to this repository (`../redmine_aws`), or its path in `REDMINE_AWS_DIR`. CI checks it out.
+The tests need Redmine Kit AWS: a checkout of [redmine_kit_aws](https://github.com/redmine-kit/redmine_aws) next to this repository (`../redmine_kit_aws`), or its path in `REDMINE_KIT_AWS_DIR`. CI checks it out.
 
 With `COVERAGE=1`, the plugin's tests also write the coverage of the plugin's own files (SimpleCov, Cobertura XML in `coverage/coverage.xml`) and run in one process. CI sets it on Ruby 4.0 and uploads the report to [Codecov](https://codecov.io/gh/redmine-kit/redmine_aws_ses) with the flag `plugin`. The upload authenticates with OIDC (`id-token: write`), so no token is stored as a secret. Codecov's statuses are informational and never fail a commit or a pull request (`codecov.yml`).
 
@@ -167,7 +175,7 @@ With `COVERAGE=1`, the plugin's tests also write the coverage of the plugin's ow
 bin/test            # the plugin's tests and Redmine's tests around email
 bin/test --redmine  # with every Redmine test
 COVERAGE=1 bin/test # with the coverage in coverage/coverage.xml
-REDMINE_AWS_DIR=<dir> bin/test  # with redmine_aws from <dir>
+REDMINE_KIT_AWS_DIR=<dir> bin/test  # with redmine_kit_aws from <dir>
 bin/test-gem        # the gem: built, installed, linked into plugins/, booted
 bin/lint            # RuboCop
 bin/services --down # stops PostgreSQL, moto and LocalStack

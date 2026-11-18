@@ -24,7 +24,7 @@ module AwsSesMailHelper
   end
 
   # The SES account as the "Email sending" tab shows it (aws_admin/values of
-  # redmine_aws, as Administration › Information shows values).
+  # redmine_kit_aws, as Administration › Information shows values).
   def aws_ses_mail_account_rows(account)
     sending = :"label_aws_ses_mail_sending_status_#{account['sending_enabled'] ? 'enabled' : 'paused'}"
     [{ name: l(:label_aws_ses_mail_enforcement_status),
@@ -51,7 +51,7 @@ module AwsSesMailHelper
   # The addresses of the "Email receiving" tab.
   def aws_ses_mail_address_rows(domain, snapshot)
     [{ name: l(:label_aws_ses_mail_domain), value: domain },
-     { name: l(:label_aws_ses_mail_global_address), value: RedmineAws::SES.global_address },
+     { name: l(:label_aws_ses_mail_global_address), value: RedmineKit::Aws::Ses.global_address },
      { name: 'MX', value: aws_ses_mail_mx(snapshot) }]
   end
 

@@ -5,14 +5,14 @@
 #   bin/test                 # the plugin's tests, then the Redmine tests around email
 #   bin/test --redmine       # also every Redmine test, with the plugin installed
 #   bin/test <files>         # some files of the plugin's tests
-#   REDMINE_AWS_DIR=<dir> bin/test   # redmine_aws from <dir> (default ../redmine_aws)
+#   REDMINE_KIT_AWS_DIR=<dir> bin/test   # redmine_kit_aws from <dir> (default ../redmine_kit_aws)
 #   TEST_RUBY=3.2 bin/test   # on Ruby 3.2 (default 4.0), as the CI also does
 #   COVERAGE=1 bin/test      # with the plugin's coverage in coverage/coverage.xml, as the CI does
 # Commands that run inside the container are in single quotes on purpose.
 # shellcheck disable=SC2016
 set -euo pipefail
 cd "$(dirname "$0")/.."
-image=redmine-aws-ses-test
+image=redmine-kit-aws-ses-test
 # SES sending runs on LocalStack or moto (the emulator cannot run it yet,
 # docs/sending.md#tests); TEST_SES_BACKEND names it.
 if [[ -n "${LOCALSTACK_AUTH_TOKEN:-}" ]]; then
@@ -25,25 +25,25 @@ bin/services >/dev/null
 # network (test/compose.yml), and trust only the certificate it wrote at
 # start-up. Redmine's own tests, which call no AWS API, run on the default
 # network.
-emulator=$(docker compose -f test/compose.yml -p redmine-aws-ses-test ps -q aws-emulator)
+emulator=$(docker compose -f test/compose.yml -p redmine-kit-aws-ses-test ps -q aws-emulator)
 aws=(--network "container:$emulator" --volumes-from "$emulator:ro"
   -e AWS_ENDPOINT_URL=https://127.0.0.1:9297 -e AWS_CA_BUNDLE=/home/emulator/.aws/emulator/9297/ca.pem
   -e TEST_AWS_BACKEND=aws-emulator
   -e AWS_ENDPOINT_URL_SESV2="$ses_endpoint" -e AWS_ENDPOINT_URL_SES="$ses_endpoint" -e TEST_SES_BACKEND="$ses_backend")
 echo "AWS for the tests: AWS Emulator $(docker exec "$emulator" aws-emulator --version | sed -n 's/^Version: //p'); SES sending: $ses_backend"
-# redmine_aws, which the plugin requires: a checkout next to this one, or
-# REDMINE_AWS_DIR.
-aws_dir=${REDMINE_AWS_DIR:-../redmine_aws}
-[[ -f "$aws_dir/init.rb" ]] || { echo "redmine_aws is not in $aws_dir; set REDMINE_AWS_DIR" >&2; exit 1; }
+# redmine_kit_aws, which the plugin requires: a checkout next to this one, or
+# REDMINE_KIT_AWS_DIR.
+aws_dir=${REDMINE_KIT_AWS_DIR:-../redmine_kit_aws}
+[[ -f "$aws_dir/init.rb" ]] || { echo "redmine_kit_aws is not in $aws_dir; set REDMINE_KIT_AWS_DIR" >&2; exit 1; }
 # test/Dockerfile on the Ruby of TEST_RUBY (default 4.0), whose image is
 # pinned in test/ruby-<version>.Dockerfile, in place of its FROM ruby line.
 ruby=$(sed -n 's/^FROM //p' "test/ruby-${TEST_RUBY:-4.0}.Dockerfile")
 dockerfile() {
   sed "s|^FROM ruby:[^ ]*|FROM $ruby|" test/Dockerfile
 }
-dockerfile | docker buildx build --load -q -t "$image" --build-context redmine_aws="$aws_dir" -f - . >/dev/null
+dockerfile | docker buildx build --load -q -t "$image" --build-context redmine_kit_aws="$aws_dir" -f - . >/dev/null
 run() {
-  docker run --rm --network redmine-aws-ses-test_default -e PARALLEL_WORKERS="${PARALLEL_WORKERS:-4}" "$image" \
+  docker run --rm --network redmine-kit-aws-ses-test_default -e PARALLEL_WORKERS="${PARALLEL_WORKERS:-4}" "$image" \
     sh -c 'bin/rails db:drop db:create db:migrate redmine:plugins:migrate db:schema:dump >/dev/null && "$@"' test "$@"
 }
 # The plugin's tests; with COVERAGE set, in one process with the coverage
@@ -53,7 +53,7 @@ run_plugin() {
   local cov=(-e PARALLEL_WORKERS="${PARALLEL_WORKERS:-4}")
   if [[ -n "${COVERAGE:-}" ]]; then
     rm -f coverage/.resultset.json && mkdir -p coverage
-    cov=(-e PLUGIN_COVERAGE=1 -e PARALLEL_WORKERS=1 -v "$PWD/coverage:/redmine/plugins/redmine_aws_ses/coverage")
+    cov=(-e PLUGIN_COVERAGE=1 -e PARALLEL_WORKERS=1 -v "$PWD/coverage:/redmine/plugins/redmine_kit_aws_ses/coverage")
   fi
   docker run --rm "${cov[@]}" "${aws[@]}" "$image" \
     sh -c 'bin/rails db:drop db:create db:migrate redmine:plugins:migrate db:schema:dump >/dev/null && "$@"' test "$@"
@@ -63,11 +63,11 @@ redmine_tests=(test/unit/mail_handler_test.rb test/unit/mailer_test.rb test/func
 # Redmine's tests that fail with the current gems for known reasons.
 known=$(grep -v -e '^#' -e '^$' test/redmine_known_failures.txt | sed 's/[.]/\\./g' | paste -sd '|' -)
 if [[ "${1:-}" == "--redmine" ]]; then
-  run_plugin bin/rails test plugins/redmine_aws_ses/test
+  run_plugin bin/rails test plugins/redmine_kit_aws_ses/test
   run bin/rails test --exclude "/^($known)\$/"
 elif (($#)); then
-  run_plugin bin/rails test "${@/#/plugins/redmine_aws_ses/}"
+  run_plugin bin/rails test "${@/#/plugins/redmine_kit_aws_ses/}"
 else
-  run_plugin bin/rails test plugins/redmine_aws_ses/test
+  run_plugin bin/rails test plugins/redmine_kit_aws_ses/test
   run bin/rails test "${redmine_tests[@]}"
 fi

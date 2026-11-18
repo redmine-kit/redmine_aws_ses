@@ -11,11 +11,11 @@
 <p class="warning"><%= l(:text_aws_ses_mail_no_domain) %></p>
 <% else %>
 <%= render partial: 'aws_admin/values', locals: { rows: aws_ses_mail_address_rows(@domain, @snapshot) } %>
-<% if RedmineAws::SES.global_local_parts.size > 1 %>
-<p class="warning"><%= l(:text_aws_ses_mail_emission_address, address: "#{RedmineAws::SES.emission_local_part}@#{@domain}") %></p>
+<% if RedmineKit::Aws::Ses.global_local_parts.size > 1 %>
+<p class="warning"><%= l(:text_aws_ses_mail_emission_address, address: "#{RedmineKit::Aws::Ses.emission_local_part}@#{@domain}") %></p>
 <% end %>
 
-<% if RedmineAws::SES.per_project_addresses? && @project_settings.any? %>
+<% if RedmineKit::Aws::Ses.per_project_addresses? && @project_settings.any? %>
 <% aws_ses_mail_address_warnings(@project_settings).each do |warning| %>
 <p class="warning"><%= warning %></p>
 <% end %>
@@ -40,7 +40,7 @@
 <% end %>
 <% end %>
 
-<% unless RedmineAws::SES.mail_bucket %>
+<% unless RedmineKit::Aws::Ses.mail_bucket %>
 <p class="warning"><%= l(:text_aws_ses_mail_no_bucket) %></p>
 <% end %>
 
