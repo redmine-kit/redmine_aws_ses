@@ -1,19 +1,75 @@
 #!/usr/bin/env bash
-# Starts PostgreSQL 16, AWS Emulator and moto for the tests (and LocalStack
-# when LOCALSTACK_AUTH_TOKEN is set; test/compose.yml), or stops them with
-# --down.
+# Starts the services of the tests, or stops them with --down, in Apple
+# container when it runs, else in Docker (CONTAINER_CLI=container|docker
+# chooses): PostgreSQL 16, moto for sending, and LocalStack in its place when
+# LOCALSTACK_AUTH_TOKEN is set (AWS Emulator, for S3, comes with bin/test). No host ports: the tests run in a
+# container on the same network.
+#   bin/services                 # the services of bin/test
+#   bin/services --screenshots   # also headless Chromium (bin/screenshots)
+#   bin/services --down          # stops them
 set -euo pipefail
 cd "$(dirname "$0")/.."
-compose=(docker compose -f test/compose.yml -p redmine-kit-aws-ses-test)
-if [[ -n "${LOCALSTACK_AUTH_TOKEN:-}" ]]; then
-  compose+=(--profile localstack)
-fi
-if [[ "${1:-}" == "--down" ]]; then
-  "${compose[@]}" down -v
+source bin/container_cli
+name=redmine-kit-aws-ses-test
+if [[ "$cli" == docker ]]; then
+  compose=(docker compose -f test/compose.yml -p "$name")
+  [[ -z "${LOCALSTACK_AUTH_TOKEN:-}" ]] || compose+=(--profile localstack)
+  case "${1:-}" in
+    --down) "${compose[@]}" --profile screenshots --profile localstack down -v; exit 0 ;;
+    --screenshots) up=("${compose[@]}" --profile screenshots up -d --wait) ;;
+    *) up=("${compose[@]}" up -d --wait) ;;
+  esac
+  if ! "${up[@]}"; then
+    "${compose[@]}" ps -a >&2
+    "${compose[@]}" logs --tail 80 >&2
+    exit 1
+  fi
   exit 0
 fi
-if ! "${compose[@]}" up -d --wait; then
-  "${compose[@]}" ps -a >&2
-  "${compose[@]}" logs --tail 80 >&2
-  exit 1
+
+# Apple container: the services of test/compose.yml, with the images it pins,
+# on the network $name; PostgreSQL also on $name-aws, the internal network of
+# the plugin's tests (bin/aws_emulator), which bin/test starts, and moto only
+# there. LocalStack checks its token on the internet, so it is on both.
+image() { sed -n "s/^    image: //p" test/compose.yml | grep "^$1" | head -1; }
+postgres=$name-postgres
+chrome=$name-chrome
+if [[ "${1:-}" == --down ]]; then
+  source bin/aws_emulator
+  aws_emulator_down
+  container rm -f "$postgres" "$chrome" "$name-moto" "$name-localstack" >/dev/null 2>&1 || true
+  container network rm "$name" >/dev/null 2>&1 || true
+  exit 0
 fi
+container network inspect "$name" >/dev/null 2>&1 || container network create "$name" >/dev/null
+container network inspect "$name-aws" >/dev/null 2>&1 || container network create --internal "$name-aws" >/dev/null
+if ! container_running "$postgres"; then
+  container rm -f "$postgres" >/dev/null 2>&1 || true
+  container run -d --name "$postgres" --network "$name" --network "$name-aws" -m 1G --progress none \
+    -e POSTGRES_HOST_AUTH_METHOD=trust "$(image postgres)" >/dev/null
+fi
+if ! container_running "$name-moto"; then
+  container rm -f "$name-moto" >/dev/null 2>&1 || true
+  container run -d --name "$name-moto" --network "$name-aws" -m 1G --progress none "$(image motoserver/moto)" >/dev/null
+fi
+if [[ -n "${LOCALSTACK_AUTH_TOKEN:-}" ]] && ! container_running "$name-localstack"; then
+  container rm -f "$name-localstack" >/dev/null 2>&1 || true
+  container run -d --name "$name-localstack" --network "$name" --network "$name-aws" -m 2G --progress none \
+    -e LOCALSTACK_AUTH_TOKEN "$(image localstack/localstack)" >/dev/null
+fi
+if [[ "${1:-}" == --screenshots ]] && ! container_running "$chrome"; then
+  container rm -f "$chrome" >/dev/null 2>&1 || true
+  container run -d --name "$chrome" --network "$name" -m 3G --shm-size 2G --progress none \
+    "$(image selenium/standalone-chromium)" >/dev/null
+fi
+for _ in $(seq 150); do
+  if container exec "$postgres" pg_isready -q -U postgres &&
+    container exec "$name-moto" python3 -c "import urllib.request; urllib.request.urlopen('http://127.0.0.1:5000/moto-api/')" 2>/dev/null &&
+    { [[ -z "${LOCALSTACK_AUTH_TOKEN:-}" ]] || container exec "$name-localstack" python3 -c "import urllib.request; urllib.request.urlopen('http://127.0.0.1:4566/_localstack/health')" >/dev/null 2>&1; } &&
+    { [[ "${1:-}" != --screenshots ]] || container exec "$chrome" /opt/bin/check-grid.sh --host 0.0.0.0 --port 4444 >/dev/null 2>&1; }; then
+    exit 0
+  fi
+  sleep 2
+done
+echo "The services did not start: container logs $postgres (or $chrome)" >&2
+exit 1

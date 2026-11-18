@@ -175,7 +175,7 @@ bin/rake redmine_kit_aws_ses:prune_records[<日数>]
 
 ## テスト
 
-テストは `test/` にあり、Redmine 標準のしくみで、Docker の中の Redmine 7.0.3 と PostgreSQL 16 で動かします。S3 (取り込みのテスト) は、バージョンを固定し、テレメトリをオフにした [AWS Emulator](https://docs.aws.amazon.com/emulator/latest/userguide/) です (`test/aws-emulator/Dockerfile`)。送信のテストは、エミュレーターではまだ動かせないので ([sending.md](sending.md#tests))、`LOCALSTACK_AUTH_TOKEN` があれば LocalStack (CI は組織のシークレットを使う)、なければ moto で動かします。ログに使ったものを出します。プラグインのテストは AWS に届かない内部ネットワークで動き、AWS への接続が開くと失敗するテストがあります。AWS の API を呼ばない Redmine 本体のテストは、デフォルトのネットワークで動きます。
+テストは `test/` にあり、Redmine 標準のしくみで、Redmine 7.0.3 と PostgreSQL 16 で動かします。Apple container がインストールされて動いていれば Apple container で、そうでなければ Docker で動かします (`CONTAINER_CLI=container` または `docker` で選べます。1 台のマシンで同時に実行する redmine-kit のリポジトリのテストは 2 つまで、`TEST_SLOTS`)。S3 (取り込みのテスト) は、バージョンを固定し、テレメトリをオフにした [AWS Emulator](https://docs.aws.amazon.com/emulator/latest/userguide/) です (`test/aws-emulator/Dockerfile`)。送信のテストは、エミュレーターではまだ動かせないので ([sending.md](sending.md#tests))、`LOCALSTACK_AUTH_TOKEN` があれば LocalStack (CI は組織のシークレットを使う)、なければ moto で動かします。ログに使ったものを出します。プラグインのテストは AWS に届かない内部ネットワークで動き、AWS への接続が開くと失敗するテストがあります。AWS の API を呼ばない Redmine 本体のテストは、デフォルトのネットワークで動きます。AWS Emulator の証明書には `127.0.0.1` と `localhost` しか含まれないので、テストはそのアドレスでエミュレーターに接続します。Docker ではエミュレーターのネットワーク名前空間で動かします。Apple container は名前空間を共有できないので、`127.0.0.1:9297` をエミュレーターのコンテナに転送し (`bin/aws_emulator`、`test/aws_forward.rb`)、コンテナから取り出した証明書を信頼します。
 
 テストに要る応答を、どのバックエンドも実際の AWS のとおりに返さない呼び出しは、その呼び出しだけを SDK の応答のスタブ (`stub_responses`) でモックします。
 

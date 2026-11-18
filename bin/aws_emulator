@@ -1,0 +1,66 @@
+# shellcheck shell=bash
+# shellcheck disable=SC2034,SC2154 # sets variables for, and reads $cli and $name of, the sourcing script
+# Sourced by the scripts in bin/ after bin/container_cli: AWS Emulator for
+# the tests, with $name set to the base name of the tests' containers.
+# In Docker, the service of test/compose.yml; the tests run in its network
+# namespace and trust the certificate it wrote at start-up. In Apple
+# container, which can't share a network namespace, a container of its own on
+# the internal network $name-aws (no way out to AWS); the tests run on that
+# network, forward 127.0.0.1:9297 to the emulator (test/aws_forward.rb), since
+# its certificate names only 127.0.0.1 and localhost, and trust the
+# certificate copied out of it.
+aws_ca=
+
+# aws_emulator_up <test directory in the tests' container>: starts the
+# emulator and sets $aws (the options of the tests' container), $aws_forward
+# (a command that starts the forwarder, empty in Docker), $aws_ca (a directory
+# to remove afterwards) and $emulator_version.
+aws_emulator_up() {
+  local emulator_ca=/home/emulator/.aws/emulator/9297/ca.pem emulator emulator_image
+  if [[ "$cli" == docker ]]; then
+    local compose=(docker compose -f test/compose.yml -p "$name")
+    if ! "${compose[@]}" up -d --wait aws-emulator; then
+      "${compose[@]}" ps -a >&2
+      "${compose[@]}" logs --tail 80 >&2
+      return 1
+    fi
+    emulator=$("${compose[@]}" ps -q aws-emulator)
+    aws=(--network "container:$emulator" --volumes-from "$emulator:ro" -e AWS_CA_BUNDLE="$emulator_ca")
+    aws_forward=
+  else
+    emulator=$name-aws-emulator
+    # The image, tagged by its Dockerfile, so that a change builds it again.
+    emulator_image=$name-aws-emulator:$(shasum test/aws-emulator/Dockerfile | cut -c1-12)
+    container image inspect "$emulator_image" >/dev/null 2>&1 ||
+      build_image "$emulator_image" test/aws-emulator/Dockerfile test/aws-emulator
+    container network inspect "$name-aws" >/dev/null 2>&1 || container network create --internal "$name-aws" >/dev/null
+    if ! container_running "$emulator" || ! container inspect "$emulator" | grep -q "$emulator_image"; then
+      container rm -f "$emulator" >/dev/null 2>&1 || true
+      container run -d --name "$emulator" --network "$name-aws" -m 2G --progress none "$emulator_image" --auth off >/dev/null
+    fi
+    for _ in $(seq 60); do
+      container exec "$emulator" curl -fsk https://127.0.0.1:9297/__admin/health >/dev/null 2>&1 && break
+      sleep 1
+    done
+    aws_ca=$(mktemp -d)
+    container exec "$emulator" cat "$emulator_ca" >"$aws_ca/ca.pem"
+    aws=(--network "$name-aws" -v "$aws_ca:/aws-emulator:ro" -e AWS_CA_BUNDLE=/aws-emulator/ca.pem
+      -e AWS_EMULATOR_ADDRESS="$(container_address "$emulator" "$name-aws")")
+    # Started in the tests' container before the tests; waits until it listens.
+    aws_forward="ruby $1/aws_forward.rb \"\$AWS_EMULATOR_ADDRESS\" 9297 &
+      until ruby -rsocket -e 'TCPSocket.new(%(127.0.0.1), 9297).close' 2>/dev/null; do sleep 0.2; done; "
+  fi
+  aws+=(-e AWS_ENDPOINT_URL=https://127.0.0.1:9297)
+  emulator_version=$("$cli" exec "$emulator" aws-emulator --version | sed -n 's/^Version: //p')
+}
+
+# aws_emulator_down: stops the emulator (in Docker, with the other services of
+# test/compose.yml).
+aws_emulator_down() {
+  if [[ "$cli" == docker ]]; then
+    docker compose -f test/compose.yml -p "$name" --profile screenshots down -v
+  else
+    container rm -f "$name-aws-emulator" >/dev/null 2>&1 || true
+    container network rm "$name-aws" >/dev/null 2>&1 || true
+  fi
+}

@@ -1,8 +1,7 @@
 # syntax=docker/dockerfile:1
 # Redmine 7.0.3 with this plugin and redmine_kit_aws, which it requires, for the
-# tests (bin/test). Built from the repository root, with redmine_kit_aws as the
-# build context of that name:
-#   docker buildx build --build-context redmine_kit_aws=../redmine_kit_aws -f test/Dockerfile .
+# tests (bin/test). Built by bin/test_image from a context that holds this
+# plugin in plugin/ and redmine_kit_aws in redmine_kit_aws/.
 FROM ruby:4.0@sha256:a69f361db050bb2c65ec66ef75411bfc4ce2e1d993ba1179fac4e4ba6ecfe91f
 # Ghostscript for Redmine's tests that export PDF and PNG.
 RUN apt-get update && apt-get install -y --no-install-recommends ghostscript && rm -rf /var/lib/apt/lists/*
@@ -14,9 +13,9 @@ RUN curl -fsSLo /tmp/redmine.tar.gz "https://www.redmine.org/releases/redmine-${
   && mv "/redmine-${REDMINE_VERSION}" /redmine \
   && rm /tmp/redmine.tar.gz
 WORKDIR /redmine
-COPY test/database.yml config/database.yml
-COPY --from=redmine_kit_aws . plugins/redmine_kit_aws/
-COPY . plugins/redmine_kit_aws_ses/
+COPY plugin/test/database.yml config/database.yml
+COPY redmine_kit_aws plugins/redmine_kit_aws/
+COPY plugin plugins/redmine_kit_aws_ses/
 # The plugin as a gem by path, so that Bundler loads boot/ (docs/setup.md),
 # and redmine_kit_aws, which its gemspec requires, by path without loading it.
 # simplecov-cobertura writes the coverage that Codecov reads (bin/test with
