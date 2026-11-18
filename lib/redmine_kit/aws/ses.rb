@@ -64,7 +64,7 @@ module RedmineKit
 
         # The bucket where SES stores received email (inbound/, processed/).
         def mail_bucket
-          ENV.fetch('REDMINE_MAIL_BUCKET', '').presence
+          ENV.fetch('REDMINE_SES_MAIL_BUCKET', '').presence
         end
 
         # The process that runs jobs (docs/setup.md#configuration).

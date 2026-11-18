@@ -84,7 +84,7 @@ gem 'redmine_kit_aws_ses', git: 'https://github.com/redmine-kit/redmine_aws_ses.
 
 | キー | 説明 | パラメーター |
 | --- | --- | --- |
-| `REDMINE_MAIL_BUCKET` | SES が受け取ったメールを置くバケット (`inbound/<メッセージ ID>`。取り込んだメールは `processed/` に移す) | 受信するなら必須。取り込むプロセス (タスクと、再取得のための worker) に設定する |
+| `REDMINE_SES_MAIL_BUCKET` | SES が受け取ったメールを置くバケット (`inbound/<メッセージ ID>`。取り込んだメールは `processed/` に移す) | 受信するなら必須。取り込むプロセス (タスクと、再取得のための worker) に設定する |
 | `REDMINE_ROLE` | 送信の再試行を、ジョブを動かすプロセスでだけ有効にする (下記) | ジョブを動かすプロセスでは `worker` |
 
 | 項目 | 説明 | 変える場所 |

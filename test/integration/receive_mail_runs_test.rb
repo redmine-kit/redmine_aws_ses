@@ -73,7 +73,7 @@ module RedmineKit
         def test_reimport_from_processed_reuses_the_recipients_and_verdicts
           record = receive(ses_message(to: 'x@other.example'))
           Issue.find(record.issue_id).destroy
-          with_env('REDMINE_MAIL_BUCKET' => @bucket) do
+          with_env('REDMINE_SES_MAIL_BUCKET' => @bucket) do
             with_ses_settings('per_project_addresses' => '1') do
               assert_difference('Issue.count', 1) { AwsSesReimportMailJob.perform_now(record.message_id) }
             end

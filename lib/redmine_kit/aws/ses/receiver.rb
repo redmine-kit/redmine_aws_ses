@@ -25,7 +25,7 @@ module RedmineKit
         def initialize(message_id, event: {}, s3_client: Clients.s3, bucket: RedmineKit::Aws::Ses.mail_bucket,
                        max_bytes: MAX_BYTES)
           raise ArgumentError, "invalid message ID: #{message_id.inspect}" unless MESSAGE_ID.match?(message_id.to_s)
-          raise ArgumentError, 'REDMINE_MAIL_BUCKET is not set' unless bucket
+          raise ArgumentError, 'REDMINE_SES_MAIL_BUCKET is not set' unless bucket
 
           @message_id = message_id
           read_event(event)

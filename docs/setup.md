@@ -76,7 +76,7 @@ gem 'redmine_kit_aws_ses', git: 'https://github.com/redmine-kit/redmine_aws_ses.
 
 | Key | Description | Parameter |
 | --- | --- | --- |
-| `REDMINE_MAIL_BUCKET` | The bucket where SES stores received email (`inbound/<message ID>`; imported email moves to `processed/`) | Required for receiving. Set it in the processes that import (the task, and the worker for re-imports) |
+| `REDMINE_SES_MAIL_BUCKET` | The bucket where SES stores received email (`inbound/<message ID>`; imported email moves to `processed/`) | Required for receiving. Set it in the processes that import (the task, and the worker for re-imports) |
 | `REDMINE_ROLE` | Turns on retries of sending only in the process that runs jobs (below) | `worker` in the process that runs jobs |
 
 | Item | Description | Where to change |

@@ -42,7 +42,7 @@ module RedmineKit
           id ||= store(raw)
           event = { recipients: ["ecookbook@#{TestHelper::DOMAIN}"], verdicts: TestHelper::PASS }
                   .merge(options.extract!(:recipients, :verdicts, :envelope_from))
-          with_env('REDMINE_MAIL_BUCKET' => @bucket) do
+          with_env('REDMINE_SES_MAIL_BUCKET' => @bucket) do
             with_ses_settings({ 'per_project_addresses' => '1' }.merge(options)) do
               project_setting
               RedmineKit::Aws::Ses::Receiver.new(id, event: event, max_bytes: max_bytes).run

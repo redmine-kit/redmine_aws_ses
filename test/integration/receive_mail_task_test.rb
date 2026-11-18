@@ -31,7 +31,7 @@ module RedmineKit
           Rails.application.load_tasks unless Rake::Task.task_defined?('redmine_kit_aws_ses:receive_mail')
           task = Rake::Task['redmine_kit_aws_ses:receive_mail']
           task.reenable
-          with_env(env.merge('REDMINE_MAIL_BUCKET' => @bucket)) do
+          with_env(env.merge('REDMINE_SES_MAIL_BUCKET' => @bucket)) do
             with_ses_settings('per_project_addresses' => '1') do
               AwsSesProjectMailSetting.find_or_create_by!(project_id: 1) { |setting| setting.receive = true }
               capture_io { task.invoke }

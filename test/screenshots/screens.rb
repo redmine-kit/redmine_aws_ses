@@ -41,8 +41,8 @@ module RedmineKit
 
         def setup
           super
-          @saved_bucket = ENV.fetch('REDMINE_MAIL_BUCKET', nil)
-          ENV['REDMINE_MAIL_BUCKET'] = 'redmine-mail-111122223333'
+          @saved_bucket = ENV.fetch('REDMINE_SES_MAIL_BUCKET', nil)
+          ENV['REDMINE_SES_MAIL_BUCKET'] = 'redmine-mail-111122223333'
           configure_plugin
           @saved_ses = RedmineKit::Aws::Ses::Clients.instance_variable_get(:@ses)
           RedmineKit::Aws::Ses::Clients.ses = ses_client
@@ -52,7 +52,7 @@ module RedmineKit
 
         def teardown
           RedmineKit::Aws::Ses::Clients.ses = @saved_ses
-          @saved_bucket ? ENV['REDMINE_MAIL_BUCKET'] = @saved_bucket : ENV.delete('REDMINE_MAIL_BUCKET')
+          @saved_bucket ? ENV['REDMINE_SES_MAIL_BUCKET'] = @saved_bucket : ENV.delete('REDMINE_SES_MAIL_BUCKET')
         end
 
         def test_screens

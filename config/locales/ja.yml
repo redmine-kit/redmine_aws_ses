@@ -64,7 +64,7 @@ ja:
   notice_aws_ses_mail_reimport: "%{count} 通を再取得します。"
   error_aws_ses_mail_local_part: アドレスには英小文字、数字、「.」「_」「-」のみ使用できます。
   text_aws_ses_mail_no_domain: 送信元メールアドレス (管理 › 設定 › メール通知) を、SES で検証したドメインのアドレスにしてください。
-  text_aws_ses_mail_no_bucket: REDMINE_MAIL_BUCKET が未設定のため、受信メールを取得できません。
+  text_aws_ses_mail_no_bucket: REDMINE_SES_MAIL_BUCKET が未設定のため、受信メールを取得できません。
   text_aws_ses_mail_mx_unknown: 不明
   label_aws_ses_mail_import_without_dmarc_pass: DMARC に失敗したメールも取得
   label_aws_ses_mail_import_spam: スパムも取得
