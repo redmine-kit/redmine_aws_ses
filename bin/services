@@ -28,9 +28,9 @@ if [[ "$cli" == docker ]]; then
 fi
 
 # Apple container: the services of test/compose.yml, with the images it pins,
-# on the network $name; PostgreSQL also on $name-aws, the internal network of
-# the plugin's tests (bin/aws_emulator), which bin/test starts, and moto only
-# there. LocalStack checks its token on the internet, so it is on both.
+# on the network the tests of every repository share (bin/container_cli);
+# PostgreSQL also on the shared internal network of the plugin's tests
+# (bin/aws_emulator), which bin/test starts, and moto only there. LocalStack checks its token on the internet, so it is on both.
 image() { sed -n "s/^    image: //p" test/compose.yml | grep "^$1" | head -1; }
 postgres=$name-postgres
 chrome=$name-chrome
@@ -38,28 +38,27 @@ if [[ "${1:-}" == --down ]]; then
   source bin/aws_emulator
   aws_emulator_down
   container rm -f "$postgres" "$chrome" "$name-moto" "$name-localstack" >/dev/null 2>&1 || true
-  container network rm "$name" >/dev/null 2>&1 || true
   exit 0
 fi
-container network inspect "$name" >/dev/null 2>&1 || container network create "$name" >/dev/null
-container network inspect "$name-aws" >/dev/null 2>&1 || container network create --internal "$name-aws" >/dev/null
+ensure_shared_network "$kit_test_network"
+ensure_shared_network "$kit_test_internal_network" --internal
 if ! container_running "$postgres"; then
   container rm -f "$postgres" >/dev/null 2>&1 || true
-  container run -d --name "$postgres" --network "$name" --network "$name-aws" -m 1G --progress none \
+  container run -d --name "$postgres" --network "$kit_test_network" --network "$kit_test_internal_network" -m 1G --progress none \
     -e POSTGRES_HOST_AUTH_METHOD=trust "$(image postgres)" >/dev/null
 fi
 if ! container_running "$name-moto"; then
   container rm -f "$name-moto" >/dev/null 2>&1 || true
-  container run -d --name "$name-moto" --network "$name-aws" -m 1G --progress none "$(image motoserver/moto)" >/dev/null
+  container run -d --name "$name-moto" --network "$kit_test_internal_network" -m 1G --progress none "$(image motoserver/moto)" >/dev/null
 fi
 if [[ -n "${LOCALSTACK_AUTH_TOKEN:-}" ]] && ! container_running "$name-localstack"; then
   container rm -f "$name-localstack" >/dev/null 2>&1 || true
-  container run -d --name "$name-localstack" --network "$name" --network "$name-aws" -m 2G --progress none \
+  container run -d --name "$name-localstack" --network "$kit_test_network" --network "$kit_test_internal_network" -m 2G --progress none \
     -e LOCALSTACK_AUTH_TOKEN "$(image localstack/localstack)" >/dev/null
 fi
 if [[ "${1:-}" == --screenshots ]] && ! container_running "$chrome"; then
   container rm -f "$chrome" >/dev/null 2>&1 || true
-  container run -d --name "$chrome" --network "$name" -m 3G --shm-size 2G --progress none \
+  container run -d --name "$chrome" --network "$kit_test_network" -m 3G --shm-size 2G --progress none \
     "$(image selenium/standalone-chromium)" >/dev/null
 fi
 for _ in $(seq 150); do

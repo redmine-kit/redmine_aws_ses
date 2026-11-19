@@ -34,7 +34,7 @@ fi
 if [[ "$cli" == docker ]]; then
   ses_endpoint=http://$ses_backend:$ses_port
 else
-  ses_endpoint=http://$(container_address "$name-$ses_backend" "$name-aws"):$ses_port
+  ses_endpoint=http://$(container_address "$name-$ses_backend" "$kit_test_internal_network"):$ses_port
 fi
 echo "AWS for the tests: AWS Emulator $emulator_version; SES sending: $ses_backend"
 aws+=(-e TEST_AWS_BACKEND=aws-emulator -e AWS_ENDPOINT_URL_SESV2="$ses_endpoint" -e AWS_ENDPOINT_URL_SES="$ses_endpoint"
@@ -46,8 +46,8 @@ if [[ "$cli" == docker ]]; then
 else
   # PostgreSQL by its address on each network, and more memory than the 1 GB
   # a container gets by default.
-  network=(--network "$name" -e TEST_DATABASE_HOST="$(container_address "$name-postgres" "$name")")
-  aws+=(-e TEST_DATABASE_HOST="$(container_address "$name-postgres" "$name-aws")")
+  network=(--network "$kit_test_network" -e TEST_DATABASE_HOST="$(container_address "$name-postgres" "$kit_test_network")")
+  aws+=(-e TEST_DATABASE_HOST="$(container_address "$name-postgres" "$kit_test_internal_network")")
   opts=(-m 4G -e PARALLEL_WORKERS="${PARALLEL_WORKERS:-2}")
 fi
 # A database of this run's own (test/database.yml), dropped when the tests end.
