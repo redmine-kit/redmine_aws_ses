@@ -7,7 +7,7 @@ The specifications in this page were checked against official information and th
 | Item | Details |
 | --- | --- |
 | No secrets shown | AWS credentials and the bodies of received email are not shown. Errors show the class of the error only (for example `Aws::SESV2::Errors::AccessDeniedException`); the message is in Redmine's log |
-| Stored state | The tabs show the state of SES and the MX record as the last refresh read it, with `Updated: <time>` at the top right, and never call SES or DNS while a page opens. `rake redmine_kit_aws_ses:refresh` reads it on a schedule ([setup.md](setup.md#refreshing-the-ses-state)), and "Refresh" next to the time reads it again. Only the latest state is kept (the plugin's table `aws_ses_snapshots`) |
+| Stored state | The tabs show the state of SES and the MX record as the last refresh read it, with `Updated: <time>` at the top right, and never call SES or DNS while a page opens. `rake redmine_kit:aws:ses:refresh` reads it on a schedule ([setup.md](setup.md#refreshing-the-ses-state)), and "Refresh" next to the time reads it again. Only the latest state is kept (the plugin's table `aws_ses_snapshots`) |
 | Settings on the page | Receiving options are plugin settings (Redmine's `Setting.plugin_redmine_kit_aws_ses`, stored in the database) and are changed on the "Email receiving" tab. The plugin list has no "Configure" link |
 | Operations are logged | Refreshing, removing an address from the suppression list, fetching again and changing settings are written to Redmine's log with who did what (`[redmine_kit_aws_ses] <login> ...`) |
 | Connection test | The "Connection test" on the "Status" tab of Redmine Kit AWS also calls SES v2 `GetAccount` ([its admin.md](https://redmine-kit.github.io/redmine_aws/admin.html#status)). The result reads "Sending: Enabled, production access: Yes" |
@@ -65,11 +65,11 @@ The specifications in this page were checked against official information and th
 
 | Item | Details |
 | --- | --- |
-| Import records | `redmine_kit_aws_ses:receive_mail` stores the result for each message in the plugin's table (`aws_ses_received_mails`): the sender, the subject, the envelope recipients and the verdicts from the SES event, the project, and the issue created or the note added. The body is not stored; its key in the mail bucket (`inbound/` or `processed/`) is. Fetching again updates the same record. Records older than 90 days are deleted by `rake redmine_kit_aws_ses:prune_records`, which Serverless runs daily ([security.md](https://redmine-kit.github.io/serverless/security.html#retention-periods)) |
+| Import records | `redmine_kit:aws:ses:receive_mail` stores the result for each message in the plugin's table (`aws_ses_received_mails`): the sender, the subject, the envelope recipients and the verdicts from the SES event, the project, and the issue created or the note added. The body is not stored; its key in the mail bucket (`inbound/` or `processed/`) is. Fetching again updates the same record. Records older than 90 days are deleted by `rake redmine_kit:aws:ses:prune` (`DAYS=` sets another number of days), which Serverless runs daily ([security.md](https://redmine-kit.github.io/serverless/security.html#retention-periods)) |
 | Email that was not fetched | It stays in `inbound/` and can be fetched again after the cause is fixed |
 | Fetching an imported email again | Nothing happens while the issue or the note it created exists, so one email never creates two issues. Runs for the same email (SES's retry, "Fetch again") run one after the other ([receiving.md](receiving.md#importing)) |
 | Fetch again | The page does not call `redmine-task` directly; it puts a job on the queue. This way `redmine-web` needs no permission to read the mail bucket or to invoke Lambda. With Redmine Kit AWS SQS, the job class is added to the allowed job classes |
-| Why receiving settings are on the page | You do not have to deploy each time you change the default project. `redmine_kit_aws_ses:receive_mail` reads the settings from the database on every run |
+| Why receiving settings are on the page | You do not have to deploy each time you change the default project. `redmine_kit:aws:ses:receive_mail` reads the settings from the database on every run |
 
 ## Project email settings
 

@@ -7,7 +7,7 @@ module RedmineKit
     module Ses
       # Reads the state of SES and DNS for the email tabs (docs/admin.md): the
       # account, the domain's identity, the suppression list and the domain's MX
-      # records. The rake task redmine_kit_aws_ses:refresh (on a schedule) and the
+      # records. The rake task redmine_kit:aws:ses:refresh (on a schedule) and the
       # tabs' Refresh link store it in AwsSesSnapshot; the tabs show what is
       # stored and never call SES or DNS themselves.
       class Account

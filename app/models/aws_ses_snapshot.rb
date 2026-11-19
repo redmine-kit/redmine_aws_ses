@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 # The state of SES and DNS that the email tabs show (RedmineKit::Aws::Ses::Account),
-# as read by the last refresh: the rake task redmine_kit_aws_ses:refresh, on a
+# as read by the last refresh: the rake task redmine_kit:aws:ses:refresh, on a
 # schedule, or the tabs' Refresh link. Only the latest is kept.
 class AwsSesSnapshot < ApplicationRecord
   DOMAIN_SECTIONS = %w[identity mx].freeze

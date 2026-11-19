@@ -98,7 +98,7 @@ In the job, the kind of error decides what happens: temporary errors are retried
 
 ### Importing received mail
 
-The rake task `redmine_kit_aws_ses:receive_mail` imports one received message, so something must start it for each message. On Lambda, the SES receipt rule invokes the task function asynchronously, and its handler passes the values of the SES event as variables ([Serverless tasks.md](https://redmine-kit.github.io/serverless/tasks.html#kinds-of-events)):
+The rake task `redmine_kit:aws:ses:receive_mail` imports one received message, so something must start it for each message. On Lambda, the SES receipt rule invokes the task function asynchronously, and its handler passes the values of the SES event as variables ([Serverless tasks.md](https://redmine-kit.github.io/serverless/tasks.html#kinds-of-events)):
 
 | Variable | From the SES event |
 | --- | --- |
@@ -116,15 +116,15 @@ A message is imported only if its virus verdict is `PASS`, and its spam and DMAR
 The "Email sending" and "Email receiving" tabs show the state of SES (the account, the domain's identity, the suppression list) and the domain's MX record as this task last read it, and never call SES or DNS while a page opens ([admin.md](admin.md)). Run it on a schedule, for example once an hour; the tabs' "Refresh" link runs the same reading. It fails when a section could not be read (the log has the error).
 
 ```sh
-bin/rake redmine_kit_aws_ses:refresh
+bin/rake redmine_kit:aws:ses:refresh
 ```
 
 ### Keeping records
 
-This task deletes the import records older than the given number of days (default 90). Serverless runs it daily ([Serverless security.md](https://redmine-kit.github.io/serverless/security.html#retention-periods)).
+This task deletes the import records older than a number of days, set with `DAYS` (default 90; a whole number from 1 to 99999), as Redmine's `redmine:users:prune` takes it. Serverless runs it daily ([Serverless security.md](https://redmine-kit.github.io/serverless/security.html#retention-periods)).
 
 ```sh
-bin/rake redmine_kit_aws_ses:prune_records[<days>]
+bin/rake redmine_kit:aws:ses:prune DAYS=90
 ```
 
 ## AWS resources

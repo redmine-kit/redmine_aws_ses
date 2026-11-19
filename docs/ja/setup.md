@@ -112,7 +112,7 @@ gem 'redmine_kit_aws_ses', git: 'https://github.com/redmine-kit/redmine_aws_ses.
 
 ### 受信メールの取り込み
 
-rake タスク `redmine_kit_aws_ses:receive_mail` は、受信メールを 1 通取り込みます。そのため、メールごとに何かがこのタスクを起動する必要があります。Lambda では、SES の受信ルールがタスクの関数を非同期で呼び出し、そのハンドラーが SES のイベントの値を変数で渡します ([Serverless の tasks.md](https://redmine-kit.github.io/serverless/ja/tasks.html#kinds-of-events))。
+rake タスク `redmine_kit:aws:ses:receive_mail` は、受信メールを 1 通取り込みます。そのため、メールごとに何かがこのタスクを起動する必要があります。Lambda では、SES の受信ルールがタスクの関数を非同期で呼び出し、そのハンドラーが SES のイベントの値を変数で渡します ([Serverless の tasks.md](https://redmine-kit.github.io/serverless/ja/tasks.html#kinds-of-events))。
 
 | 変数 | SES のイベントの値 |
 | --- | --- |
@@ -130,17 +130,17 @@ rake タスク `redmine_kit_aws_ses:receive_mail` は、受信メールを 1 通
 「メール送信」と「メール受信」のタブは、SES の状態 (アカウント、ドメインの ID、サプレッションリスト) とドメインの MX レコードを、このタスクが最後に読んだとおりに出し、画面を開くときに SES や DNS は呼びません ([admin.md](admin.md))。スケジュールで動かします (例: 1 時間に 1 回)。タブの「最新の情報に更新」のリンクも、同じ読み込みをします。読めなかったセクションがあると、タスクは失敗します (エラーはログにあります)。
 
 ```sh
-bin/rake redmine_kit_aws_ses:refresh
+bin/rake redmine_kit:aws:ses:refresh
 ```
 
 <a id="keeping-records"></a>
 
 ### 記録の保持
 
-次のタスクが、指定した日数より古い取り込みの記録を消します (デフォルトは 90 日)。Serverless は毎日動かします ([Serverless の security.md](https://redmine-kit.github.io/serverless/ja/security.html#retention-periods))。
+次のタスクが、`DAYS` で指定した日数より古い取り込みの記録を削除します (デフォルトは 90。1 から 99999 までの整数)。日数の指定は、Redmine の `redmine:users:prune` と同じ形です。Serverless は毎日実行します ([Serverless の security.md](https://redmine-kit.github.io/serverless/ja/security.html#retention-periods))。
 
 ```sh
-bin/rake redmine_kit_aws_ses:prune_records[<日数>]
+bin/rake redmine_kit:aws:ses:prune DAYS=90
 ```
 
 <a id="aws-resources"></a>

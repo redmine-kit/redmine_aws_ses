@@ -50,7 +50,7 @@ The methods above are the Redmine 7.0.3 mailer methods that do not add the proje
 
 ## Importing
 
-The rake task `redmine_kit_aws_ses:receive_mail` imports one message:
+The rake task `redmine_kit:aws:ses:receive_mail` imports one message:
 
 1. Lock the message's record (one run at a time per message, below). If the message was imported and its issue or note still exists, stop.
 2. Find the message in the mail bucket (`HeadObject` on `inbound/`, or `processed/` for a re-import). A message larger than 40 MB is not imported: SES stores at most 40 MB, headers included ([Deliver to S3 bucket action](https://docs.aws.amazon.com/ses/latest/dg/receiving-email-action-s3.html)); only its first 64 KiB are read, for the record's sender and subject, and it is recorded as "Not fetched (too large)".
@@ -73,7 +73,7 @@ The task takes the values of the SES event as variables:
 | `SES_SPAM_VERDICT`<br>`SES_VIRUS_VERDICT`<br>`SES_DMARC_VERDICT`<br>`SES_SPF_VERDICT`<br>`SES_DKIM_VERDICT` | `receipt.spamVerdict.status` and the others |
 | `SES_DMARC_POLICY` | `receipt.dmarcPolicy` |
 
-On Lambda, the SES receipt rule invokes the task function, whose handler sets these ([Serverless tasks.md](https://redmine-kit.github.io/serverless/tasks.html#kinds-of-events)). A re-import gives `MESSAGE_ID` only and uses what the first run recorded.
+On Lambda, the SES receipt rule invokes the task function, whose handler sets these ([Serverless tasks.md](https://redmine-kit.github.io/serverless/tasks.html#kinds-of-events)). A re-import gives `MESSAGE_ID` only and uses what the first run recorded. A missing or malformed `MESSAGE_ID` stops the task with a message, before it reads anything.
 
 **Choosing the project:**
 
@@ -171,9 +171,10 @@ The project's "Author of forwarded email" decides whose name a forwarded issue c
 | Target | What is checked |
 | --- | --- |
 | The verdicts | Each combination of the settings; a virus is never imported; missing verdicts |
-| Importing | On the mail bucket in S3 (LocalStack or moto), with the values of an SES event (`test/fixtures/ses_event.json`): the project of the recipient, Bcc, a `Project:` keyword that cannot change the project, each reason for dropping, forged SES headers that change nothing, the move to `processed/`, re-imports from the record, the rake task, a message over the size limit, a second run and two first runs that create one issue, automatic forwarding through a registered forwarder, a member's forward and one Redmine refuses |
+| Importing | On the mail bucket in S3 (LocalStack or moto), with the values of an SES event (`test/fixtures/ses_event.json`): the project of the recipient, Bcc, a `Project:` keyword that cannot change the project, each reason for dropping, forged SES headers that change nothing, the move to `processed/`, re-imports from the record, the rake task (and its refusal of a missing or malformed `MESSAGE_ID`), a message over the size limit, a second run and two first runs that create one issue, automatic forwarding through a registered forwarder, a member's forward and one Redmine refuses |
 | Choosing the project | Addresses per project, identifiers longer than 64 characters, role addresses, projects that do not receive, the default address, subaddresses |
 | Forwarded email | Table-driven: replies through a registered forwarder (issue, note, forum message, news, news comment; by subject, `In-Reply-To` and `References`; to the routed and to another project; for each "Author of forwarded email"), a reply of an unknown kind, the reply kinds against Redmine's; registered forwarders (domain, address, `+` tags, other domains), forged forwarder headers, DMARC failing without a registered forwarder, a forwarder whose SPF did not pass, a forwarder of another project; forwards by members with each condition alone not met (setting off, DMARC, permission, locked or unknown user, not a member); the originals of Gmail and Outlook in English and Japanese, forward as attachment, nested forwards, a block in another language, replies, two attached messages, an original over the size limit (`test/fixtures/forwarded/`) |
 | Project settings | A project whose identifier cannot be an address shows no address and cannot turn "Receive email" on; only people with the permission can change the settings, and the permission alone opens project settings; the defaults must be the project's choices; only administrators can choose "Create a user"; parameters of an unexpected shape are ignored; errors are shown with Redmine's error list |
 | Receiving settings | A part before `@` that cannot be an address is refused, and the page shows the error with the values given; parameters of an unexpected shape are ignored |
 | Untrusted messages | Headers with raw 8-bit text (Shift_JIS without MIME encoding) and a date that is not one still leave a record |
+| Keeping records | `redmine_kit:aws:ses:prune` deletes the records older than 90 days, or than `DAYS`; a `DAYS` that is not a whole number from 1 to 99999 stops the task with a message and deletes nothing |

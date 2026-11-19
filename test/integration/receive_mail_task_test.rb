@@ -7,7 +7,7 @@ require 'rake'
 module RedmineKit
   module Aws
     module Ses
-      # The rake task redmine_kit_aws_ses:receive_mail with the values of an SES
+      # The rake task redmine_kit:aws:ses:receive_mail with the values of an SES
       # event, as Serverless's task handler sets them.
       class ReceiveMailTaskTest < ActiveSupport::TestCase
         include RedmineKit::Aws::Ses::TestHelper
@@ -28,8 +28,8 @@ module RedmineKit
         end
 
         def rake_receive(env)
-          Rails.application.load_tasks unless Rake::Task.task_defined?('redmine_kit_aws_ses:receive_mail')
-          task = Rake::Task['redmine_kit_aws_ses:receive_mail']
+          Rails.application.load_tasks unless Rake::Task.task_defined?('redmine_kit:aws:ses:receive_mail')
+          task = Rake::Task['redmine_kit:aws:ses:receive_mail']
           task.reenable
           with_env(env.merge('REDMINE_SES_MAIL_BUCKET' => @bucket)) do
             with_ses_settings('per_project_addresses' => '1') do
@@ -47,6 +47,22 @@ module RedmineKit
 
           assert_equal %w[imported NONE], [record.status, record.dmarc_policy]
           assert_equal 'jsmith@somenet.foo', record.envelope_from
+        end
+
+        # The SystemExit of abort.
+        def rake_refuse(id)
+          Rails.application.load_tasks unless Rake::Task.task_defined?('redmine_kit:aws:ses:receive_mail')
+          task = Rake::Task['redmine_kit:aws:ses:receive_mail'].tap(&:reenable)
+          assert_raises(SystemExit, "MESSAGE_ID=#{id.inspect}") do
+            with_env('MESSAGE_ID' => id, 'REDMINE_SES_MAIL_BUCKET' => @bucket) { capture_io { task.invoke } }
+          end
+        end
+
+        def test_an_invalid_message_id_aborts_and_imports_nothing
+          [nil, '', '../inbound/x', "abc\n", 'a' * 129].each do |id|
+            assert_not rake_refuse(id).success?
+            assert_equal 0, AwsSesReceivedMail.count, "MESSAGE_ID=#{id.inspect}"
+          end
         end
 
         def test_the_rake_task_with_a_failed_verdict

@@ -4,7 +4,7 @@ module RedmineKit
   module Aws
     module Ses
       # Imports one message that SES stored in the mail bucket
-      # (rake redmine_kit_aws_ses:receive_mail; docs/receiving.md#importing): reads
+      # (rake redmine_kit:aws:ses:receive_mail; docs/receiving.md#importing): reads
       # the message from inbound/ (or processed/ for a re-import), imports it as
       # Admission decides (Import), and moves it to processed/. Each run leaves
       # a record (AwsSesReceivedMail), which keeps the event's verdicts,
