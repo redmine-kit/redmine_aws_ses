@@ -1,4 +1,7 @@
 ja:
+  # The plugin's name and description (Administration › Plugins; redmine_kit_ui's docs/plugin-names.md)
+  plugin_name_redmine_kit_aws_ses: Redmine Kit AWS SES
+  plugin_description_redmine_kit_aws_ses: Redmine のメールを Amazon SES で送受信
   label_aws_ses_mail_sending: メール送信
   label_aws_ses_mail_receiving: メール受信
   label_aws_ses_check: SES
