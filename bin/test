@@ -55,7 +55,7 @@ db="redmine_test_$$"
 setup='bin/rails db:drop db:create db:migrate redmine:plugins:migrate db:schema:dump >/dev/null'
 teardown='; status=$?; bin/rails db:drop >/dev/null 2>&1; exit $status'
 run() {
-  "$cli" run --rm "${network[@]}" "${opts[@]}" -e TEST_DATABASE="$db" "$image" \
+  "$cli" run --rm "${run_opts[@]}" "${network[@]}" "${opts[@]}" -e TEST_DATABASE="$db" "$image" \
     sh -c "$setup"' && "$@"'"$teardown" test "$@"
 }
 # The plugin's tests, on the emulator's network; with COVERAGE set, in one
@@ -68,7 +68,7 @@ run_plugin() {
     rm -f coverage/.resultset.json && mkdir -p coverage
     cov=(-e PLUGIN_COVERAGE=1 -e PARALLEL_WORKERS=1 -v "$PWD/coverage:/redmine/plugins/$plugin/coverage")
   fi
-  "$cli" run --rm "${aws[@]}" "${opts[@]}" ${cov[@]+"${cov[@]}"} -e TEST_DATABASE="$db" "$image" \
+  "$cli" run --rm "${run_opts[@]}" "${aws[@]}" "${opts[@]}" ${cov[@]+"${cov[@]}"} -e TEST_DATABASE="$db" "$image" \
     sh -c "$aws_forward$setup"' && "$@"'"$teardown" test "$@"
 }
 redmine_tests=(test/unit/mail_handler_test.rb test/unit/mailer_test.rb test/functional/projects_controller_test.rb
