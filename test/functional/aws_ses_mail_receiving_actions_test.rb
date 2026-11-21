@@ -52,24 +52,27 @@ module RedmineKit
         # active project's identifier (closed, archived or unknown).
         def test_update_refuses_values_the_form_does_not_offer
           Project.find(2).update_column(:status, Project::STATUS_CLOSED)
-          [[{ global_mail: 'forward' }, 'Incoming emails is not included in the list'],
-           [{ default_project: 'onlinestore' }, 'Default project is not included in the list'],
-           [{ default_project: 'no-such-project' }, 'Default project is not included in the list'],
-           [{ global_mail: 'default_project', default_project: 'ecookbook' }, nil],
-           [{ global_mail: 'drop', default_project: '' }, nil]].each do |values, error|
-            with_ses_settings('global_mail' => 'drop', 'default_project' => 'subproject1') do
-              post :update, params: { settings: values }
+          [[{ global_mail: 'forward' }, 'Incoming emails'], [{ default_project: 'onlinestore' }, 'Default project'],
+           [{ default_project: 'no-such-project' }, 'Default project']].each do |values, label|
+            assert_equal %w[drop subproject1], update_receiving(values), values.inspect
+            assert_response :success
+            assert_select '#aws-ses-mail-settings #errorExplanation li', text: "#{label} is not included in the list"
+          end
+        end
 
-              saved = RedmineKit::Aws::Ses.settings.values_at('global_mail', 'default_project')
-              if error
-                assert_response :success
-                assert_select '#aws-ses-mail-settings #errorExplanation li', text: error
-                assert_equal %w[drop subproject1], saved, values.inspect
-              else
-                assert_redirected_to '/admin/aws/mail_receiving'
-                assert_equal values.values_at(:global_mail, :default_project), saved, values.inspect
-              end
-            end
+        def test_update_accepts_the_choices_of_the_form
+          [%w[default_project ecookbook], ['drop', '']].each do |global_mail, project|
+            assert_equal [global_mail, project], update_receiving(global_mail: global_mail, default_project: project)
+            assert_redirected_to '/admin/aws/mail_receiving'
+          end
+        end
+
+        # Posts the values over saved settings; global_mail and
+        # default_project as saved after it.
+        def update_receiving(values)
+          with_ses_settings('global_mail' => 'drop', 'default_project' => 'subproject1') do
+            post :update, params: { settings: values }
+            RedmineKit::Aws::Ses.settings.values_at('global_mail', 'default_project')
           end
         end
 
