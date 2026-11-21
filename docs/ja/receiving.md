@@ -33,6 +33,7 @@ Redmine Kit AWS SES が、SES の受け取ったメールを取り込むしく�
 - **送信元:** すべての通知を、デフォルトアドレスから送ります。
 
 <a id="address-for-the-whole-redmine"></a>
+<a id="default-address"></a>
 
 ## デフォルトアドレス
 

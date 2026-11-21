@@ -92,6 +92,7 @@ gem 'redmine_kit_aws_ses', git: 'https://github.com/redmine-kit/redmine_aws_ses.
 | 送信元メールアドレス (`Setting.mail_from`) | デフォルトアドレス。検証済みのドメインのもの (例: `noreply@redmine.example.com`) ([receiving.md](receiving.md#address-for-the-whole-redmine)) | Redmine の管理画面の設定 |
 | 受信設定 | デフォルトアドレスの `@` の前、そこに届いたメールの扱い、デフォルトのプロジェクト、スパムと DMARC に失敗したメールを取得するか ([admin.md](admin.md#receiving-email)) | プラグインの設定。Serverless では `redmine.json` の `pluginSettings` |
 | プロジェクト別のアドレス | 使うか使わないか。デフォルトは使わない (Redmine の標準と同じ)。プロジェクトごとの設定は、各プロジェクトの「メール」のタブ ([admin.md](admin.md#project-email-settings)) | プラグインの設定 |
+| プロジェクト別の送信元 | 使うか使わないか。デフォルトは使わない。プロジェクト別のアドレスを使うとき、プロジェクトの通知をプロジェクトのアドレスから送信する ([sending.md](sending.md#senders-per-project)) | プラグインの設定 |
 | 「メール本文から一致する行以降を切り捨てる」 | 引用の前の行。返信の引用が注記に入らないようにする | Redmine の管理画面の設定 |
 
 <a id="receiving-defaults"></a>

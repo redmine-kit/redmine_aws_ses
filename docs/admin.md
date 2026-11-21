@@ -103,7 +103,7 @@ For these pages, the role that runs Redmine's web requests gets permission to re
 
 Each page has Redmine functional tests, with SDK response stubs for SES ([testing.md](https://redmine-kit.github.io/serverless/testing.html#administration-pages)).
 
-The screenshots on this page are taken with `bin/screenshots` (headless Chromium in Docker, with Redmine's test data and example SES answers and received email). Run it after changing a page.
+The screenshots on this page are taken with `bin/screenshots` (headless Chromium in Apple container when it runs, else in Docker, with Redmine's test data and example SES answers and received email). Run it after changing a page.
 
 <a id="terms"></a>
 

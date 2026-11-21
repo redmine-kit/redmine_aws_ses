@@ -13,6 +13,7 @@ Redmine Kit AWS SES の管理画面です。システム管理者だけが開け
 | 接続テスト | Redmine Kit AWS の「ステータス」のタブの「接続テスト」で、SES v2 の `GetAccount` も呼びます ([その admin.md](https://redmine-kit.github.io/redmine_aws/ja/admin.html#status))。結果は「送信: 有効、本稼働アクセス: はい」のように出ます |
 
 <a id="sending-email"></a>
+<a id="email-sending"></a>
 
 ## メール送信
 
@@ -35,6 +36,7 @@ Redmine Kit AWS SES の管理画面です。システム管理者だけが開け
 | テストメール | Redmine 標準のテストメールは、画面のリクエストの中で送る (`deliver_now`) ので、`redmine-web` にも SES で送る権限を与えます ([mail.md](https://redmine-kit.github.io/serverless/ja/mail.html#ses)) |
 
 <a id="receiving-email"></a>
+<a id="email-receiving"></a>
 
 ## メール受信
 
@@ -109,7 +111,7 @@ Redmine Kit AWS SES の管理画面です。システム管理者だけが開け
 
 画面ごとに、Redmine の機能テストがあります。SES には SDK の応答のスタブを使います ([testing.md](https://redmine-kit.github.io/serverless/ja/testing.html#administration-pages))。
 
-このページの画面のスクリーンショットは、`bin/screenshots` で撮ります (Docker の中のヘッドレス Chromium と、Redmine のテストデータ、SES の応答と受信メールの例を使います)。画面を変えたら実行します。
+このページの画面のスクリーンショットは、`bin/screenshots` で撮ります (Apple container が動いていれば Apple container、そうでなければ Docker の中のヘッドレス Chromium と、Redmine のテストデータ、SES の応答と受信メールの例を使います)。画面を変えたら実行します。
 
 <a id="terms"></a>
 

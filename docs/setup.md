@@ -84,6 +84,7 @@ gem 'redmine_kit_aws_ses', git: 'https://github.com/redmine-kit/redmine_aws_ses.
 | Emission email address (`Setting.mail_from`) | The default address, on the verified domain (for example `noreply@redmine.example.com`) ([receiving.md](receiving.md#address-for-the-whole-redmine)) | Redmine's administration settings |
 | Receiving settings | The part before `@` of the default address, what to do with email sent to it, the default project, and whether to fetch spam and email that fails DMARC ([admin.md](admin.md#receiving-email)) | Plugin settings. In Serverless, `pluginSettings` in `redmine.json` |
 | Addresses per project | On or off. Default off, the same as standard Redmine. Per-project settings are in the "Email" tab of each project ([admin.md](admin.md#project-email-settings)) | Plugin settings |
+| Senders per project | On or off. Default off. With addresses per project, project notifications are sent from the project's address ([sending.md](sending.md#senders-per-project)) | Plugin settings |
 | Truncate emails after one of these lines | A line before the quoted text, so that replies do not bring the quote into notes | Redmine's administration settings |
 
 ### Receiving defaults
