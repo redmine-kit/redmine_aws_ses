@@ -187,5 +187,5 @@ bin/services --down # stops PostgreSQL, moto and LocalStack
 - The service name of the interface endpoint for the SES API
 - Which identity SES's SPF verdict checks (RFC 7208 checks the MAIL FROM identity, and the HELO identity when MAIL FROM is empty); SES's documentation does not say. Registered forwarders rely on it being MAIL FROM
 - Which envelope sender Google Workspace's recipient address maps and Gmail's forwarding give a forwarded message (Google's documentation does not say), and so whether a registered forwarder matches
-- The exact lines of forwarded blocks in the Japanese interfaces of Gmail (「転送されたメッセージ」) and Outlook (「差出人:」「送信日時:」「宛先:」「件名:」): not documented, and not checked against forwards from those products yet
+- The exact lines of forwarded blocks in the Japanese interfaces of Gmail (「転送されたメッセージ」) and Outlook (「差出人:」「送信日時:」「宛先:」「件名:」): not documented, and not checked against forwards from those products yet <!-- ja-ok: the forwarded-block lines of the Japanese interfaces -->
 - The open questions of the mail design in [Serverless mail.md](https://redmine-kit.github.io/serverless/mail.html#to-verify)

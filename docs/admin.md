@@ -111,13 +111,13 @@ The screenshots on this page are taken with `bin/screenshots` (headless Chromium
 
 The screens use the Japanese terms of the SES console and documentation (checked on 2026-11-10).
 
-| Screen (en / ja) | AWS term | Source | Status |
-| --- | --- | --- | --- |
-| Account status / アカウントステータス; Healthy / 正常, Under review / レビュー対象, Paused / 一時停止 | `EnforcementStatus` (`HEALTHY`, `PROBATION`, `SHUTDOWN`) | 「アカウントステータス」「正常」「一時停止」「レビュー対象」 in https://docs.aws.amazon.com/ja_jp/ses/latest/dg/faqs-enforcement.html | Documentation |
-| Production access / 本稼働アクセス | `ProductionAccessEnabled` | https://docs.aws.amazon.com/ja_jp/ses/latest/dg/manage-sending-quotas.html. A third-party article quotes the console as 「本番アクセス」 (https://blog.serverworks.co.jp/ses-sandbox) | To recheck in the console |
-| Daily sending quota / 日次送信クォータ | `SendQuota.Max24HourSend` | https://docs.aws.amazon.com/ja_jp/ses/latest/dg/monitor-sending-activity-console.html | Documentation |
-| Maximum send rate / 最大送信レート | `SendQuota.MaxSendRate` | https://docs.aws.amazon.com/ja_jp/ses/latest/dg/monitor-sending-activity-console.html | Documentation |
-| Verified / 検証済み | `VerifiedForSendingStatus` | 「検証済み ID」 in https://docs.aws.amazon.com/ja_jp/ses/latest/dg/send-email-authentication-dkim-easy-managing.html | Documentation |
-| DKIM: Successful / 成功, Pending / 保留中, Failed / 失敗, Temporary failure / 一時的な失敗, Not started / 未開始 | `DkimAttributes.Status` (`SUCCESS`, `PENDING`, `FAILED`, `TEMPORARY_FAILURE`, `NOT_STARTED`) | The documentation keeps the API values in English; the Japanese values are ours | To recheck in the console |
-| Suppression list / サプレッションリスト; Bounce / バウンス, Complaint / 苦情; Remove / 削除 | `ListSuppressedDestinations` (`Reason`: `BOUNCE`, `COMPLAINT`), `DeleteSuppressedDestination` | https://docs.aws.amazon.com/ja_jp/ses/latest/dg/sending-email-suppression-list.html | Documentation |
-| Verdicts / 判定: Spam / スパム, Virus / ウイルス, DMARC fail / DMARC 失敗, … undetermined / 判定不能, … scan failed / スキャン失敗, DMARC no policy / DMARC ポリシーなし, Passed / 合格 | `spamVerdict`, `virusVerdict`, `dmarcVerdict` (`PASS`, `FAIL`, `GRAY`, `PROCESSING_FAILED`) | https://docs.aws.amazon.com/ja_jp/ses/latest/dg/receiving-email-notifications-contents.html describes each value (「認証に合格」「認証に失敗」「断定できませんでした」「スキャンできませんでした」); the console shows no Japanese for them, so the short labels are ours | Derived from the documentation |
+| English | Japanese | AWS term | Source | Status |
+| --- | --- | --- | --- | --- |
+| Account status; Healthy, Under review, Paused | アカウントステータス; 正常, レビュー対象, 一時停止 | `EnforcementStatus` (`HEALTHY`, `PROBATION`, `SHUTDOWN`) | 「アカウントステータス」「正常」「一時停止」「レビュー対象」 in https://docs.aws.amazon.com/ja_jp/ses/latest/dg/faqs-enforcement.html | Documentation |
+| Production access | 本稼働アクセス | `ProductionAccessEnabled` | https://docs.aws.amazon.com/ja_jp/ses/latest/dg/manage-sending-quotas.html. A third-party article quotes the console as 「本番アクセス」 (https://blog.serverworks.co.jp/ses-sandbox) | To recheck in the console |
+| Daily sending quota | 日次送信クォータ | `SendQuota.Max24HourSend` | https://docs.aws.amazon.com/ja_jp/ses/latest/dg/monitor-sending-activity-console.html | Documentation |
+| Maximum send rate | 最大送信レート | `SendQuota.MaxSendRate` | https://docs.aws.amazon.com/ja_jp/ses/latest/dg/monitor-sending-activity-console.html | Documentation |
+| Verified | 検証済み | `VerifiedForSendingStatus` | 「検証済み ID」 in https://docs.aws.amazon.com/ja_jp/ses/latest/dg/send-email-authentication-dkim-easy-managing.html | Documentation |
+| DKIM: Successful, Pending, Failed, Temporary failure, Not started | DKIM: 成功, 保留中, 失敗, 一時的な失敗, 未開始 | `DkimAttributes.Status` (`SUCCESS`, `PENDING`, `FAILED`, `TEMPORARY_FAILURE`, `NOT_STARTED`) | The documentation keeps the API values in English; the Japanese values are ours | To recheck in the console |
+| Suppression list; Bounce, Complaint; Remove | サプレッションリスト; バウンス, 苦情; 削除 | `ListSuppressedDestinations` (`Reason`: `BOUNCE`, `COMPLAINT`), `DeleteSuppressedDestination` | https://docs.aws.amazon.com/ja_jp/ses/latest/dg/sending-email-suppression-list.html | Documentation |
+| Verdicts: Spam, Virus, DMARC fail, … undetermined, … scan failed, DMARC no policy, Passed | 判定: スパム, ウイルス, DMARC 失敗, 判定不能, スキャン失敗, DMARC ポリシーなし, 合格 | `spamVerdict`, `virusVerdict`, `dmarcVerdict` (`PASS`, `FAIL`, `GRAY`, `PROCESSING_FAILED`) | https://docs.aws.amazon.com/ja_jp/ses/latest/dg/receiving-email-notifications-contents.html describes each value (「認証に合格」「認証に失敗」「断定できませんでした」「スキャンできませんでした」); the console shows no Japanese for them, so the short labels are ours | Derived from the documentation |
