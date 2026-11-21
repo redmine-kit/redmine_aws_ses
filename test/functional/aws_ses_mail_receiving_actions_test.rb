@@ -47,6 +47,32 @@ module RedmineKit
           assert_select '#aws-ses-mail-settings input[name=?][checked=checked]', 'settings[import_spam]'
         end
 
+        # A value the form doesn't offer is refused, with Redmine's message: a
+        # global_mail other than its choices, a default project that is not an
+        # active project's identifier (closed, archived or unknown).
+        def test_update_refuses_values_the_form_does_not_offer
+          Project.find(2).update_column(:status, Project::STATUS_CLOSED)
+          [[{ global_mail: 'forward' }, 'Incoming emails is not included in the list'],
+           [{ default_project: 'onlinestore' }, 'Default project is not included in the list'],
+           [{ default_project: 'no-such-project' }, 'Default project is not included in the list'],
+           [{ global_mail: 'default_project', default_project: 'ecookbook' }, nil],
+           [{ global_mail: 'drop', default_project: '' }, nil]].each do |values, error|
+            with_ses_settings('global_mail' => 'drop', 'default_project' => 'subproject1') do
+              post :update, params: { settings: values }
+
+              saved = RedmineKit::Aws::Ses.settings.values_at('global_mail', 'default_project')
+              if error
+                assert_response :success
+                assert_select '#aws-ses-mail-settings #errorExplanation li', text: error
+                assert_equal %w[drop subproject1], saved, values.inspect
+              else
+                assert_redirected_to '/admin/aws/mail_receiving'
+                assert_equal values.values_at(:global_mail, :default_project), saved, values.inspect
+              end
+            end
+          end
+        end
+
         # Parameters of an unexpected shape are ignored: nothing changes and
         # the page does not fail.
         def test_update_with_unexpected_parameters

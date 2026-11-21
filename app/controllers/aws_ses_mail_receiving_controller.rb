@@ -20,8 +20,8 @@ class AwsSesMailReceivingController < ApplicationController
   # the form, as Redmine's settings do (SettingsController#edit).
   def update
     @settings = RedmineKit::Aws::Ses.settings.merge(setting_params)
-    unless @settings['global_local_part'].to_s.match?(AwsSesProjectMailSetting::LOCAL_PART)
-      @setting_errors = [l(:error_aws_ses_mail_local_part)]
+    @setting_errors = setting_errors(@settings)
+    if @setting_errors.any?
       index
       return render(:index)
     end
@@ -65,6 +65,28 @@ class AwsSesMailReceivingController < ApplicationController
     values = values.is_a?(ActionController::Parameters) ? values.permit(*RedmineKit::Aws::Ses::DEFAULTS.keys).to_h : {}
     values['global_local_part'] = values['global_local_part'].to_s.strip.downcase if values.key?('global_local_part')
     values
+  end
+
+  # The errors of the settings: the address, a value of global_mail, and an
+  # active project's identifier (or none) as the default project, the choices
+  # the form offers. A full message as Rails composes one (errors.format,
+  # "%{attribute} %{message}"), with Redmine's own strings.
+  def setting_errors(settings)
+    address = settings['global_local_part'].to_s
+    project = settings['default_project'].to_s
+    [
+      (l(:error_aws_ses_mail_local_part) unless address.match?(AwsSesProjectMailSetting::LOCAL_PART)),
+      (not_in_list(:label_incoming_emails) unless RedmineKit::Aws::Ses::GLOBAL_MAIL.include?(settings['global_mail'])),
+      (not_in_list(:label_aws_ses_mail_default_project) unless project.empty? || active_project?(project))
+    ].compact
+  end
+
+  def active_project?(identifier)
+    Project.active.exists?(identifier: identifier)
+  end
+
+  def not_in_list(label)
+    "#{l(label)} #{l('activerecord.errors.messages.inclusion')}"
   end
 
   def audit(what)

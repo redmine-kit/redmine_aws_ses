@@ -106,8 +106,7 @@
   <p>
     <%= label_tag 'settings_global_mail', l(:label_incoming_emails) %>
     <%= select_tag 'settings[global_mail]',
-                   options_for_select([[l(:label_aws_ses_mail_global_drop), 'drop'],
-                                       [l(:label_aws_ses_mail_global_default_project), 'default_project']],
+                   options_for_select(RedmineKit::Aws::Ses::GLOBAL_MAIL.map { |v| [l(:"label_aws_ses_mail_global_#{v}"), v] },
                                       @settings['global_mail']) %>
   </p>
   <p>

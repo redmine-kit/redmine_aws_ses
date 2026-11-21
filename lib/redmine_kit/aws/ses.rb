@@ -17,6 +17,10 @@ module RedmineKit
         'import_spam' => '0'
       }.freeze
 
+      # The values of global_mail: what becomes of email to the address for
+      # the whole Redmine (Routing#global_target).
+      GLOBAL_MAIL = %w[drop default_project].freeze
+
       class << self
         def settings
           DEFAULTS.merge(Setting.plugin_redmine_kit_aws_ses.to_h.transform_keys(&:to_s))
