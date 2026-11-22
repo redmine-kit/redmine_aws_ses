@@ -16,6 +16,14 @@ A Redmine plugin for sending and receiving Redmine's email with Amazon SES: retr
 - Website: https://redmine-kit.github.io/redmine_aws_ses/ ([日本語](https://redmine-kit.github.io/redmine_aws_ses/ja/))
 - Markdown: [docs/README.md](docs/README.md) ([日本語](docs/ja/README.md)), with [setup](docs/setup.md), [IAM permissions](docs/iam.md) and the [administration pages](docs/admin.md)
 
+## Help
+
+With [Redmine Kit Help](https://github.com/redmine-kit/redmine_help) installed, the plugin's help is in `help/`: the topics Sending email, Receiving email and Project email settings (English and Japanese), and a section Email in the guide's topic Project Settings (after Activities (time tracking)), labelled with the plugin's name. The Email sending and Email receiving tabs and the project settings' Email tab open their topics from the Help panel (`help/map.yml`). Check it against the installed guide from Redmine's folder:
+
+```sh
+bin/rails redmine_kit:help:check PLUGIN=redmine_kit_aws_ses
+```
+
 ## Sponsors
 
 <a href="https://www.keyselect.co.jp/">

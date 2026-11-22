@@ -1,4 +1,6 @@
-# This plugin's screens -> help topics, read by redmine_help (docs/mapping.md).
+# This plugin's screens -> help topics, read by Redmine Kit Help (redmine_kit_help's docs/mapping.md). The plugin has
+# no screen in the new UI; the same keys would serve it. The project settings' tab is projects#settings?tab=aws_ses_mail
+# in both UIs, and aws_ses_project_mail_settings shows its form again after a failed save.
 aws_ses_mail_sending: aws-ses/sending
 aws_ses_mail_receiving: aws-ses/receiving
 projects#settings?tab=aws_ses_mail: aws-ses/project-mail

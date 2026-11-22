@@ -18,6 +18,16 @@ Redmine のメールを Amazon SES で送受信するための Redmine のプラ
 - Web サイト: https://redmine-kit.github.io/redmine_aws_ses/ja/ (English: https://redmine-kit.github.io/redmine_aws_ses/)
 - Markdown: [docs/ja/README.md](docs/ja/README.md) (English: [docs/README.md](docs/README.md))。[導入](docs/ja/setup.md)、[IAM 権限](docs/ja/iam.md)と[管理画面](docs/ja/admin.md)があります。
 
+<a id="help"></a>
+
+## ヘルプ
+
+[Redmine Kit Help](https://github.com/redmine-kit/redmine_help) をインストールしていれば、プラグインのヘルプは `help/` にあります。トピック「メールの送信」、「メールの受信」、「プロジェクトのメール設定」(英語と日本語) と、ガイドのトピック「プロジェクト設定」の「メール」のセクション (「作業分類 (時間管理)」のあと、プラグインの名前のラベル付き) です。「メール送信」と「メール受信」のタブ、プロジェクトの設定の「メール」タブで、ヘルプのパネルがそれぞれのトピックを開きます (`help/map.yml`)。Redmine のディレクトリで、インストールされたガイドに対してチェックできます。
+
+```sh
+bin/rails redmine_kit:help:check PLUGIN=redmine_kit_aws_ses
+```
+
 <a id="sponsors"></a>
 
 ## スポンサー
