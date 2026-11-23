@@ -28,6 +28,7 @@ Redmine Kit AWS SES を使う Redmine に要るもの (インストール、設�
 | --- | --- |
 | [Redmine Kit AWS SQS](https://github.com/redmine-kit/redmine_aws_sqs) | 受信メールの再取り込みを SQS のジョブとして実行 |
 | [Redmine Kit Help](https://github.com/redmine-kit/redmine_help) | ヘルプのパネルに表示するこのプラグインのヘルプ |
+| [Redmine Kit UI](https://github.com/redmine-kit/redmine_kit_ui) | 新しい UI のメールのタブと、プロジェクトの「メール」タブの画面 ([admin.md](admin.md#in-the-new-ui)) |
 
 <a id="installation"></a>
 
@@ -205,7 +206,7 @@ bin/rake redmine_kit:aws:ses:prune DAYS=90
 | 検証済みの ID でない送信元からの SES v2 の `SendEmail` | 実際の SES は `MessageRejected` で拒むが、LocalStack は送ってしまう | SES のメッセージ (「Email address is not verified. ...」) を持つ `MessageRejected` |
 | `SendEmail` の種類別のエラー ([sending.md](sending.md#handling-by-kind-of-error)) | エミュレーターに、スロットリングやアカウントのエラーを返させられない | API リファレンスのそれぞれのエラーコード |
 
-それぞれのテストで確認することは、[sending.md](sending.md#tests) と [receiving.md](receiving.md#tests) にあります。SES のエラーは、SDK の応答のスタブで、配信方法を通して 1 つずつ起こします。画面もスタブを使います。取り込みのテストは、メールをテスト用の S3 (AWS Emulator) に置き、イベントの判定と宛先といっしょに取り込みます。宛先のプロジェクト、Bcc、プロジェクトを変えられない `Project:` のキーワード、取り込まないそれぞれの理由、何も変えない偽の SES のヘッダー、記録からの再取得を確認します。Redmine のコードローダー (Zeitwerk) が、boot のファイルを先に読み込んだ状態で、Redmine Kit AWS の名前空間の下のプラグインのファイルを読み込めることも、新しいプロセスで確認します (`bin/rails zeitwerk:check`)。`bin/test` は、プラグインのテストのあと、メールのまわりの Redmine 本体のテスト (`MailHandler`、`Mailer`、プロジェクト、設定、管理) を動かします。`bin/test --redmine` は、プラグインをインストールした状態で Redmine 本体のすべてのテストを動かします。CI はこちらです。
+それぞれのテストで確認することは、[sending.md](sending.md#tests) と [receiving.md](receiving.md#tests) にあります。SES のエラーは、SDK の応答のスタブで、配信方法を通して 1 つずつ起こします。画面もスタブを使います。取り込みのテストは、メールをテスト用の S3 (AWS Emulator) に置き、イベントの判定と宛先といっしょに取り込みます。宛先のプロジェクト、Bcc、プロジェクトを変えられない `Project:` のキーワード、取り込まないそれぞれの理由、何も変えない偽の SES のヘッダー、記録からの再取得を確認します。Redmine のコードローダー (Zeitwerk) が、boot のファイルを先に読み込んだ状態で、Redmine Kit AWS の名前空間の下のプラグインのファイルを読み込めることも、新しいプロセスで確認します (`bin/rails zeitwerk:check`)。`bin/test` は、プラグインのテストを [Redmine Kit UI](https://github.com/redmine-kit/redmine_kit_ui) をインストールした状態 (隣のチェックアウト `../redmine_kit_ui` の `HEAD`。`REDMINE_KIT_UI` と `REDMINE_KIT_UI_REF` で別のものを選べます) と、インストールしない状態で動かし、そのあと、メールのまわりの Redmine 本体のテスト (`MailHandler`、`Mailer`、プロジェクト、設定、管理) を動かします。`bin/test --redmine` は、プラグインをインストールした状態で Redmine 本体のすべてのテストを動かします。CI はこちらです。
 
 CI は、静的チェックとテストを Ruby 3.2 と 4.0 で実行します。ローカルでは、`TEST_RUBY=3.2 bin/test` (または `bin/lint`) で Ruby 3.2 で実行します。
 
@@ -223,6 +224,15 @@ REDMINE_KIT_AWS_DIR=<ディレクトリ> bin/test  # redmine_kit_aws を <ディ
 bin/test-gem        # gem をビルド・インストールし、plugins/ にリンクして起動する
 bin/lint            # RuboCop
 bin/services --down # PostgreSQL、moto、LocalStack を止める
+```
+
+新しい UI のモジュールは、`frontend/` で Node.js (バージョンは `frontend/.nvmrc`) を使って確認します。`.npmrc` には `ignore-scripts=true` があり、`@redmine-kit/ui` と `@redmine-kit/plugin` は、隣にある ui リポジトリのチェックアウト (`../../ui/packages/…`) から取得します。
+
+```sh
+cd frontend
+npm install
+npm run check       # 型チェック、コンポーネントのテスト (vitest)、ビルド、kit-check-ui、Storybook のビルド
+npm run storybook   # タブの状態の Storybook (ポート 6008)
 ```
 
 <a id="releasing"></a>

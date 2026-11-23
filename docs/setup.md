@@ -23,6 +23,7 @@ Without it, Redmine stops at boot and names it. Installed as a gem, this plugin 
 | --- | --- |
 | [Redmine Kit AWS SQS](https://github.com/redmine-kit/redmine_aws_sqs) | the re-import of received mail as a job on SQS |
 | [Redmine Kit Help](https://github.com/redmine-kit/redmine_help) | this plugin's help in the Help panel |
+| [Redmine Kit UI](https://github.com/redmine-kit/redmine_kit_ui) | the new UI's screens of the email tabs and of a project's Email tab ([admin.md](admin.md#in-the-new-ui)) |
 
 ## Installation
 
@@ -178,7 +179,7 @@ Calls whose answers the tests need but no backend gives as real AWS does are moc
 | SES v2 `SendEmail` from a sender that is not a verified identity | Real SES rejects it with `MessageRejected`; LocalStack sends it | `MessageRejected` with SES's message ("Email address is not verified. ...") |
 | Each `SendEmail` error by kind ([sending.md](sending.md#handling-by-kind-of-error)) | The emulators cannot be made to answer throttling or account errors | Each error code of the API reference |
 
-What each test checks is in [sending.md](sending.md#tests) and [receiving.md](receiving.md#tests). SES errors are raised one by one through the delivery method with SDK response stubs; the pages use stubs too. The import tests store messages in the test S3 (AWS Emulator) and import them with the event's verdicts and recipients: the project of the recipient, Bcc, a `Project:` keyword that cannot change the project, each reason for dropping, forged SES headers that change nothing, and re-imports from the record. A test also checks, in new processes, that Redmine's code loader (Zeitwerk) loads the plugin's files under the namespace of Redmine Kit AWS, with the boot file loaded first (`bin/rails zeitwerk:check`). `bin/test` runs the plugin's tests, then Redmine's tests around email (`MailHandler`, `Mailer`, projects, settings, administration); `bin/test --redmine` runs every Redmine test with the plugin installed, as the CI does.
+What each test checks is in [sending.md](sending.md#tests) and [receiving.md](receiving.md#tests). SES errors are raised one by one through the delivery method with SDK response stubs; the pages use stubs too. The import tests store messages in the test S3 (AWS Emulator) and import them with the event's verdicts and recipients: the project of the recipient, Bcc, a `Project:` keyword that cannot change the project, each reason for dropping, forged SES headers that change nothing, and re-imports from the record. A test also checks, in new processes, that Redmine's code loader (Zeitwerk) loads the plugin's files under the namespace of Redmine Kit AWS, with the boot file loaded first (`bin/rails zeitwerk:check`). `bin/test` runs the plugin's tests with [Redmine Kit UI](https://github.com/redmine-kit/redmine_kit_ui) installed (from the checkout next to this one, `../redmine_kit_ui` at `HEAD`; `REDMINE_KIT_UI` and `REDMINE_KIT_UI_REF` choose another), then without it, then Redmine's tests around email (`MailHandler`, `Mailer`, projects, settings, administration); `bin/test --redmine` runs every Redmine test with the plugin installed, as the CI does.
 
 CI runs the lint and the tests on Ruby 3.2 and 4.0; locally, `TEST_RUBY=3.2 bin/test` (or `bin/lint`) runs them on Ruby 3.2.
 
@@ -196,6 +197,15 @@ REDMINE_KIT_AWS_DIR=<dir> bin/test  # with redmine_kit_aws from <dir>
 bin/test-gem        # the gem: built, installed, linked into plugins/, booted
 bin/lint            # RuboCop
 bin/services --down # stops PostgreSQL, moto and LocalStack
+```
+
+The new UI's module is checked in `frontend/` with Node.js (the version in `frontend/.nvmrc`); `.npmrc` has `ignore-scripts=true`, and `@redmine-kit/ui` and `@redmine-kit/plugin` come from the checkout of the ui repository next to this one (`../../ui/packages/…`):
+
+```sh
+cd frontend
+npm install
+npm run check       # type check, the components' tests (vitest), the build, kit-check-ui, the Storybook's build
+npm run storybook   # the Storybook of the tab's states, on port 6008
 ```
 
 ## Releasing

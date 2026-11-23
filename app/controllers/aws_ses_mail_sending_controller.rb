@@ -2,15 +2,23 @@
 
 # The "Sending email" tab (docs/admin.md#sending-email): the SES account, the
 # sender domain and the suppression list, as the last refresh stored them
-# (AwsSesSnapshot). The page itself never calls SES.
+# (AwsSesSnapshot). The page itself never calls SES. Redmine's page (HTML,
+# with redirects and flash messages), and the same data and actions as JSON
+# for the new UI's tab (AwsSesMailSending of frontend/;
+# AwsSesMailHelper#aws_ses_mail_sending_json).
 class AwsSesMailSendingController < ApplicationController
   include RedmineKit::Aws::AdminTab
 
   helper :aws_ses_mail
+  helper :aws_ses_mail_json
 
   def index
     @domain = RedmineKit::Aws::Ses.domain
     @snapshot = AwsSesSnapshot.latest
+    respond_to do |format|
+      format.html
+      format.json { render json: view_context.aws_ses_mail_sending_json }
+    end
   end
 
   # Reads the state of SES and DNS again, for both email tabs; back to the
@@ -20,11 +28,10 @@ class AwsSesMailSendingController < ApplicationController
   def refresh
     AwsSesSnapshot.refresh!
     logger&.info "[redmine_kit_aws_ses] #{User.current.login} refreshed the SES state"
+    done(nil, tab_path)
   rescue StandardError => e
     logger&.error "[redmine_kit_aws_ses] could not refresh the SES state: #{e.class}: #{e.message}"
-    flash[:error] = l(:text_aws_ses_mail_api_error, error: e.class.name)
-  ensure
-    redirect_to tab_path
+    failed(l(:text_aws_ses_mail_api_error, error: e.class.name), tab_path)
   end
 
   def unsuppress
@@ -35,12 +42,33 @@ class AwsSesMailSendingController < ApplicationController
     # message in the log.
     logger&.error "[redmine_kit_aws_ses] could not remove #{address} from the suppression list: " \
                   "#{e.class}: #{e.message}"
-    flash[:error] = l(:text_aws_ses_mail_api_error, error: e.class.name)
-  ensure
-    redirect_to action: 'index'
+    failed(l(:text_aws_ses_mail_api_error, error: e.class.name), { action: 'index' })
   end
 
   private
+
+  # An action that worked: back to the tab with its notice, or the notice as
+  # JSON (text: Redmine's flash, which is HTML, gets it escaped).
+  def done(notice, path)
+    respond_to do |format|
+      format.html do
+        flash[:notice] = ERB::Util.h(notice) if notice
+        redirect_to path
+      end
+      format.json { render json: { notice: notice, errors: [] } }
+    end
+  end
+
+  # An action that failed: back to the tab with the error, or 422.
+  def failed(error, path)
+    respond_to do |format|
+      format.html do
+        flash[:error] = error
+        redirect_to path
+      end
+      format.json { render json: { errors: [error] }, status: :unprocessable_content }
+    end
+  end
 
   # The email tab the request came from; a value from the request never
   # chooses the path.
@@ -53,8 +81,8 @@ class AwsSesMailSendingController < ApplicationController
     RedmineKit::Aws::Ses::Account.new.unsuppress(address)
     AwsSesSnapshot.latest&.remove_suppressed!(address)
     logger&.info "[redmine_kit_aws_ses] #{User.current.login} removed #{address} from the suppression list"
-    # Redmine shows flash messages as HTML (render_flash_messages), so values
-    # in them are escaped, as Redmine's own controllers do.
-    flash[:notice] = l(:notice_aws_ses_mail_unsuppressed, address: ERB::Util.h(address))
+    # Redmine shows flash messages as HTML (render_flash_messages), so the
+    # notice is escaped there (done), as Redmine's own controllers do.
+    done(l(:notice_aws_ses_mail_unsuppressed, address: address), { action: 'index' })
   end
 end

@@ -3,9 +3,11 @@
 # Emulator and SES on LocalStack (when LOCALSTACK_AUTH_TOKEN is set) or moto
 # (docs/setup.md#tests), in Apple container when it runs, else in Docker (CI;
 # CONTAINER_CLI=container|docker chooses).
-#   bin/test                 # the plugin's tests, then the Redmine tests around email
+#   bin/test                 # the plugin's tests with redmine_kit_ui, then without it,
+#                            # then the Redmine tests around email
 #   bin/test --redmine       # also every Redmine test, with the plugin installed
-#   bin/test <files>         # some files of the plugin's tests
+#   bin/test <files>         # some files of the plugin's tests, with redmine_kit_ui
+#   REDMINE_KIT_UI=<dir> REDMINE_KIT_UI_REF=<commit> bin/test   # redmine_kit_ui from that checkout and commit
 #   REDMINE_KIT_AWS_DIR=<dir> bin/test   # redmine_kit_aws from <dir> (default ../redmine_kit_aws)
 #   TEST_RUBY=3.2 bin/test   # on Ruby 3.2 (default 4.0), as the CI also does
 #   COVERAGE=1 bin/test      # with the plugin's coverage in coverage/coverage.xml, as the CI does
@@ -55,9 +57,14 @@ fi
 db="redmine_test_$$"
 setup='bin/rails db:drop db:create db:migrate redmine:plugins:migrate db:schema:dump >/dev/null'
 teardown='; status=$?; bin/rails db:drop >/dev/null 2>&1; exit $status'
+# Without redmine_kit_ui: its folder moved away, its Gemfile kept (the
+# installed gems stay the bundle's), so that the plugin boots alone; Redmine's
+# tests run without it too.
+without_kit_ui='mv plugins/redmine_kit_ui /tmp/ && mkdir plugins/kit_ui_gems && cp /tmp/redmine_kit_ui/Gemfile plugins/kit_ui_gems/ && '
+prepare=''
 run() {
   "$cli" run --rm "${run_opts[@]}" "${network[@]}" "${opts[@]}" -e TEST_DATABASE="$db" "$image" \
-    sh -c "$setup"' && "$@"'"$teardown" test "$@"
+    sh -c "$prepare$setup"' && "$@"'"$teardown" test "$@"
 }
 # The plugin's tests, on the emulator's network; with COVERAGE set, in one
 # process with the coverage written to coverage/coverage.xml
@@ -70,18 +77,25 @@ run_plugin() {
     cov=(-e PLUGIN_COVERAGE=1 -e PARALLEL_WORKERS=1 -v "$PWD/coverage:/redmine/plugins/$plugin/coverage")
   fi
   "$cli" run --rm "${run_opts[@]}" "${aws[@]}" "${opts[@]}" ${cov[@]+"${cov[@]}"} -e TEST_DATABASE="$db" "$image" \
-    sh -c "$aws_forward$setup"' && "$@"'"$teardown" test "$@"
+    sh -c "$aws_forward$prepare$setup"' && "$@"'"$teardown" test "$@"
+}
+# The plugin's tests with redmine_kit_ui, then without it.
+run_plugin_both() {
+  echo '== with redmine_kit_ui' >&2
+  prepare='' run_plugin bin/rails test "plugins/$plugin/test"
+  echo '== without redmine_kit_ui' >&2
+  COVERAGE='' prepare=$without_kit_ui run_plugin bin/rails test "plugins/$plugin/test"
 }
 redmine_tests=(test/unit/mail_handler_test.rb test/unit/mailer_test.rb test/functional/projects_controller_test.rb
   test/functional/settings_controller_test.rb test/functional/admin_controller_test.rb)
 # Redmine's tests that fail with the current gems for known reasons.
 known=$(grep -v -e '^#' -e '^$' test/redmine_known_failures.txt | sed 's/[.]/\\./g' | paste -sd '|' -)
 if [[ "${1:-}" == "--redmine" ]]; then
-  run_plugin bin/rails test "plugins/$plugin/test"
-  run bin/rails test --exclude "/^($known)\$/"
+  run_plugin_both
+  prepare=$without_kit_ui run bin/rails test --exclude "/^($known)\$/"
 elif (($#)); then
   run_plugin bin/rails test "${@/#/plugins/$plugin/}"
 else
-  run_plugin bin/rails test "plugins/$plugin/test"
-  run bin/rails test "${redmine_tests[@]}"
+  run_plugin_both
+  prepare=$without_kit_ui run bin/rails test "${redmine_tests[@]}"
 fi

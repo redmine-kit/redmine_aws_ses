@@ -2,18 +2,22 @@
 
 # The "Receiving email" tab (docs/admin.md#receiving-email): addresses, the MX
 # record (as the last refresh stored it, AwsSesSnapshot), received email,
-# re-importing and the receiving settings.
+# re-importing and the receiving settings. Redmine's page (HTML, with
+# redirects and flash messages), and the same data and actions as JSON for the
+# new UI's tab (AwsSesMailReceiving of frontend/;
+# AwsSesMailHelper#aws_ses_mail_receiving_json).
 class AwsSesMailReceivingController < ApplicationController
   include RedmineKit::Aws::AdminTab
 
   helper :aws_ses_mail
+  helper :aws_ses_mail_json
 
   def index
-    @settings ||= RedmineKit::Aws::Ses.settings
-    @domain = RedmineKit::Aws::Ses.domain
-    @snapshot = AwsSesSnapshot.latest
-    @project_settings = AwsSesProjectMailSetting.includes(:project).order(:id).to_a
-    @received = received_mails
+    load_page
+    respond_to do |format|
+      format.html
+      format.json { render json: view_context.aws_ses_mail_receiving_json }
+    end
   end
 
   # On an error, the page again with the values given and the error above
@@ -21,15 +25,11 @@ class AwsSesMailReceivingController < ApplicationController
   def update
     @settings = RedmineKit::Aws::Ses.settings.merge(setting_params)
     @setting_errors = setting_errors(@settings)
-    if @setting_errors.any?
-      index
-      return render(:index)
-    end
+    return update_failed if @setting_errors.any?
 
     Setting.plugin_redmine_kit_aws_ses = @settings
     audit('changed the receiving settings')
-    flash[:notice] = l(:notice_successful_update)
-    redirect_to action: 'index'
+    done(l(:notice_successful_update))
   end
 
   def reimport
@@ -38,11 +38,42 @@ class AwsSesMailReceivingController < ApplicationController
 
     mails.each { |mail| AwsSesReimportMailJob.perform_later(mail.message_id) }
     audit("re-imported #{mails.map(&:message_id).join(', ')}")
-    flash[:notice] = l(:notice_aws_ses_mail_reimport, count: mails.size)
-    redirect_to action: 'index'
+    done(l(:notice_aws_ses_mail_reimport, count: mails.size))
   end
 
   private
+
+  # What the tab shows; the settings given, when a save was refused.
+  def load_page
+    @settings ||= RedmineKit::Aws::Ses.settings
+    @domain = RedmineKit::Aws::Ses.domain
+    @snapshot = AwsSesSnapshot.latest
+    @project_settings = AwsSesProjectMailSetting.includes(:project).order(:id).to_a
+    @received = received_mails
+  end
+
+  # Back to the tab with the notice, or the notice as JSON.
+  def done(notice)
+    respond_to do |format|
+      format.html do
+        flash[:notice] = notice
+        redirect_to action: 'index'
+      end
+      format.json { render json: { notice: notice, errors: [] } }
+    end
+  end
+
+  # The settings refused: the page again with the values given and the errors,
+  # or the errors as JSON (422).
+  def update_failed
+    respond_to do |format|
+      format.html do
+        load_page
+        render :index
+      end
+      format.json { render json: { errors: @setting_errors }, status: :unprocessable_content }
+    end
+  end
 
   # The records of the ids[] of the form; anything else in ids finds
   # nothing.

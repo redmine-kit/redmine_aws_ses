@@ -1,0 +1,17 @@
+# What Redmine Kit AWS SES adds to Redmine Kit's new UI (redmine_kit_ui's docs/plugins-kit.md, "The manifest"): the tabs
+# Email sending and Email receiving of Administration › AWS (at the routes of Redmine's tabs), on the page of
+# redmine_kit_aws's admin menu item aws, at the positions of their register_tab (docs/api.md of redmine_kit_aws, "The
+# new UI"), and the Email tab of a project's settings. Who may open them is the controllers' (require_admin; the
+# permission manage_aws_ses_mail_settings, and the tab's JSON only while addresses per project are on).
+api_version: 1
+module: kit/ses.js
+stylesheet: kit/ses.css
+screens:
+  - { path: /admin/aws/mail_sending, component: AwsSesMailSending, layout: admin, menu_item: aws, title: label_aws, tab: label_aws_ses_mail_sending, position: 30 }
+  - { path: /admin/aws/mail_receiving, component: AwsSesMailReceiving, layout: admin, menu_item: aws, title: label_aws, tab: label_aws_ses_mail_receiving, position: 40 }
+settings:
+  project:
+    - name: aws_ses_mail
+      label: label_aws_ses_project_mail
+      permission: manage_aws_ses_mail_settings
+      component: AwsSesProjectMail

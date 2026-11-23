@@ -99,6 +99,19 @@ Redmine Kit AWS SES の管理画面です。システム管理者だけが開け
 | エラー | 値を保存できないとき (たとえば、編集中にプロジェクトから外されたトラッカー) は、Redmine のカテゴリの編集画面と同じく、エラーといっしょにフォームを再表示します |
 | 未登録の送信者のメールを取得するとき | 問い合わせ窓口のように、外部の人からのメールを受けるときに使います。スパムが増えるので、DMARC の確認は外しません ([receiving.md](receiving.md#spoofing-and-spam)) |
 
+<a id="in-the-new-ui"></a>
+
+## 新しい UI
+
+[Redmine Kit UI](https://github.com/redmine-kit/redmine_kit_ui) をインストールしていれば、3 つの画面は新しい UI が描画します (`config/kit_ui.yml`。`frontend/` から `assets/javascripts/kit/ses.js` にビルドするコンポーネント `AwsSesMailSending`、`AwsSesMailReceiving`、`AwsSesProjectMail`)。メールの 2 つのタブは Redmine Kit AWS のページ「AWS」のタブ ([その api.md](https://redmine-kit.github.io/redmine_aws/ja/api.html#the-new-ui))、「メール」タブはプロジェクトの設定のタブです。同じアクションとチェック (`require_admin`。権限「メール設定の管理」) が Redmine の画面と JSON の両方に応答し、同じ値を表示して、同じ操作ができます。
+
+| 画面 | 新しい UI |
+| --- | --- |
+| メール送信、メール受信 | カードの見出しに「更新: …」と「最新の情報に更新」。項目は Redmine の画面と同じで、値はラベルと値の組、一覧は表です。SES アカウントの見出しの下に「テストメールを送信」(Redmine Kit UI の `admin/test_email.json`) と、Redmine Kit AWS SQS があれば「失敗したジョブ」。サプレッションリストのアドレスごとの「削除」と、チェックしたメールの「再取得」は、どちらも「よろしいですか？」のあとに実行します。受信履歴の見出しに「すべて」と「未取得」。受信設定は「保存」で保存し、Redmine のエラーをその上に表示します |
+| プロジェクトの「メール」タブ | Redmine のタブと同じフォーム。転送メールの値は、システム管理者以外には無効にして表示します。新しい UI では、プロジェクト別のアドレスが無効でも、権限があればタブが表示されます。そのとき JSON は 404 を返し、タブはエラーの表示になります |
+
+JSON はブラウザーのセッション (kit リクエスト) で使います。`GET /admin/aws/mail_sending.json`、`GET /admin/aws/mail_receiving.json` (未取得のメールだけは `?dropped=1`)、`GET /projects/:id/aws_ses_mail_setting.json` は、Redmine のヘルパーで整形した値を返します。`POST …/mail_sending/refresh.json` (`tab`)、`…/unsuppress.json` (`address`)、`…/mail_receiving/reimport.json` (`ids`)、`POST /admin/aws/mail_receiving.json` (`settings`) は `{ notice, errors }` を返し、拒否したときは 422 とエラーを返します。`PATCH /projects/:id/aws_ses_mail_setting.json` はタブを保存し、失敗すれば 422 とモデルのエラーを返します。
+
 <a id="permissions"></a>
 
 ## 権限

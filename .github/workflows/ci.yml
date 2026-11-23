@@ -15,6 +15,10 @@ on:
 permissions:
   contents: read
 
+# redmine_kit_ui, checked out inside the plugin's folder by the jobs below
+env:
+  REDMINE_KIT_UI: redmine_kit_ui
+
 concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
@@ -64,6 +68,15 @@ jobs:
           repository: redmine-kit/redmine_aws
           path: redmine_kit_aws
           persist-credentials: false
+      # redmine_kit_ui, which bin/test_image installs for the new UI's tests
+      # (REDMINE_KIT_UI). A private repository: read with a token of the
+      # organization that can read its contents (REDMINE_KIT_UI_TOKEN).
+      - uses: actions/checkout@v7.0.1
+        with:
+          repository: redmine-kit/redmine_kit_ui
+          path: redmine_kit_ui
+          token: ${{ secrets.REDMINE_KIT_UI_TOKEN }}
+          persist-credentials: false
       # The plugin's tests, then every Redmine test with the plugin installed,
       # with S3 on AWS Emulator; SES sending on LocalStack when the
       # organization's secret is available (not on pull requests from forks),
@@ -100,6 +113,15 @@ jobs:
           repository: redmine-kit/redmine_aws
           path: redmine_kit_aws
           persist-credentials: false
+      # redmine_kit_ui, which bin/test_image installs for the new UI's tests
+      # (REDMINE_KIT_UI). A private repository: read with a token of the
+      # organization that can read its contents (REDMINE_KIT_UI_TOKEN).
+      - uses: actions/checkout@v7.0.1
+        with:
+          repository: redmine-kit/redmine_kit_ui
+          path: redmine_kit_ui
+          token: ${{ secrets.REDMINE_KIT_UI_TOKEN }}
+          persist-credentials: false
       - run: bin/test-gem
         env:
           REDMINE_KIT_AWS_DIR: redmine_kit_aws
@@ -130,6 +152,15 @@ jobs:
           repository: redmine-kit/redmine_aws
           ref: ${{ steps.release.outputs.tag }}
           path: redmine_kit_aws
+          persist-credentials: false
+      # redmine_kit_ui, which bin/test_image installs for the new UI's tests
+      # (REDMINE_KIT_UI). A private repository: read with a token of the
+      # organization that can read its contents (REDMINE_KIT_UI_TOKEN).
+      - uses: actions/checkout@v7.0.1
+        with:
+          repository: redmine-kit/redmine_kit_ui
+          path: redmine_kit_ui
+          token: ${{ secrets.REDMINE_KIT_UI_TOKEN }}
           persist-credentials: false
       - if: steps.release.outputs.tag != ''
         run: bin/test

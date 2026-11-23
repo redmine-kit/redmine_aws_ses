@@ -29,7 +29,7 @@ Redmine::Plugin.register :redmine_kit_aws_ses do
 
   # projects: :settings opens project settings, as Redmine's own permissions
   # for a settings tab do (manage_categories and others).
-  permission :manage_aws_ses_mail_settings, { projects: :settings, aws_ses_project_mail_settings: [:update] },
+  permission :manage_aws_ses_mail_settings, { projects: :settings, aws_ses_project_mail_settings: %i[show update] },
              require: :member
 end
 

@@ -95,6 +95,17 @@ An "Email" tab is added to project settings when addresses per project are on. I
 | Errors | When the values cannot be saved (for example, a tracker removed from the project while the form was open), the form is shown again with the errors, as Redmine's issue category form is |
 | When fetching email from unknown senders | Use this to receive email from outside people, such as for a contact desk. Spam increases, so keep the DMARC check ([receiving.md](receiving.md#spoofing-and-spam)) |
 
+## In the new UI
+
+With [Redmine Kit UI](https://github.com/redmine-kit/redmine_kit_ui) installed, the new UI draws the three pages itself (`config/kit_ui.yml`, the components `AwsSesMailSending`, `AwsSesMailReceiving` and `AwsSesProjectMail` built from `frontend/` into `assets/javascripts/kit/ses.js`): the two email tabs as tabs of Redmine Kit AWS's page "AWS" ([its api.md](https://redmine-kit.github.io/redmine_aws/api.html#the-new-ui)), and the Email tab in the project's settings. They show the same values and allow the same, through the same actions and checks (`require_admin`; the permission "Manage email settings"), which answer JSON as well as Redmine's pages:
+
+| Page | In the new UI |
+| --- | --- |
+| Email sending, Email receiving | "Updated: …" and "Refresh" in the card's header; the sections as on Redmine's pages, the values as label and value pairs, the lists as tables. "Send a test email" (Redmine Kit UI's `admin/test_email.json`) and, with Redmine Kit AWS SQS, "Failed jobs" under the heading of SES account; "Remove" on each address of the suppression list and "Fetch again" for the checked email, each after "Are you sure?"; "All" and "Not fetched" in the heading of the received email; the receiving settings saved with "Save", Redmine's errors above them |
+| Project's Email tab | The form of Redmine's tab; the values of forwarded email disabled for those who are not system administrators. The tab is listed in the new UI wherever the permission is, also while addresses per project are off; its JSON then answers 404 and the tab shows the error state |
+
+The JSON, for the browser's session (kit requests): `GET /admin/aws/mail_sending.json`, `GET /admin/aws/mail_receiving.json` (`?dropped=1` for the email not fetched) and `GET /projects/:id/aws_ses_mail_setting.json` give the values formatted with Redmine's helpers; `POST …/mail_sending/refresh.json` (`tab`), `…/unsuppress.json` (`address`), `…/mail_receiving/reimport.json` (`ids`) and `POST /admin/aws/mail_receiving.json` (`settings`) give `{ notice, errors }`, 422 with the errors when refused; `PATCH /projects/:id/aws_ses_mail_setting.json` saves the tab, 422 with the model's errors.
+
 ## Permissions
 
 For these pages, the role that runs Redmine's web requests gets permission to read SES status and to remove addresses from the suppression list. The list and an example policy are in [iam.md](iam.md).
