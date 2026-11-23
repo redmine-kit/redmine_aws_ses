@@ -20,7 +20,7 @@ Gem::Specification.new do |spec|
   # (autoloaded) and must not be required by Bundler.
   spec.require_paths = ['boot']
   spec.add_dependency 'aws-actionmailer-ses', '~> 1.2'
-  spec.add_dependency 'aws-sdk-s3', '~> 1.0'
+  spec.add_dependency 'aws-sdk-s3', '~> 1.202'
   spec.add_dependency 'aws-sdk-sesv2', '~> 1.0'
   spec.metadata['github_repo'] = 'ssh://github.com/redmine-kit/redmine_aws_ses'
   # The plugins it requires (config/dependencies.yml): installing the gem installs them.
