@@ -1,5 +1,9 @@
 # frozen_string_literal: true
 
+# The plugins this one requires (config/dependencies.yml): without one,
+# Redmine stops here and names it.
+load File.expand_path('config/dependencies.rb', __dir__)
+
 # Redmine runs this when it prepares the code. The SES delivery method and the
 # interceptor for per-project senders are in boot/redmine_kit_aws_ses.rb, which
 # Bundler loads earlier.
@@ -10,8 +14,6 @@
 require File.expand_path('lib/redmine_kit/aws/ses', __dir__) unless defined?(RedmineKit::Aws::Ses::VERSION)
 
 Redmine::Plugin.register :redmine_kit_aws_ses do
-  # First, so that Redmine names a missing redmine_kit_aws before anything uses it.
-  requires_redmine_plugin :redmine_kit_aws, version_or_higher: '0.1.0'
   name 'Redmine Kit AWS SES'
   author 'Redmine Kit'
   description "Sends and receives Redmine's email with Amazon SES"

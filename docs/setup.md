@@ -5,10 +5,24 @@ What a Redmine needs to use Redmine Kit AWS SES: installation, configuration, th
 ## Requirements
 
 - Redmine 7.0 or later.
-- [Redmine Kit AWS](https://redmine-kit.github.io/redmine_aws/) (`redmine_kit_aws`) 0.1 or later, in `plugins/redmine_kit_aws`. Redmine refuses to start without it (`requires_redmine_plugin` in `init.rb`), and the gem depends on it. It adds the "AWS" administration menu.
 - A process that can reach SES and S3 with AWS credentials (an execution role on Lambda, an instance profile or a task role elsewhere). No access keys or SMTP passwords are stored in Redmine.
 - For sending: the official AWS gem `aws-actionmailer-ses` (delivery method `:ses_v2`) ([Serverless mail.md](https://redmine-kit.github.io/serverless/mail.html#gems)).
-- For retries of sending: jobs that run in a process of their own (on Lambda, `REDMINE_ROLE=worker`; [Redmine Kit AWS SQS](https://redmine-kit.github.io/redmine_aws_sqs/) records the jobs that fail for the last time).
+
+### Required plugins
+
+| Plugin | Used for |
+| --- | --- |
+| [Redmine Kit AWS](https://github.com/redmine-kit/redmine_aws) | the AWS administration menu and the settings shared by the AWS plugins |
+
+Without it, Redmine stops at boot and names it. Installed as a gem, this plugin installs it
+([Installation](#installation)).
+
+### Optional plugins
+
+| Plugin | With it |
+| --- | --- |
+| [Redmine Kit AWS SQS](https://github.com/redmine-kit/redmine_aws_sqs) | the re-import of received mail as a job on SQS |
+| [Redmine Kit Help](https://github.com/redmine-kit/redmine_help) | this plugin's help in the Help panel |
 
 ## Installation
 
@@ -46,7 +60,7 @@ What a Redmine needs to use Redmine Kit AWS SES: installation, configuration, th
 
 ### Gem
 
-Each version tag (`v*`) publishes the plugin as a gem to GitHub Packages (`https://rubygems.pkg.github.com/redmine-kit`; `.github/workflows/gem.yml`). The gem holds the run-time files (`init.rb`, `boot/`, `lib/`, `app/`, `config/`, `db/`, `help/`, `LICENSE`) and depends on `redmine_kit_aws`, `aws-actionmailer-ses`, `aws-sdk-sesv2` and `aws-sdk-s3`; the plugin's `Gemfile` is not in it. Bundler installs the gem of Redmine Kit AWS with it, from the same source, so `Gemfile.local` names only the plugin. Redmine loads plugins only from `plugins/`, so the installed gems are linked there:
+`bin/release` publishes each version of the plugin as a gem to GitHub Packages (`https://rubygems.pkg.github.com/redmine-kit`, [Releasing](#releasing)). The gem holds the run-time files (`init.rb`, `boot/`, `lib/`, `app/`, `config/`, `db/`, `help/`, `LICENSE`) and depends on `redmine_kit_aws`, `aws-actionmailer-ses`, `aws-sdk-sesv2` and `aws-sdk-s3`; the plugin's `Gemfile` is not in it. Bundler installs the gem of Redmine Kit AWS with it, from the same source, so `Gemfile.local` names only the plugin. Redmine loads plugins only from `plugins/`, so the installed gems are linked there:
 
 ```ruby
 # Redmine's Gemfile.local
@@ -183,6 +197,16 @@ bin/test-gem        # the gem: built, installed, linked into plugins/, booted
 bin/lint            # RuboCop
 bin/services --down # stops PostgreSQL, moto and LocalStack
 ```
+
+## Releasing
+
+`bin/release` publishes the gem of the gemspec's version to Redmine Kit's registry on GitHub Packages, from a clean
+`main` only: the version must be newer than the last tag `v<version>`, the required plugins must resolve from the
+registry at their ranges (`config/dependencies.yml`), and `bin/lint`, `bin/test` and `bin/test-gem` must pass. It
+pushes with the key `github` of `~/.gem/credentials` (`:github: Bearer <token>`, a token with `write:packages`) and
+reads the registry with `BUNDLE_RUBYGEMS__PKG__GITHUB__COM`; no token goes into the repository or the output. It makes
+the signed tag `v<version>` and prints the command that pushes it. Versions are semantic: a change that breaks a plugin
+using this one raises the major version (the minor one before 1.0), and the ranges in the plugins that require it.
 
 ## To verify
 

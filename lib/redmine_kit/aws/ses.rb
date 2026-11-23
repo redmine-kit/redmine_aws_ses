@@ -85,7 +85,7 @@ module RedmineKit
           ProjectSettingsTab.install
           register_admin
           # The re-import job may run from the job queue of Redmine Kit AWS SQS.
-          RedmineKit::Aws::Sqs::Boot.allow_job('AwsSesReimportMailJob') if defined?(RedmineKit::Aws::Sqs::Boot)
+          ActiveSupport.on_load(:redmine_kit_aws_sqs) { RedmineKit::Aws::Sqs::Boot.allow_job('AwsSesReimportMailJob') }
         end
 
         # SES errors reach the mail job only when delivery errors are raised;
