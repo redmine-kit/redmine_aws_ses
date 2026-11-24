@@ -117,6 +117,8 @@ describe('AwsSesMailReceiving', () => {
     await user.click(screen.getByRole('radio', { name: '未取得' }));
     expect(requests.some((r) => r.path === '/admin/aws/mail_receiving.json' && r.query?.dropped === '1')).toBe(true);
     const address = await screen.findByRole('textbox', { name: 'デフォルトアドレス' });
+    // the actions' row brings its own gutter (the tab's body has none): never pulled out to the card's edge
+    expect(screen.getByRole('button', { name: /^保存/ }).closest('.px-gutter')).not.toHaveClass('-mx-gutter');
     await user.clear(address);
     await user.type(address, 'Bad Name');
     await user.click(screen.getByRole('button', { name: /^保存/ }));

@@ -256,7 +256,8 @@ function SettingsForm({ data }: { data: SesReceivingJson }) {
           </div>
         </FormRow>
       </div>
-      <FormActions>
+      {/* edge: the tab's body has no gutter (its sections bring their own), so the row brings its own */}
+      <FormActions edge>
         <Button data-form-cancel variant="ghost" disabled={!form.dirty || save.isPending} onClick={() => setValues(form.saved)}>
           {t('button_cancel')}
         </Button>
