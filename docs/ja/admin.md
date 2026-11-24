@@ -107,8 +107,8 @@ Redmine Kit AWS SES の管理画面です。システム管理者だけが開け
 
 | 画面 | 新しい UI |
 | --- | --- |
-| メール送信、メール受信 | カードの見出しに「更新: …」と「最新の情報に更新」。項目は Redmine の画面と同じで、値はラベルと値の組、一覧は表です。SES アカウントの見出しの下に「テストメールを送信」(Redmine Kit UI の `admin/test_email.json`) と、Redmine Kit AWS SQS があれば「失敗したジョブ」。サプレッションリストのアドレスごとの「削除」と、チェックしたメールの「再取得」は、どちらも「よろしいですか？」のあとに実行します。受信履歴の見出しに「すべて」と「未取得」。受信設定は「保存」で保存し、Redmine のエラーをその上に表示します |
-| プロジェクトの「メール」タブ | Redmine のタブと同じフォーム。転送メールの値は、システム管理者以外には無効にして表示します。新しい UI では、プロジェクト別のアドレスが無効でも、権限があればタブが表示されます。そのとき JSON は 404 を返し、タブはエラーの表示になります |
+| メール送信、メール受信 | カードの見出しに「更新: …」と「最新の情報に更新」。項目は Redmine の画面と同じで、値はラベルと値の組、一覧は表です。SES アカウントの見出しの下に「テストメールを送信」(Redmine Kit UI の `admin/test_email.json`) と、Redmine Kit AWS SQS があれば「失敗したジョブ」。サプレッションリストのアドレスごとの「削除」と、チェックしたメールの「再取得」は、どちらも、操作と対象を示す確認 (「user@example.com をサプレッションリストから削除しますか？」、「選択したメール 2 通を再取得しますか？」) のあとに実行します。受信履歴の見出しに「すべて」と「未取得」。受信設定は「保存」で保存し、Redmine のエラーをその上に表示します |
+| プロジェクトの「メール」タブ | Redmine のタブと同じフォーム。転送メールの値は、システム管理者以外には無効にして表示します。Redmine のタブと同じく、プロジェクト別のアドレスが有効なあいだだけ表示します (マニフェストの `enabled`: `RedmineKit::Aws::Ses::ProjectSettingsTab.enabled?`。両方のタブで同じ規則)。無効のときは JSON が 404 を返します |
 
 JSON はブラウザーのセッション (kit リクエスト) で使います。`GET /admin/aws/mail_sending.json`、`GET /admin/aws/mail_receiving.json` (未取得のメールだけは `?dropped=1`)、`GET /projects/:id/aws_ses_mail_setting.json` は、Redmine のヘルパーで整形した値を返します。`POST …/mail_sending/refresh.json` (`tab`)、`…/unsuppress.json` (`address`)、`…/mail_receiving/reimport.json` (`ids`)、`POST /admin/aws/mail_receiving.json` (`settings`) は `{ notice, errors }` を返し、拒否したときは 422 とエラーを返します。`PATCH /projects/:id/aws_ses_mail_setting.json` はタブを保存し、失敗すれば 422 とモデルのエラーを返します。
 

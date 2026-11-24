@@ -12,9 +12,16 @@ module RedmineKit
           ProjectsHelper.prepend(self) unless ProjectsHelper.include?(self)
         end
 
+        # Whether the project has the tab: while addresses per project are on.
+        # The one rule for Redmine's tab and the new UI's (the manifest's
+        # `enabled`).
+        def self.enabled?(_project)
+          RedmineKit::Aws::Ses.per_project_addresses?
+        end
+
         def project_settings_tabs
           tabs = super
-          if RedmineKit::Aws::Ses.per_project_addresses? &&
+          if ProjectSettingsTab.enabled?(@project) &&
              User.current.allowed_to?(:manage_aws_ses_mail_settings, @project)
             tabs << { name: 'aws_ses_mail', action: :manage_aws_ses_mail_settings,
                       partial: 'aws_ses_project_mail_settings/form', label: :label_aws_ses_project_mail }

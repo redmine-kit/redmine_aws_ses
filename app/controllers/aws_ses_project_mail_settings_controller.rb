@@ -49,7 +49,7 @@ class AwsSesProjectMailSettingsController < ApplicationController
   # The project's setting; the tab is there only while addresses per project
   # are on (RedmineKit::Aws::Ses::ProjectSettingsTab), and its JSON too.
   def find_setting
-    return render_404 if request.format.json? && !RedmineKit::Aws::Ses.per_project_addresses?
+    return render_404 if request.format.json? && !RedmineKit::Aws::Ses::ProjectSettingsTab.enabled?(@project)
 
     @setting = AwsSesProjectMailSetting.find_or_initialize_by(project: @project)
   end

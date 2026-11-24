@@ -177,7 +177,7 @@ export function AwsSesMailReceiving() {
                     onClick={() =>
                       confirmAction({
                         title: t('button_aws_ses_mail_reimport'),
-                        description: t('text_are_you_sure'),
+                        message: t('text_aws_ses_mail_reimport_confirm', { count: selected.length }),
                         action: t('button_aws_ses_mail_reimport'),
                         onConfirm: () => run(sesPaths.reimport, { ids: selected.map(Number) }),
                       })

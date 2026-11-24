@@ -100,3 +100,9 @@ en:
   label_aws_ses_mail_forwarded_author_registered: Registered users
   label_aws_ses_mail_forwarded_author_forwarder: Never the original sender
   text_aws_ses_mail_emission_address: "The emission email address (%{address}) is not the default address. Email sent to it, such as replies to notifications, is handled as email to the default address."
+  # the confirmations of the new UI's email tabs: the action and its object
+  label_aws_ses_mail_unsuppress_title: "Remove %{address}"
+  text_aws_ses_mail_unsuppress_confirm: "Remove %{address} from the suppression list?"
+  text_aws_ses_mail_reimport_confirm:
+    one: Fetch the selected email again?
+    other: "Fetch the %{count} selected emails again?"

@@ -14,4 +14,6 @@ settings:
     - name: aws_ses_mail
       label: label_aws_ses_project_mail
       permission: manage_aws_ses_mail_settings
+      # while addresses per project are on, as Redmine's tab (ProjectSettingsTab.enabled?)
+      enabled: RedmineKit::Aws::Ses::ProjectSettingsTab
       component: AwsSesProjectMail

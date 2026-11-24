@@ -106,8 +106,8 @@ export function AwsSesMailSending() {
               rows={data.suppressed.rows.map((destination) => ({ id: destination.address, destination }))}
               onAction={(id) =>
                 confirmAction({
-                  title: t('button_aws_ses_mail_unsuppress'),
-                  description: t('text_are_you_sure'),
+                  title: t('label_aws_ses_mail_unsuppress_title', { address: id }),
+                  message: t('text_aws_ses_mail_unsuppress_confirm', { address: id }),
                   action: t('button_aws_ses_mail_unsuppress'),
                   onConfirm: () => run(sesPaths.unsuppress, { address: id }),
                 })

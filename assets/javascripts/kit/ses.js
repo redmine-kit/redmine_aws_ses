@@ -201,8 +201,8 @@ function AwsSesMailSending() {
 					destination
 				})),
 				onAction: (id) => confirmAction({
-					title: t("button_aws_ses_mail_unsuppress"),
-					description: t("text_are_you_sure"),
+					title: t("label_aws_ses_mail_unsuppress_title", { address: id }),
+					message: t("text_aws_ses_mail_unsuppress_confirm", { address: id }),
 					action: t("button_aws_ses_mail_unsuppress"),
 					onConfirm: () => run(sesPaths.unsuppress, { address: id })
 				})
@@ -424,7 +424,7 @@ function AwsSesMailReceiving() {
 						disabled: action.isPending,
 						onClick: () => confirmAction({
 							title: t("button_aws_ses_mail_reimport"),
-							description: t("text_are_you_sure"),
+							message: t("text_aws_ses_mail_reimport_confirm", { count: selected.length }),
 							action: t("button_aws_ses_mail_reimport"),
 							onConfirm: () => run(sesPaths.reimport, { ids: selected.map(Number) })
 						}),

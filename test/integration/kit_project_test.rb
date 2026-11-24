@@ -47,6 +47,17 @@ module RedmineKit
           end
         end
 
+        test "the capabilities list the project's tab only while addresses per project are on, as Redmine's tab" do
+          Role.find(1).add_permission!(:manage_aws_ses_mail_settings)
+          log_user('jsmith', 'jsmith')
+          tabs = lambda do
+            get '/projects/ecookbook/capabilities.json', headers: { 'X-Redmine-Kit' => '1' }
+            response.parsed_body.dig('capabilities', 'extensions', 'project_settings').pluck('name')
+          end
+          with_ses_settings { assert_not_includes tabs.call, 'aws_ses_mail' }
+          with_ses_settings('per_project_addresses' => '1') { assert_includes tabs.call, 'aws_ses_mail' }
+        end
+
         test "a project's tab is there only while addresses per project are on, and with the permission" do
           Role.find(1).add_permission!(:manage_aws_ses_mail_settings)
           headers = kit_session('jsmith')

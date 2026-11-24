@@ -51,6 +51,7 @@ describe('AwsSesMailSending', () => {
     });
     await screen.findByText('bounce@example.net');
     await user.click(screen.getByRole('button', { name: '削除' }));
+    expect(within(await screen.findByRole('dialog')).getByText('bounce@example.net をサプレッションリストから削除しますか？')).toBeInTheDocument();
     await confirm(user, '削除');
     expect(await screen.findByText('bounce@example.net をサプレッションリストから削除しました。')).toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'テストメールを送信' }));
@@ -110,6 +111,7 @@ describe('AwsSesMailReceiving', () => {
     await screen.findByText('ログインできません');
     await user.click(within(screen.getByRole('table', { name: '受信履歴' })).getAllByRole('checkbox')[1]);
     await user.click(screen.getByRole('button', { name: '再取得' }));
+    expect(within(await screen.findByRole('dialog')).getByText('選択したメール 1 通を再取得しますか？')).toBeInTheDocument();
     await confirm(user, '再取得');
     expect(await screen.findByText('1 通を再取得します。')).toBeInTheDocument();
     await user.click(screen.getByRole('radio', { name: '未取得' }));

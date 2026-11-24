@@ -100,3 +100,9 @@ ja:
   label_aws_ses_mail_forwarded_author_registered: 登録済みのユーザー
   label_aws_ses_mail_forwarded_author_forwarder: 元の差出人にしない
   text_aws_ses_mail_emission_address: "送信元メールアドレス (%{address}) がデフォルトアドレスと異なります。そこに届くメール (通知への返信など) は、デフォルトアドレスのメールとして処理します。"
+  # the confirmations of the new UI's email tabs: the action and its object
+  label_aws_ses_mail_unsuppress_title: "%{address} を削除"
+  text_aws_ses_mail_unsuppress_confirm: "%{address} をサプレッションリストから削除しますか？"
+  text_aws_ses_mail_reimport_confirm:
+    one: "選択したメール %{count} 通を再取得しますか？"
+    other: "選択したメール %{count} 通を再取得しますか？"
