@@ -11,8 +11,8 @@
 # redmine_kit_aws, which the plugin requires (a checkout next to this one, or
 # REDMINE_KIT_AWS_DIR), as they are in the working tree (tracked and new, not
 # ignored). The image's entrypoint copies them into Redmine's plugins/ and
-# installs the gems they add (their Gemfiles, and the PluginGemfile written
-# here) into the plugin's named volume for that Ruby, kept between runs. A
+# installs the gems they add (their
+# Gemfiles) into the plugin's named volume for that Ruby, kept between runs. A
 # first run, on the network that reaches the internet, installs them, so that
 # the tests can run on the internal network, which doesn't.
 # $name: the base name of the tests' containers, set by the sourcing script.
@@ -44,12 +44,10 @@ kit_ui_ref=${REDMINE_KIT_UI_REF:-HEAD}
 mkdir -p "$test_context/plugins/redmine_kit_ui"
 git -C "$kit_ui" archive "$kit_ui_ref" init.rb Gemfile app assets config db lib test |
   tar -xf - -C "$test_context/plugins/redmine_kit_ui"
-# The plugin as a gem by path, so that Bundler loads boot/ (docs/setup.md),
-# and redmine_kit_aws, which its gemspec requires, by path without loading it.
-# Redmine's Gemfile reads plugins/*/PluginGemfile with the plugins' Gemfiles.
-printf '%s\n' "gem 'redmine_kit_aws', path: '/redmine/plugins/redmine_kit_aws', require: false" \
-  "gem 'redmine_kit_aws_ses', path: '/redmine/plugins/redmine_kit_aws_ses'" \
-  >"$test_context/plugins/redmine_kit_aws_ses/PluginGemfile"
+# The plugins come as checkouts in Redmine's plugins/, as docs/setup.md#installation
+# installs them that way: the plugin's Gemfile names it by path, so that Bundler
+# loads boot/redmine_kit_aws_ses.rb, and Redmine Kit AWS from its checkout next to it;
+# bin/test-gem checks the gem.
 # Redmine from its repository instead of the 7.0.3 release: REDMINE_BRANCH=
 # <branch> (master) at the branch's current commit, or REDMINE_COMMIT=<sha>;
 # a base image of its own, tagged with the commit.
