@@ -90,6 +90,18 @@ describe('AwsSesMailReceiving', () => {
     expect(screen.getByRole('img', { name: 'はい' })).toBeInTheDocument();
   });
 
+  it("puts the bucket's warning at the tab's top, and the address warnings one block", async () => {
+    const second = 'プロジェクトのアドレスが SES で検証したドメインにありません: portal@example.org。';
+    renderKit(<AwsSesMailReceiving />, { responses: { [RECEIVING]: { ...receiving, bucket: false, warnings: [...receiving.warnings, second] } } });
+    const bucket = (await screen.findByText(/REDMINE_SES_MAIL_BUCKET が未設定/)).closest('[data-notice]')!;
+    // before the addresses' section, not between it and the received email
+    expect(bucket.compareDocumentPosition(screen.getByRole('region', { name: 'メールアドレス' })) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    // the two address warnings are siblings (they touch, one line between them), not parted by a gap
+    const first = screen.getByText(/ロールアドレスをプロジェクトのアドレスとして/).closest('[data-notice]')!;
+    expect(first.nextElementSibling).toBe(screen.getByText(second).closest('[data-notice]'));
+    expect(first.parentElement!.className).not.toMatch(/gap-/);
+  });
+
   it('no domain and no bucket: the warnings; no email: 表示するデータがありません', async () => {
     renderKit(<AwsSesMailReceiving />, { responses: { [RECEIVING]: receivingEmpty } });
     expect(await screen.findByText(/REDMINE_SES_MAIL_BUCKET が未設定/)).toBeInTheDocument();

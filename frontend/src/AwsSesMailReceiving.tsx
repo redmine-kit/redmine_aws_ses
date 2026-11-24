@@ -122,6 +122,9 @@ export function AwsSesMailReceiving() {
       <RefreshAction updated={data?.updated ?? null} busy={!data || action.isPending} onRefresh={() => run(sesPaths.refresh, { tab: 'mail_receiving' })} />
       <CardBody>
         <ActionResult result={result} errors={errorTexts(action.error)} />
+        {/* the tab's own warning at its top, as the other AWS tabs have theirs: right after the action's result, so that
+            the bands touch as one block (Notice) */}
+        {data && !data.bucket && <Notice tone="warning" text={t('text_aws_ses_mail_no_bucket')} wrap />}
         <CardSection line={false} heading={t('label_aws_ses_mail_addresses')}>
           {!data ? (
             <SkeletonRegion label={t('label_loading')} className="px-gutter">
@@ -132,9 +135,14 @@ export function AwsSesMailReceiving() {
           ) : (
             <div className="flex flex-col gap-3">
               {data.addresses && <ValueRows rows={data.addresses} />}
-              {data.warnings.map((warning) => (
-                <Notice key={warning} tone="warning" text={warning} wrap />
-              ))}
+              {data.warnings.length > 0 && (
+                // the warnings one block (Notice): out of the column's gap
+                <div>
+                  {data.warnings.map((warning) => (
+                    <Notice key={warning} tone="warning" text={warning} wrap />
+                  ))}
+                </div>
+              )}
               {data.projects && (
                 <DataTable<ProjectRow>
                   label={t('label_aws_ses_mail_addresses')}
@@ -145,7 +153,6 @@ export function AwsSesMailReceiving() {
             </div>
           )}
         </CardSection>
-        {data && !data.bucket && <Notice tone="warning" text={t('text_aws_ses_mail_no_bucket')} wrap />}
         <CardSection
           heading={t('label_aws_ses_mail_received')}
           controls={

@@ -349,6 +349,11 @@ function AwsSesMailReceiving() {
 			result,
 			errors: errorTexts(action.error)
 		}),
+		data && !data.bucket && /* @__PURE__ */ jsx(Notice, {
+			tone: "warning",
+			text: t("text_aws_ses_mail_no_bucket"),
+			wrap: true
+		}),
 		/* @__PURE__ */ jsx(CardSection, {
 			line: false,
 			heading: t("label_aws_ses_mail_addresses"),
@@ -372,11 +377,11 @@ function AwsSesMailReceiving() {
 				className: "flex flex-col gap-3",
 				children: [
 					data.addresses && /* @__PURE__ */ jsx(ValueRows, { rows: data.addresses }),
-					data.warnings.map((warning) => /* @__PURE__ */ jsx(Notice, {
+					data.warnings.length > 0 && /* @__PURE__ */ jsx("div", { children: data.warnings.map((warning) => /* @__PURE__ */ jsx(Notice, {
 						tone: "warning",
 						text: warning,
 						wrap: true
-					}, warning)),
+					}, warning)) }),
 					data.projects && /* @__PURE__ */ jsx(DataTable, {
 						label: t("label_aws_ses_mail_addresses"),
 						columns: projectColumns,
@@ -387,11 +392,6 @@ function AwsSesMailReceiving() {
 					})
 				]
 			})
-		}),
-		data && !data.bucket && /* @__PURE__ */ jsx(Notice, {
-			tone: "warning",
-			text: t("text_aws_ses_mail_no_bucket"),
-			wrap: true
 		}),
 		/* @__PURE__ */ jsxs(CardSection, {
 			heading: t("label_aws_ses_mail_received"),
